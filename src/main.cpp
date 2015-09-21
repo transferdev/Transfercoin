@@ -1138,11 +1138,15 @@ int64_t GetProofOfWorkReward(int nHeight, int64_t nFees)
 // miner's coin stake reward based on coin age spent (coin-days)
 int64_t GetProofOfStakeReward(int nHeight, int64_t nCoinAge, int64_t nFees)
 {
-    int64_t nSubsidy = 15 * COIN;
+    int64_t nSubsidy = 1 * COIN;
 
     if(nHeight <= 15000)
     {
         nSubsidy = 300 * COIN;
+    }
+    else if(nHeight < 57000)
+    {
+        nSubsidy = 15 * COIN;
     }
 
     return nSubsidy + nFees;
