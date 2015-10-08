@@ -59,7 +59,7 @@ CFLAGS = -g -msse2
 endif
 
 # ppc doesn't work because we don't support big-endian
-CFLAGS += -Wall -Wextra -Wformat -Wno-ignored-qualifiers -Wformat-security -Wno-unused-parameter \
+CFLAGS += -Wall -Wextra -Wformat -Wno-ignored-qualifiers -Wformat-security -Wno-unused-parameter -Wunused-function -Wunused-variable -fpermissive -Wconversion-null -Wmaybe-uninitialized\
     $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 
 OBJS= \
@@ -70,6 +70,7 @@ OBJS= \
     obj/addrman.o \
     obj/crypter.o \
     obj/key.o \
+    obj/eckey.o \
     obj/init.o \
     obj/bitcoind.o \
     obj/keystore.o \
@@ -84,19 +85,47 @@ OBJS= \
     obj/rpcnet.o \
     obj/rpcblockchain.o \
     obj/rpcrawtransaction.o \
+    obj/rpcsmessage.o \
     obj/timedata.o \
     obj/script.o \
+    obj/scrypt.o \
     obj/sync.o \
     obj/txmempool.o \
     obj/util.o \
     obj/hash.o \
     obj/noui.o \
-    obj/pbkdf2.o \
     obj/kernel.o \
-    obj/scrypt.o \
-    obj/scrypt-x86.o \
-    obj/scrypt-x86_64.o \
-    obj/chainparams.o
+    obj/pbkdf2.o \
+    obj/chainparams.o \
+    obj/stealth.o \
+    obj/activemasternode.o \
+    obj/darksend.o \
+    obj/eccryptoverify.o \
+    obj/instantx.o \
+    obj/masternodeconfig.o \
+    obj/masternode.o \
+    obj/rpcdarksend.o \
+    obj/spork.o \
+    obj/crypto/hmac_sha256.o \
+    obj/crypto/hmac_sha512.o \
+    obj/crypto/rfc6979_hmac_sha256.o \
+    obj/crypto/ripemd160.o \
+    obj/crypto/sha1.o \
+    obj/crypto/sha256.o \
+    obj/crypto/sha512.o \
+    obj/smessage.o    \
+    obj/cubehash.o \
+    obj/luffa.o \
+    obj/aes_helper.o \
+    obj/echo.o \
+    obj/shavite.o \
+    obj/simd.o \
+    obj/blake.o\
+    obj/bmw.o\
+    obj/groestl.o\
+    obj/jh.o\
+    obj/keccak.o\
+    obj/skein.o
 
 ifeq (${USE_WALLET}, 1)
     DEFS += -DENABLE_WALLET
