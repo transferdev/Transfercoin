@@ -884,7 +884,7 @@ void BitcoinGUI::gotoMasternodeManagerPage()
 void BitcoinGUI::gotoBlockBrowser()
 {
     blockAction->setChecked(true);
-    centralWidget->setCurrentWidget(blockBrowser);
+    centralStackedWidget->setCurrentWidget(blockBrowser);
  
     exportAction->setEnabled(false);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
