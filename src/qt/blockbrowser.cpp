@@ -4,6 +4,7 @@
 #include "wallet.h"
 #include "base58.h"
 #include "clientmodel.h"
+#include "walletmodel.h"
 #include "bitcoinrpc.h"
 #include "transactionrecord.h"
 
@@ -212,7 +213,7 @@ std::string getOutputs(std::string txid)
         str.append(lol7);
         str.append(": ");
         str.append(amount);
-        str.append(" ZEIT");
+        str.append(" TX");
         str.append("\n");
     }
 
@@ -258,7 +259,7 @@ std::string getInputs(std::string txid)
         str.append(lol6);
         str.append(": ");
         str.append(amount);
-        str.append(" ZEIT");
+        str.append(" TX");
         str.append("\n");
     }
 
@@ -410,11 +411,11 @@ void BlockBrowser::updateExplorer(bool block)
         QString QOutputs = QString::fromUtf8(outputs.c_str());
         QString QInputs = QString::fromUtf8(inputs.c_str());
         QString QFees = QString::number(fees, 'f', 6);
-        ui->valueBox->setText(QValue + " ZEIT");
+        ui->valueBox->setText(QValue + " TX");
         ui->txID->setText(QID);
         ui->outputBox->setText(QOutputs);
         ui->inputBox->setText(QInputs);
-        ui->feesBox->setText(QFees + " ZEIT");
+        ui->feesBox->setText(QFees + " TX");
     }
 }
 
@@ -429,7 +430,7 @@ void BlockBrowser::blockClicked()
     updateExplorer(true);
 }
 
-void BlockBrowser::setModel(ClientModel *model)
+void BlockBrowser::setModel(WalletModel *model)
 {
     this->model = model;
 }
