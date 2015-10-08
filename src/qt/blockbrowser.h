@@ -48,7 +48,7 @@ public:
     explicit BlockBrowser(QWidget *parent = 0);
     ~BlockBrowser();
     
-    void setWalletModel(WalletModel *walletModel);
+    void setModel(WalletModel *walletModel);
     
 public slots:
     
