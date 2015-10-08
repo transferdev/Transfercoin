@@ -939,7 +939,7 @@ void BitcoinGUI::gotoTradingPage()
 {
 
      TradingAction->setChecked(true);
-     centralWidget->setCurrentWidget(tradingDialogPage);
+     centralStackedWidget->setCurrentWidget(tradingDialogPage);
 
   //  exportAction->setEnabled(false);
   //  disconnect(exportAction, SIGNAL(triggered()), 0, 0);
