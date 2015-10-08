@@ -2,6 +2,7 @@
 #define BLOCKBROWSER_H
 
 #include "clientmodel.h"
+#include "walletmodel.h"
 #include "main.h"
 #include "wallet.h"
 #include "base58.h"

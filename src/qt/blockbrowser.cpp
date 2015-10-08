@@ -4,6 +4,7 @@
 #include "wallet.h"
 #include "base58.h"
 #include "clientmodel.h"
+#include "walletmodel.h"
 #include "bitcoinrpc.h"
 #include "transactionrecord.h"
 
