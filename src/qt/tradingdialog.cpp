@@ -525,7 +525,7 @@ void tradingDialog::ParseAndPopulateMarketHistoryTable(QString Response){
             ui->MarketHistoryTable->setItem(itteration, 2, new QTableWidgetItem(str.number(obj["Price"].toDouble(),'i',8)));
             ui->MarketHistoryTable->setItem(itteration, 3, new QTableWidgetItem(str.number(obj["Quantity"].toDouble(),'i',8)));
             ui->MarketHistoryTable->setItem(itteration, 4, new QTableWidgetItem(str.number(obj["Total"].toDouble(),'i',8)));
-            ui->MarketHistoryTable->item(itteration,1)->setBackgroundColor((obj["OrderType"] == "BUY") ? (QColor (150, 191, 70,255)) : ( QColor (201, 119, 153,255)));
+            ui->MarketHistoryTable->item(itteration,1)->setBackgroundColor((obj["OrderType"] == QStringLiteral("BUY")) ? (QColor (150, 191, 70,255)) : ( QColor (201, 119, 153,255)));
             itteration++;
         }
        obj.empty();
