@@ -245,6 +245,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/darksend.h \
     src/instantx.h \
     src/activemasternode.h \
+    src/masternodeconfig.h \
     src/spork.h \
     src/crypto/common.h \
     src/crypto/hmac_sha256.h \

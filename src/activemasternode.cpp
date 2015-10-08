@@ -14,9 +14,9 @@ void CActiveMasternode::ManageStatus()
 {
     std::string errorMessage;
 
-    if(!fMasterNode) return;
-
     if (fDebug) LogPrintf("CActiveMasternode::ManageStatus() - Begin\n");
+
+    if(!fMasterNode) return;
 
     //need correct adjusted time to send ping
     bool fIsInitialDownload = IsInitialBlockDownload();
