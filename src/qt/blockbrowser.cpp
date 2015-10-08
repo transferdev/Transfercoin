@@ -429,7 +429,7 @@ void BlockBrowser::blockClicked()
     updateExplorer(true);
 }
 
-void BlockBrowser::setModel(ClientModel *model)
+void BlockBrowser::setModel(WalletModel *model)
 {
     this->model = model;
 }
