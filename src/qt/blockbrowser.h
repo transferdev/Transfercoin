@@ -2,7 +2,6 @@
 #define BLOCKBROWSER_H
 
 #include "clientmodel.h"
-#include "walletmodel.h"
 #include "main.h"
 #include "wallet.h"
 #include "base58.h"
@@ -39,7 +38,7 @@ int64_t getInputValue(CTransaction, CScript);
 namespace Ui {
 class BlockBrowser;
 }
-class WalletModel;
+class ClientModel;
 
 class BlockBrowser : public QWidget
 {
@@ -49,7 +48,7 @@ public:
     explicit BlockBrowser(QWidget *parent = 0);
     ~BlockBrowser();
     
-    void setModel(WalletModel *walletModel);
+    void setModel(ClientModel *model);
     
 public slots:
     
@@ -61,7 +60,7 @@ private slots:
 
 private:
     Ui::BlockBrowser *ui;
-    WalletModel *walletModel;
+    ClientModel *model;
     
 };
 

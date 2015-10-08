@@ -4,7 +4,6 @@
 #include "wallet.h"
 #include "base58.h"
 #include "clientmodel.h"
-#include "walletmodel.h"
 #include "bitcoinrpc.h"
 #include "transactionrecord.h"
 
@@ -430,9 +429,9 @@ void BlockBrowser::blockClicked()
     updateExplorer(true);
 }
 
-void BlockBrowser::setModel(WalletModel *walletModel)
+void BlockBrowser::setModel(ClientModel *model)
 {
-    this->walletModel = walletModel;
+    this->model = model;
 }
 
 BlockBrowser::~BlockBrowser()
