@@ -355,17 +355,12 @@ void BlockBrowser::updateExplorer(bool block)
         ui->timeBox->show();
         ui->hardLabel->show();
         ui->hardBox->show();;
-        ui->pawLabel->show();
-        ui->pawBox->show();
         int height = ui->heightBox->value();
         if (height > pindexBest->nHeight)
         {
             ui->heightBox->setValue(pindexBest->nHeight);
             height = pindexBest->nHeight;
         }
-        int Pawrate = getBlockHashrate(height);
-        double Pawrate2 = 0.000;
-        Pawrate2 = ((double)Pawrate / 1000);
         std::string hash = getBlockHash(height);
         std::string merkle = getBlockMerkle(height);
         int nBits = getBlocknBits(height);
@@ -379,7 +374,6 @@ void BlockBrowser::updateExplorer(bool block)
         QString QNonce = QString::number(nNonce);
         QString QTime = QString::number(atime);
         QString QHardness = QString::number(hardness, 'f', 6);
-        QString QPawrate = QString::number(Pawrate2, 'f', 3);
         ui->heightLabel->setText(QHeight);
         ui->hashBox->setText(QHash);
         ui->merkleBox->setText(QMerkle);
@@ -387,7 +381,6 @@ void BlockBrowser::updateExplorer(bool block)
         ui->nonceBox->setText(QNonce);
         ui->timeBox->setText(QTime);     
         ui->hardBox->setText(QHardness);
-        ui->pawBox->setText(QPawrate + " KH/s");
     } 
     
     if(block == false) {

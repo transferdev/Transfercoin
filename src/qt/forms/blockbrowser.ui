@@ -141,13 +141,6 @@
          </property>
         </widget>
        </item>
-       <item row="10" column="1">
-        <widget class="QLabel" name="pawBox">
-         <property name="text">
-          <string>0000 KH/s</string>
-         </property>
-        </widget>
-       </item>
        <item row="14" column="0">
         <widget class="QLabel" name="valueLabel">
          <property name="text">
@@ -252,13 +245,6 @@
         <widget class="QLabel" name="feesBox">
          <property name="text">
           <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="10" column="0">
-        <widget class="QLabel" name="pawLabel">
-         <property name="text">
-          <string>Block Hashrate:</string>
          </property>
         </widget>
        </item>
