@@ -6,18 +6,18 @@
 # Mac OS X makefile for transfer
 # Originally by Laszlo Hanyecz (solar@heliacal.net)
 
-CXX=llvm-g++
-DEPSDIR=/opt/local
+CXX=g++
+DEPSDIR=/usr/local
 
 INCLUDEPATHS= \
  -I"$(CURDIR)" \
  -I"$(CURDIR)"/obj \
  -I"$(DEPSDIR)/include" \
- -I"$(DEPSDIR)/include/db48"
+ -I"$(DEPSDIR)/include/berkeley-db4"
 
 LIBPATHS= \
  -L"$(DEPSDIR)/lib" \
- -L"$(DEPSDIR)/lib/db48"
+ -L"$(DEPSDIR)/Cellar/berkeley-db4/4.8.30/lib"
 
 USE_UPNP:=1
 USE_WALLET:=1
@@ -28,20 +28,20 @@ ifdef STATIC
 # Build STATIC if you are redistributing the transferd binary
 LIBS += \
  $(DEPSDIR)/lib/db48/libdb_cxx-4.8.a \
- $(DEPSDIR)/lib/libboost_system-mt.a \
- $(DEPSDIR)/lib/libboost_filesystem-mt.a \
- $(DEPSDIR)/lib/libboost_program_options-mt.a \
- $(DEPSDIR)/lib/libboost_thread-mt.a \
+ $(DEPSDIR)/lib/libboost_system.a \
+ $(DEPSDIR)/lib/libboost_filesystem.a \
+ $(DEPSDIR)/lib/libboost_program_options.a \
+ $(DEPSDIR)/lib/libboost_thread.a \
  $(DEPSDIR)/lib/libssl.a \
  $(DEPSDIR)/lib/libcrypto.a \
  -lz
 else
 LIBS += \
  -ldb_cxx-4.8 \
- -lboost_system-mt \
- -lboost_filesystem-mt \
- -lboost_program_options-mt \
- -lboost_thread-mt \
+ -lboost_system \
+ -lboost_filesystem \
+ -lboost_program_options \
+ -lboost_thread \
  -lssl \
  -lcrypto \
  -lz
