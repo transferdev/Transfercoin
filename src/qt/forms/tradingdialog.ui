@@ -34,7 +34,7 @@
    <property name="tabPosition">
     <enum>QTabWidget::North</enum>
    </property>
-      <property name="tabShape">
+   <property name="tabShape">
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
@@ -2891,121 +2891,97 @@
     <zorder>UpdateKeys</zorder>
    </widget>
   </widget>
-   <widget class="QFrame" name="tradingHeaderContainer">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="minimumSize">
+  <widget class="QFrame" name="tradingHeaderContainer">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>849</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="minimumSize">
     <size>
      <width>849</width>
      <height>30</height>
     </size>
    </property>
-     <property name="maximumSize">
-      <size>
-       <width>16777215</width>
-       <height>220</height>
-      </size>
-     </property>
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
-     </property>
-	 <layout class="QVBoxLayout" name="verticalLayout_trade">
-	 <item>
-       <layout class="QHBoxLayout" name="wallettradeHeader">
-	<item>
-  <widget class="QLabel" name="Bid">
-   <property name="geometry">
-    <rect>
-     <x>11</x>
-     <y>11</y>
-     <width>151</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="minimumSize">
+   <property name="maximumSize">
     <size>
-     <width>151</width>
-     <height>0</height>
+     <width>16777215</width>
+     <height>220</height>
     </size>
    </property>
-   <property name="text">
-    <string>0.00000000</string>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
    </property>
-  </widget>
-  </item>
-  <item>
-  <widget class="QLabel" name="volumet">
-   <property name="geometry">
-    <rect>
-     <x>532</x>
-     <y>11</y>
-     <width>201</width>
-     <height>16</height>
-    </rect>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
    </property>
-   <property name="minimumSize">
-    <size>
-     <width>201</width>
-     <height>0</height>
-    </size>
-   </property>
-   <property name="text">
-    <string>0.000000000</string>
-   </property>
-  </widget>
-  </item>
-  <item>
-  <widget class="QLabel" name="Ask">
-   <property name="geometry">
-    <rect>
-     <x>168</x>
-     <y>11</y>
-     <width>181</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="minimumSize">
-    <size>
-     <width>181</width>
-     <height>0</height>
-    </size>
-   </property>
-   <property name="text">
-    <string>0.00000000</string>
-   </property>
-  </widget>
-  </item>
-  <item>
-  <widget class="QLabel" name="volumebtc">
-   <property name="geometry">
-    <rect>
-     <x>355</x>
-     <y>11</y>
-     <width>171</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="minimumSize">
-    <size>
-     <width>171</width>
-     <height>0</height>
-    </size>
-   </property>
-   <property name="text">
-    <string>0.00000000</string>
-   </property>
-  </widget>
-	</item>
-	</layout>
-	</item>
-	</layout>
+   <layout class="QVBoxLayout" name="verticalLayout_trade">
+    <item>
+     <layout class="QHBoxLayout" name="wallettradeHeader">
+      <item>
+       <widget class="QLabel" name="Bid">
+        <property name="minimumSize">
+         <size>
+          <width>151</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>0.00000000</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="volumet">
+        <property name="minimumSize">
+         <size>
+          <width>201</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>0.000000000</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="Ask">
+        <property name="minimumSize">
+         <size>
+          <width>181</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>0.00000000</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="volumebtc">
+        <property name="minimumSize">
+         <size>
+          <width>171</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>0.00000000</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
   </widget>
  </widget>
  <resources/>
