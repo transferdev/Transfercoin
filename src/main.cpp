@@ -3822,7 +3822,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     // to users' AddrMan and later request them by sending getaddr messages. 
     // Making users (which are behind NAT and can only make outgoing connections) ignore 
     // getaddr message mitigates the attack.
-    else if (strCommand == "getaddr") && (pfrom->fInbound))
+    else if ((strCommand == "getaddr") && (pfrom->fInbound))
     {
         // Don't return addresses older than nCutOff timestamp
         int64_t nCutOff = GetTime() - (nNodeLifespan * 24 * 60 * 60);
