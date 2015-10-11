@@ -2562,7 +2562,7 @@
       <string>BTC Balance:</string>
      </property>
     </widget>
-    <widget class="QLabel" name="TXAvailableLabel">
+    <widget class="QLabel" name="TXAvailableLabel_2">
      <property name="geometry">
       <rect>
        <x>120</x>

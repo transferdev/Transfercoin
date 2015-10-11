@@ -35,6 +35,7 @@ tradingDialog::tradingDialog(QWidget *parent) :
     ui->BuyCostLabel->setPalette(sample_palette);
     ui->SellCostLabel->setPalette(sample_palette);
     ui->TXAvailableLabel->setPalette(sample_palette);
+    ui->TXAvailableLabel_2->setPalette(sample_palette);
     ui->BtcAvailableLbl_2->setPalette(sample_palette);
     //Set tabs to inactive
     ui->TradingTabWidget->setTabEnabled(0,false);
@@ -607,7 +608,7 @@ void tradingDialog::ActionsOnSwitch(int index = -1){
                          Response = GetBalance("TX");
 
                        if(Response.size() > 0 && Response != "Error"){
-                         DisplayBalance(*ui->TXBalanceLabel,*ui->TXAvailableLabel,*ui->TXPendingLabel, QString::fromUtf8("TX"),Response);
+                         DisplayBalance(*ui->TXBalanceLabel,*ui->TXAvailableLabel_2,*ui->TXPendingLabel, QString::fromUtf8("TX"),Response);
                         }
                 break;
 
