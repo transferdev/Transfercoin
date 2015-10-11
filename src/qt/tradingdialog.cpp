@@ -359,6 +359,7 @@ void tradingDialog::ParseAndPopulateOpenOrdersTable(QString Response){
             CancelCell= ui->OpenOrdersTable->item(itteration, 14);    //Set the wtablewidget item to the cancel cell item.
             CancelCell->setForeground(QColor::fromRgb(255,0,0));      //make this item red.
             CancelCell->setTextAlignment(Qt::AlignCenter);
+            itteration++;
         }
         obj.empty();
 }
