@@ -2529,7 +2529,7 @@
       <rect>
        <x>30</x>
        <y>30</y>
-       <width>75</width>
+       <width>91</width>
        <height>16</height>
       </rect>
      </property>
@@ -2548,7 +2548,7 @@
       <rect>
        <x>270</x>
        <y>30</y>
-       <width>71</width>
+       <width>91</width>
        <height>16</height>
       </rect>
      </property>
@@ -2583,7 +2583,7 @@
       <rect>
        <x>30</x>
        <y>70</y>
-       <width>83</width>
+       <width>91</width>
        <height>16</height>
       </rect>
      </property>
@@ -2602,7 +2602,7 @@
       <rect>
        <x>30</x>
        <y>110</y>
-       <width>76</width>
+       <width>91</width>
        <height>16</height>
       </rect>
      </property>
@@ -2637,7 +2637,7 @@
       <rect>
        <x>270</x>
        <y>70</y>
-       <width>81</width>
+       <width>101</width>
        <height>16</height>
       </rect>
      </property>
@@ -2672,7 +2672,7 @@
       <rect>
        <x>270</x>
        <y>110</y>
-       <width>71</width>
+       <width>91</width>
        <height>16</height>
       </rect>
      </property>
@@ -2823,6 +2823,21 @@
       <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
      </property>
     </widget>
+    <zorder>label_31</zorder>
+    <zorder>label_15</zorder>
+    <zorder>label_12</zorder>
+    <zorder>label_14</zorder>
+    <zorder>label_13</zorder>
+    <zorder>label_11</zorder>
+    <zorder>BitcoinBalanceLabel</zorder>
+    <zorder>TXBalanceLabel</zorder>
+    <zorder>TXAvailableLabel_2</zorder>
+    <zorder>TXPendingLabel</zorder>
+    <zorder>BitcoinAvailableLabel</zorder>
+    <zorder>BitcoinPendingLabel</zorder>
+    <zorder>label_33</zorder>
+    <zorder>GenDepositBTN</zorder>
+    <zorder>DepositAddressLabel</zorder>
    </widget>
    <widget class="QWidget" name="ApiSettings">
     <attribute name="title">
