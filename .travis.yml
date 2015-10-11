@@ -5,7 +5,7 @@ before_install:
   - sudo apt-get install build-essential
   - sudo apt-get install libdb++-dev
   - sudo apt-get install libboost1.48-all-dev
-  - sudo apt-get install autoconf libssl-dev libprotobuf-dev protobuf-compiler qt5-default qttools5-dev-tools libqrencode-dev libtool libminiupnpc-dev
+  - sudo apt-get install autoconf libssl-dev libprotobuf-dev protobuf-compiler qtbase5-dev qttools5-dev libqrencode-dev libtool libminiupnpc-dev
 script: 
   - chmod 755 src/leveldb/build_detect_platform
   - qmake -Wnone
