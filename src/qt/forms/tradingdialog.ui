@@ -38,7 +38,7 @@
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
-    <number>7</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="BuyTab">
     <attribute name="title">
@@ -227,7 +227,7 @@
       <rect>
        <x>21</x>
        <y>11</y>
-       <width>201</width>
+       <width>221</width>
        <height>16</height>
       </rect>
      </property>
@@ -691,18 +691,18 @@
       </item>
      </layout>
     </widget>
-    <widget class="QWidget" name="layoutWidget">
+    <widget class="QWidget" name="layoutWidget_2">
      <property name="geometry">
       <rect>
-       <x>11</x>
-       <y>301</y>
-       <width>231</width>
+       <x>10</x>
+       <y>300</y>
+       <width>271</width>
        <height>16</height>
       </rect>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <layout class="QHBoxLayout" name="horizontalLayout_5">
       <item>
-       <widget class="QLabel" name="label_9">
+       <widget class="QLabel" name="label_23">
         <property name="font">
          <font>
           <weight>75</weight>
@@ -710,12 +710,12 @@
          </font>
         </property>
         <property name="text">
-         <string>Total w/ 0.25% Fee</string>
+         <string>Total w/ 0.25% Fee </string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="BuyCostLabel">
+       <widget class="QLabel" name="SellCostLabel_2">
         <property name="palette">
          <palette>
           <active>
@@ -1141,7 +1141,7 @@
          <bool>false</bool>
         </property>
         <property name="text">
-         <string>0.00000000</string>
+         <string> 0.00000000</string>
         </property>
         <property name="textInteractionFlags">
          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
@@ -1149,7 +1149,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="label_10">
+       <widget class="QLabel" name="label_24">
         <property name="font">
          <font>
           <weight>50</weight>
@@ -1157,7 +1157,7 @@
          </font>
         </property>
         <property name="text">
-         <string>BTC</string>
+         <string> BTC</string>
         </property>
        </widget>
       </item>
@@ -1820,7 +1820,7 @@
       <rect>
        <x>10</x>
        <y>300</y>
-       <width>241</width>
+       <width>271</width>
        <height>16</height>
       </rect>
      </property>
