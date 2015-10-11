@@ -1,14 +1,14 @@
-sudo: false
+sudo: true
 os:
   - linux
 before_install:
-  - add-apt-repository --yes ppa:ubuntu-sdk-team/ppa
-  - apt-get update
-  - apt-get install qt5-qmake qtbase5-dev qtdeclarative5-dev qttools5-dev
-  - apt-get install build-essential
-  - apt-get install libdb++-dev
-  - apt-get install libboost1.58-all-dev
-  - apt-get install autoconf libssl-dev libprotobuf-dev protobuf-compiler libqrencode-dev libtool libminiupnpc-dev
+  - sudo add-apt-repository --yes ppa:ubuntu-sdk-team/ppa
+  - sudo apt-get update
+  - sudo apt-get install qt5-qmake qtbase5-dev qtdeclarative5-dev qttools5-dev
+  - sudo apt-get install build-essential
+  - sudo apt-get install libdb++-dev
+  - sudo apt-get install libboost1.48-all-dev
+  - sudo apt-get install autoconf libssl-dev libprotobuf-dev protobuf-compiler libqrencode-dev libtool libminiupnpc-dev
   - chmod 755 src/leveldb/build_detect_platform
   - cd src/secp256k1
   - chmod 755 *
@@ -16,10 +16,10 @@ before_install:
   - mkdir build-aux/m4
   - ./autogen.sh
   - ./configure
-  - make install
+  - sudo make install
   - cd ../..
 script: 
   - qmake USE_UPNP=-
-  - make
+  - sudo make
   - cd src
-  - make -f makefile.unix
+  - sudo make -f makefile.unix
