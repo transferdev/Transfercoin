@@ -2737,7 +2737,7 @@
     <widget class="QLabel" name="DepositAddressLabel">
      <property name="geometry">
       <rect>
-       <x>200</x>
+       <x>230</x>
        <y>200</y>
        <width>261</width>
        <height>16</height>
