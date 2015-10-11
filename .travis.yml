@@ -9,9 +9,15 @@ before_install:
   - sudo apt-get install libdb++-dev
   - sudo apt-get install libboost1.48-all-dev
   - sudo apt-get install autoconf libssl-dev libprotobuf-dev protobuf-compiler libqrencode-dev libtool libminiupnpc-dev
-script: 
   - chmod 755 src/leveldb/build_detect_platform
-  - qmake -Wnone
+  - cd src/secp256k1
+  - chmod 755 *
+  - ./autogen.sh
+  - ./configure
+  - sudo make install
+  - cd ../..
+script: 
+  - qmake USE_UPNP=-
   - sudo make
   - cd src
   - sudo make -f makefile.unix
