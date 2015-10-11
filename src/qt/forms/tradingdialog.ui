@@ -38,7 +38,7 @@
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
-    <number>6</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="BuyTab">
     <attribute name="title">
@@ -2504,6 +2504,9 @@
      <property name="text">
       <string>TextLabel</string>
      </property>
+     <property name="textInteractionFlags">
+      <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+     </property>
     </widget>
     <widget class="QLabel" name="TXBalanceLabel">
      <property name="geometry">
@@ -2516,6 +2519,9 @@
      </property>
      <property name="text">
       <string>TextLabel</string>
+     </property>
+     <property name="textInteractionFlags">
+      <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
      </property>
     </widget>
     <widget class="QLabel" name="label_11">
@@ -2568,6 +2574,9 @@
      <property name="text">
       <string>TextLabel</string>
      </property>
+     <property name="textInteractionFlags">
+      <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+     </property>
     </widget>
     <widget class="QLabel" name="label_13">
      <property name="geometry">
@@ -2619,6 +2628,9 @@
      <property name="text">
       <string>TextLabel</string>
      </property>
+     <property name="textInteractionFlags">
+      <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+     </property>
     </widget>
     <widget class="QLabel" name="label_15">
      <property name="geometry">
@@ -2651,6 +2663,9 @@
      <property name="text">
       <string>TextLabel</string>
      </property>
+     <property name="textInteractionFlags">
+      <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+     </property>
     </widget>
     <widget class="QLabel" name="label_31">
      <property name="geometry">
@@ -2682,6 +2697,9 @@
      </property>
      <property name="text">
       <string>TextLabel</string>
+     </property>
+     <property name="textInteractionFlags">
+      <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
      </property>
     </widget>
     <widget class="QLabel" name="label_33">
@@ -2919,10 +2937,13 @@
     </size>
    </property>
    <property name="frameShape">
-    <enum>QFrame::StyledPanel</enum>
+    <enum>QFrame::NoFrame</enum>
    </property>
    <property name="frameShadow">
     <enum>QFrame::Raised</enum>
+   </property>
+   <property name="lineWidth">
+    <number>0</number>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_trade">
     <item>
@@ -2938,6 +2959,9 @@
         <property name="text">
          <string>0.00000000</string>
         </property>
+        <property name="textInteractionFlags">
+         <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+        </property>
        </widget>
       </item>
       <item>
@@ -2950,6 +2974,9 @@
         </property>
         <property name="text">
          <string>0.000000000</string>
+        </property>
+        <property name="textInteractionFlags">
+         <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
         </property>
        </widget>
       </item>
@@ -2964,6 +2991,9 @@
         <property name="text">
          <string>0.00000000</string>
         </property>
+        <property name="textInteractionFlags">
+         <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+        </property>
        </widget>
       </item>
       <item>
@@ -2976,6 +3006,9 @@
         </property>
         <property name="text">
          <string>0.00000000</string>
+        </property>
+        <property name="textInteractionFlags">
+         <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
         </property>
        </widget>
       </item>
