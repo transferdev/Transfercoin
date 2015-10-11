@@ -38,7 +38,7 @@
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>6</number>
    </property>
    <widget class="QWidget" name="BuyTab">
     <attribute name="title">
@@ -2495,7 +2495,7 @@
     <widget class="QLabel" name="BitcoinBalanceLabel">
      <property name="geometry">
       <rect>
-       <x>357</x>
+       <x>360</x>
        <y>30</y>
        <width>150</width>
        <height>16</height>
@@ -2648,13 +2648,13 @@
       </font>
      </property>
      <property name="text">
-      <string>BTC Available</string>
+      <string>BTC Available:</string>
      </property>
     </widget>
     <widget class="QLabel" name="BitcoinAvailableLabel">
      <property name="geometry">
       <rect>
-       <x>357</x>
+       <x>360</x>
        <y>70</y>
        <width>150</width>
        <height>16</height>
@@ -2683,13 +2683,13 @@
       </font>
      </property>
      <property name="text">
-      <string>BTC Pending</string>
+      <string>BTC Pending:</string>
      </property>
     </widget>
     <widget class="QLabel" name="BitcoinPendingLabel">
      <property name="geometry">
       <rect>
-       <x>357</x>
+       <x>360</x>
        <y>110</y>
        <width>150</width>
        <height>16</height>
