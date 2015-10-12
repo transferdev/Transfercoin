@@ -26,7 +26,9 @@ static const int64_t DARKSEND_FEE = (0.0001*COIN);
 static const int64_t DARKSEND_POOL_MAX = (100000.99*COIN);
 
 static const int64_t STATIC_POS_REWARD = 1 * COIN; //Constant reward of 1 TX per COIN i.e. 8% 
-
+static const int64_t TARGET_SPACING_FORK = 60;
+static const int64_t TARGET_SPACING = 69;
+static const signed int HARD_FORK_BLOCK = 85000;
 /*
     At 15 signatures, 1/2 of the masternode network can be owned by
     one party without comprimising the security of InstantX
@@ -47,8 +49,8 @@ static const int64_t STATIC_POS_REWARD = 1 * COIN; //Constant reward of 1 TX per
 
 #define MASTERNODE_MIN_CONFIRMATIONS           7
 #define MASTERNODE_MIN_DSEEP_SECONDS           (15*60)
-#define MASTERNODE_MIN_DSEE_SECONDS            (1*60)
-#define MASTERNODE_PING_SECONDS                (10) //(1*60)
+#define MASTERNODE_MIN_DSEE_SECONDS            (5*60)
+#define MASTERNODE_PING_SECONDS                (5*60) //(1*60)
 #define MASTERNODE_EXPIRATION_SECONDS          (65*60)
 #define MASTERNODE_REMOVAL_SECONDS             (70*60)
 
@@ -171,7 +173,7 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles);
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake);
 int64_t GetProofOfWorkReward(int nHeight, int64_t nFees);
-int64_t GetProofOfStakeReward(int nHeight, int64_t nCoinAge, int64_t nFees);
+int64_t GetProofOfStakeReward(const CBlockIndex* pindexPrev, int64_t nCoinAge, int64_t nFees);
 bool IsInitialBlockDownload();
 std::string GetWarnings(std::string strFor);
 bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock);
@@ -444,7 +446,7 @@ public:
                        std::map<uint256, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx,
                        const CBlockIndex* pindexBlock, bool fBlock, bool fMiner, unsigned int flags = STANDARD_SCRIPT_VERIFY_FLAGS, bool fValidateSig = true);
     bool CheckTransaction() const;
-    bool GetCoinAge(CTxDB& txdb, uint64_t& nCoinAge) const;  // ppcoin: get transaction coin age
+    bool GetCoinAge(CTxDB& txdb, const CBlockIndex* pindexPrev, uint64_t& nCoinAge) const;
 
     const CTxOut& GetOutputFor(const CTxIn& input, const MapPrevTx& inputs) const;
 };

@@ -1533,15 +1533,28 @@ void CWallet::AvailableCoinsForStaking(vector<COutput>& vCoins, unsigned int nSp
         {
             const CWalletTx* pcoin = &(*it).second;
 
-            // Filtering by tx timestamp instead of block timestamp may give false positives but never false negatives
-            if (pcoin->nTime + nStakeMinAge > nSpendTime)
-                continue;
-
-            if (pcoin->GetBlocksToMaturity() > 0)
-                continue;
-
             int nDepth = pcoin->GetDepthInMainChain();
             if (nDepth < 1)
+                continue;
+
+            if(pindexBest->nHeight >= HARD_FORK_BLOCK){
+                nStakeMinConfirmations = 1440;
+            } else {
+                nStakeMinConfirmations = 1000;
+            }
+
+            if (nDepth < nStakeMinConfirmations)
+            {
+                continue;
+            }    
+            else
+            {
+            // Filtering by tx timestamp instead of block timestamp may give false positives but never false negatives
+            if (pcoin->nTime + nStakeMinAge > nSpendTime)
+               continue;
+            }
+            
+            if (pcoin->GetBlocksToMaturity() > 0)
                 continue;
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++)
@@ -3343,13 +3356,17 @@ uint64_t CWallet::GetStakeWeight() const
     CTxDB txdb("r");
 
     LOCK2(cs_main, cs_wallet);
+    int nStakeMinConfirmations = 0;
+    if(pindexBest->nHeight >= HARD_FORK_BLOCK){
+      nStakeMinConfirmations = 1440;
+    } else {
+      nStakeMinConfirmations = 1000;
+    }
+
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
         CTxIndex txindex;
-        if (!txdb.ReadTxIndex(pcoin.first->GetHash(), txindex))
-            continue;
-
-        if (nCurrentTime - pcoin.first->nTime > nStakeMinAge)
+        if (pcoin.first->GetDepthInMainChain() >= nStakeMinConfirmations)
             nWeight += pcoin.first->vout[pcoin.second].nValue;
     }
 
@@ -3506,10 +3523,10 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     {
         uint64_t nCoinAge;
         CTxDB txdb("r");
-        if (!txNew.GetCoinAge(txdb, nCoinAge))
+        if (!txNew.GetCoinAge(txdb, pindexPrev, nCoinAge))
             return error("CreateCoinStake : failed to calculate coin age");
 
-        nReward = GetProofOfStakeReward(pindexPrev->nHeight + 1, nCoinAge, nFees);
+        nReward = GetProofOfStakeReward(pindexPrev, nCoinAge, nFees);
         if (nReward <= 0)
             return false;
 
