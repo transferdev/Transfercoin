@@ -1481,11 +1481,22 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
                 return DoS(100, error("ConnectInputs() : %s prevout.n out of range %d %u %u prev tx %s\n%s", GetHash().ToString(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString(), txPrev.ToString()));
 
             // If prev is coinbase or coinstake, check that it's matured
-            if (txPrev.IsCoinBase() || txPrev.IsCoinStake()) 
-            {
-                int nSpendDepth;
-                if (IsConfirmedInNPrevBlocks(txindex, pindexBlock, nCoinbaseMaturity, nSpendDepth))
-                    return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", nSpendDepth);
+            if(pindexBest->nHeight >= HARD_FORK_BLOCK){
+                if (txPrev.IsCoinBase() || txPrev.IsCoinStake()) 
+                {
+                    int nSpendDepth;
+                    if (IsConfirmedInNPrevBlocks(txindex, pindexBlock, nCoinbaseMaturity, nSpendDepth)){
+                        return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", nSpendDepth);
+                    }
+                }
+            } else {
+                if (txPrev.IsCoinBase() || txPrev.IsCoinStake()){
+                    for (const CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < nCoinbaseMaturity; pindex = pindex->pprev){
+                        if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile){
+                            return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", pindexBlock->nHeight - pindex->nHeight);
+                        }
+                    }
+                }     
             }
             // ppcoin: check transaction timestamp
             if (txPrev.nTime > nTime)
@@ -2174,10 +2185,10 @@ bool CTransaction::GetCoinAge(CTxDB& txdb, const CBlockIndex* pindexPrev, uint64
             return false;  // Transaction timestamp violation
 
         int nSpendDepth;
-   if(pindexBest->nHeight >= HARD_FORK_BLOCK) {
-          nStakeMinConfirmations = 1440;
+        if(pindexBest->nHeight >= HARD_FORK_BLOCK) {
+            nStakeMinConfirmations = 1440;
         } else {
-          nStakeMinConfirmations = 1000;
+            nStakeMinConfirmations = 1000;
         }
 
         if (IsConfirmedInNPrevBlocks(txindex, pindexPrev, nStakeMinConfirmations - 1, nSpendDepth))

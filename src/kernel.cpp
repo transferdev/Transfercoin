@@ -256,6 +256,10 @@ static bool CheckStakeKernelHashV1(unsigned int nBits, const CBlock& blockFrom, 
         return error("CheckStakeKernelHash() : nTime violation");
 
     unsigned int nTimeBlockFrom = blockFrom.GetBlockTime();
+    if(pindexBest->nHeight < HARD_FORK_BLOCK){
+        if (nTimeBlockFrom + nStakeMinAge > nTimeTx) // Min age requirement
+            return error("CheckStakeKernelHash() : min age violation");
+    }
 
     CBigNum bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
@@ -334,6 +338,11 @@ static bool CheckStakeKernelHashV2(CBlockIndex* pindexPrev, unsigned int nBits, 
 {
     if (nTimeTx < txPrev.nTime)  // Transaction timestamp violation
         return error("CheckStakeKernelHash() : nTime violation");
+
+    if(pindexBest->nHeight < HARD_FORK_BLOCK){
+        if (nTimeBlockFrom + nStakeMinAge > nTimeTx) // Min age requirement
+            return error("CheckStakeKernelHash() : min age violation");
+    }
 
     // Base target
     CBigNum bnTarget;
