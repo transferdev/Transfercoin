@@ -3351,6 +3351,7 @@ uint64_t CWallet::GetStakeWeight() const
             continue;
 
         if (nCurrentTime - pcoin.first->nTime > nStakeMinAge)
+            nWeight += pcoin.first->vout[pcoin.second].nValue;
     }
 
     return nWeight;
