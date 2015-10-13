@@ -3343,7 +3343,6 @@ uint64_t CWallet::GetStakeWeight() const
     CTxDB txdb("r");
 
     LOCK2(cs_main, cs_wallet);
-
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
         CTxIndex txindex;
