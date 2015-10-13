@@ -1200,7 +1200,11 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
         return bnTargetLimit.GetCompact(); // second block
 
     int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
+
     if(pindexBest->nHeight >= HARD_FORK_BLOCK){
+        if (nActualSpacing < 0){
+            nActualSpacing = TARGET_SPACING_FORK;
+        }
         if(nActualSpacing < TARGET_SPACING_FORK * 10){
             nActualSpacing = TARGET_SPACING_FORK * 10;
         }
