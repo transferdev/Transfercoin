@@ -1200,10 +1200,14 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
         return bnTargetLimit.GetCompact(); // second block
 
     int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
-    if(pindexBest->nHeight >= HARD_FORK_BLOCK && nActualSpacing < TARGET_SPACING_FORK * 10){
+    if(pindexBest->nHeight >= HARD_FORK_BLOCK){
+        if(nActualSpacing < TARGET_SPACING_FORK * 10){
             nActualSpacing = TARGET_SPACING_FORK * 10;
-    } else if(nActualSpacing < 0) {
-        nActualSpacing = TARGET_SPACING;
+        }
+    } else if(pindexBest->nHeight < HARD_FORK_BLOCK) {
+        if (nActualSpacing < 0){
+            nActualSpacing = TARGET_SPACING;
+        }
     }
 
     // ppcoin: target change every block
@@ -2247,7 +2251,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos, const u
         return error("AddToBlockIndex() : ComputeNextStakeModifier() failed");
     pindexNew->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
     pindexNew->bnStakeModifierV2 = ComputeStakeModifierV2(pindexNew->pprev, IsProofOfWork() ? hash : vtx[1].vin[0].prevout.hash);
-    
+
     // Add to mapBlockIndex
     map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(hash, pindexNew)).first;
     if (pindexNew->IsProofOfStake())
