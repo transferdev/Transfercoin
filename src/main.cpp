@@ -1205,7 +1205,7 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
         if (nActualSpacing < 0){
             nActualSpacing = TARGET_SPACING_FORK;
         }
-        if(nActualSpacing < TARGET_SPACING_FORK * 10){
+        if(nActualSpacing > TARGET_SPACING_FORK * 10){
             nActualSpacing = TARGET_SPACING_FORK * 10;
         }
     } else if(pindexBest->nHeight < HARD_FORK_BLOCK) {
