@@ -133,7 +133,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64_t& nStakeMod
     if(pindexBest->nHeight >= HARD_FORK_BLOCK){
         vSortedByTimestamp.reserve(64 * nModifierInterval / TARGET_SPACING_FORK);
     } else {
-        vSortedByTimestamp.reserve(64 * nModifierInterval / GetTargetSpacing(pindexPrev->nHeight));
+        vSortedByTimestamp.reserve(64 * nModifierInterval / TARGET_SPACING);
     }
 
     int64_t nSelectionInterval = GetStakeModifierSelectionInterval();
@@ -316,7 +316,7 @@ bool CheckProofOfStake(CBlockIndex* pindexPrev, const CTransaction& tx, unsigned
         nStakeMinConfirmations = 1000;
     }
     
-    if (!CheckStakeKernelHash(pindexPrev, nBits, block.GetBlockTime();, txPrev, txin.prevout, tx.nTime, hashProofOfStake, targetProofOfStake, fDebug))
+    if (!CheckStakeKernelHash(pindexPrev, nBits, block.GetBlockTime(), txPrev, txin.prevout, tx.nTime, hashProofOfStake, targetProofOfStake, fDebug))
         return tx.DoS(1, error("CheckProofOfStake() : INFO: check kernel failed on coinstake %s, hashProof=%s", tx.GetHash().ToString(), hashProofOfStake.ToString())); // may occur during initial download or if behind on block chain sync
 
     return true;
