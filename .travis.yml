@@ -7,12 +7,6 @@ addons:
     - boost-latest
     - ubuntu-sdk-team
     packages:
-    - qt5-qmake
-    - qtbase5-dev
-    - qtdeclarative5-dev
-    - qttools5-dev
-    - qttools5-dev-tools
-    - qt5-default
     - build-essential
     - libdb++-dev
     - libboost1.55-all-dev
@@ -33,7 +27,6 @@ before_install:
   - ./configure --prefix=$HOME/secp256k1
   - make
   - make install
-
   - cd ../..
 script: 
   - cd src
