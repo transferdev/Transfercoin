@@ -25,6 +25,11 @@ https://github.com/SCDeveloper/All-Work-Done-Prior-to-DarkSilk-RC-Repo/commit/0e
 Guard against OpenSSL's new strict DER checks
 https://github.com/SCDeveloper/All-Work-Done-Prior-to-DarkSilk-RC-Repo/commit/63d5e3cf349de3f9853bde444a0eef17f6e37041
 
+Fix twice denominatedBalance calculations in qt/overviewpage.cpp
+
+Solve performance problems by caching and fix probable security issue
+https://github.com/SCDeveloper/All-Work-Done-Prior-to-DarkSilk-RC-Repo/commit/9d0e11afad97e4dcd979c2d6ac0e795f0ce9bc4b
+https://github.com/SCDeveloper/All-Work-Done-Prior-to-DarkSilk-RC-Repo/commit/c49309131fe47dabf683d9dd81bbe29ae6ba34f6
 
 
 
@@ -41,10 +46,6 @@ Remove KeePass integration
 To Do:
 Add time offset to getpeerinfo output
 https://github.com/SCDeveloper/DarkSilk-Release-Candidate/commit/9c4b2303957cd19ccdf2e47fce745240c3ea822b
-
-Solve performance problems by caching
-https://github.com/SCDeveloper/All-Work-Done-Prior-to-DarkSilk-RC-Repo/commit/9d0e11afad97e4dcd979c2d6ac0e795f0ce9bc4b
-https://github.com/SCDeveloper/All-Work-Done-Prior-to-DarkSilk-RC-Repo/commit/c49309131fe47dabf683d9dd81bbe29ae6ba34f6
 
 Made special marker non spendable
 Added nonspendable encoding for block signing key
