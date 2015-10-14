@@ -380,6 +380,8 @@ static bool CheckStakeKernelHashV2(CBlockIndex* pindexPrev, unsigned int nBits, 
 
     if(pindexBest->nHeight >= HARD_FORK_BLOCK){
         ss << bnStakeModifierV2;
+        ss << txPrev.nTime << prevout.hash << prevout.n << nTimeTx;
+        hashProofOfStake = Hash(ss.begin(), ss.end());
     } else{
         ss << nStakeModifier << nTimeBlockFrom << txPrev.nTime << prevout.hash << prevout.n << nTimeTx;
         hashProofOfStake = Hash(ss.begin(), ss.end());
