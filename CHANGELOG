@@ -18,8 +18,14 @@ PosV3 Modifier
 Fork at block 90 000
 DNSSeed Thread Fix
 Scale up addrman
-Sync fixes, CPU use
+
+Sync fixes, CPU use, Darksend fixes
 https://github.com/SCDeveloper/All-Work-Done-Prior-to-DarkSilk-RC-Repo/commit/0e1fe7055bf536c5545849264724aeecdcf3201b
+
+Guard against OpenSSL's new strict DER checks
+https://github.com/SCDeveloper/All-Work-Done-Prior-to-DarkSilk-RC-Repo/commit/63d5e3cf349de3f9853bde444a0eef17f6e37041
+
+
 
 
 Removal of old code:
@@ -28,6 +34,8 @@ FutureDriftV1/FutureDriftV2 reverted back to FutureDrift
 CheckStakeKernelHashV1/CheckStakeKernalHashV2 reverted back to CheckStakeKernelHash
 Remove ComputeMaxBits, ComputeMinWork, ComputeMinStake
 Remove KeePass integration
+
+
 
 
 To Do:
