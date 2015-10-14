@@ -31,7 +31,7 @@ before_install:
   - mkdir build-aux/m4
   - ./autogen.sh
   - ./configure
-  - make
+  - make install
   - cd ../..
 script: 
   - cd src
