@@ -1,4 +1,4 @@
-sudo: true
+sudo: false
 os:
   - linux
 addons:
@@ -31,7 +31,8 @@ before_install:
   - mkdir build-aux/m4
   - ./autogen.sh
   - ./configure
-  - sudo make install
+  - make
+  - export PATH=$PATH:$PWD/Transfercoin/src/secp256k1
   - cd ../..
 script: 
   - cd src
