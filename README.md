@@ -3,8 +3,9 @@ Transfer is a PoS-based cryptocurrency.
 
 Transfer uses libsecp256k1,
 			  Boost1.55,
+			  OR Boost1.57,  
 			  Openssl1.01p,
-			  Berkeley DB 5.3.28.NC,
+			  Berkeley DB 4.8,
 			  QT5 to compile
 
 
