@@ -30,11 +30,10 @@ before_install:
   - mkdir build-aux
   - mkdir build-aux/m4
   - ./autogen.sh
-  - ./configure
+  - ./configure --prefix=$HOME/secp256k1
   - make
-  - export PATH=$PATH:$PWD/Transfercoin/src/secp256k1
-  - export PATH=$PATH:$PWD/Transfercoin/src/secp256k1/include
-  - export PATH=$PATH:$PWD/Transfercoin/src/secp256k1/src
+  - make install
+
   - cd ../..
 script: 
   - cd src
