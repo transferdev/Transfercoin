@@ -357,5 +357,5 @@ bool CheckKernel(CBlockIndex* pindexPrev, unsigned int nBits, int64_t nTime, con
     if (pBlockTime)
         *pBlockTime = block.GetBlockTime();
 
-    return CheckStakeKernelHash(pindexPrev, nBits, block, block.GetBlockTime(), txPrev, prevout, nTime, hashProofOfStake, targetProofOfStake);
+    return CheckStakeKernelHash(pindexPrev, nBits, block.GetBlockTime(), txPrev, prevout, nTime, hashProofOfStake, targetProofOfStake);
 }
