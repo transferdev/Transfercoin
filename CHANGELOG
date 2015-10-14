@@ -18,7 +18,8 @@ PosV3 Modifier
 Fork at block 90 000
 DNSSeed Thread Fix
 Scale up addrman
-
+Sync fixes, CPU use
+https://github.com/SCDeveloper/All-Work-Done-Prior-to-DarkSilk-RC-Repo/commit/0e1fe7055bf536c5545849264724aeecdcf3201b
 
 
 Removal of old code:
@@ -32,9 +33,6 @@ Remove KeePass integration
 To Do:
 Add time offset to getpeerinfo output
 https://github.com/SCDeveloper/DarkSilk-Release-Candidate/commit/9c4b2303957cd19ccdf2e47fce745240c3ea822b
-
-Sync fixes, CPU use, checkpoints, bump version
-https://github.com/SCDeveloper/All-Work-Done-Prior-to-DarkSilk-RC-Repo/commit/0e1fe7055bf536c5545849264724aeecdcf3201b
 
 Solve performance problems by caching
 https://github.com/SCDeveloper/All-Work-Done-Prior-to-DarkSilk-RC-Repo/commit/9d0e11afad97e4dcd979c2d6ac0e795f0ce9bc4b
