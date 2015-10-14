@@ -1,0 +1,50 @@
+Changes:
+Discourage fee sniping with nLockTime
+Limited drop of difficulty per block
+Minimum age replaced with Minimum confirmations
+Reward and Min Conf Blocks Changed
+nTargetSpacing replaced with Static Const TARGET_SPACING
+TARGET_SPACING set to 60 seconds after the fork, Was set to 69 seconds
+Ignore getaddr messages on Outbound connections
+Increase Stake Split Threshold
+Correctly randomize change output position
+Fix static build with miniupnpc >= 1.9.20140610
+Fix for building with Boost 1.58
+Fix boost::get usage with Boost 1.58 in rpcrawtransaction.cpp
+Fix issue where getrawtransaction RPC call does not work
+Fix issue on open orders tab of the trading page
+Decentralized checkpoints from PosV3
+PosV3 Modifier
+Fork at block 90 000
+DNSSeed Thread Fix
+Scale up addrman
+
+
+
+Removal of old code:
+IsProtocolV1/IsProtocolV2 hard fork switches removed
+FutureDriftV1/FutureDriftV2 reverted back to FutureDrift
+CheckStakeKernelHashV1/CheckStakeKernalHashV2 reverted back to CheckStakeKernelHash
+Remove ComputeMaxBits, ComputeMinWork, ComputeMinStake
+Remove KeePass integration
+
+
+To Do:
+Add time offset to getpeerinfo output
+https://github.com/SCDeveloper/DarkSilk-Release-Candidate/commit/9c4b2303957cd19ccdf2e47fce745240c3ea822b
+
+Sync fixes, CPU use, checkpoints, bump version
+https://github.com/SCDeveloper/All-Work-Done-Prior-to-DarkSilk-RC-Repo/commit/0e1fe7055bf536c5545849264724aeecdcf3201b
+
+Solve performance problems by caching
+https://github.com/SCDeveloper/All-Work-Done-Prior-to-DarkSilk-RC-Repo/commit/9d0e11afad97e4dcd979c2d6ac0e795f0ce9bc4b
+https://github.com/SCDeveloper/All-Work-Done-Prior-to-DarkSilk-RC-Repo/commit/c49309131fe47dabf683d9dd81bbe29ae6ba34f6
+
+Made special marker non spendable
+Added nonspendable encoding for block signing key
+BIP66 compatibility
+Replaced NOP7 with CHECKLOCKTIMEVERIFY
+Enforce new script verification flags
+Demand canonical block sig from updated peers
+Submitblock: Add submission of stake template
+https://github.com/SCDeveloper/DarkSilk-Release-Candidate/commit/a108b8b0179f1790dd8dba824efc3a15c1ab6066
