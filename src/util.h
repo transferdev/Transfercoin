@@ -128,8 +128,7 @@ extern bool fSucessfullyLoaded;
 extern std::vector<int64_t> darkSendDenominations;
 
 
-extern std::map<std::string, std::string> mapArgs;
-extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
+
 extern bool fDebug;
 extern bool fDebugSmsg;
 extern bool fNoSmsg;
@@ -143,12 +142,9 @@ extern bool fNoListen;
 extern bool fLogTimestamps;
 extern volatile bool fReopenDebugLog;
 
-void RandAddSeed();
-void RandAddSeedPerfmon();
 
-
-
-/* Return true if log accepts specified category */
+bool IsLogOpen();
+"/* Return true if log accepts specified category */
 bool LogAcceptCategory(const char* category);
 /* Send a string to the log output */
 int LogPrintStr(const std::string &str);
@@ -162,16 +158,23 @@ int LogPrintStr(const std::string &str);
     /*   Print to debug.log if -debug=category switch is given OR category is NULL. */ \
     template<TINYFORMAT_ARGTYPES(n)>                                          \
     static inline int LogPrint(const char* category, const char* format, TINYFORMAT_VARARGS(n))  \
-    {                                                                         \
-        if(!LogAcceptCategory(category)) return 0;                            \
-        return LogPrintStr(tfm::format(format, TINYFORMAT_PASSARGS(n))); \
-    }                                                                         \
-    /*   Log error and return false */                                        \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline bool error(const char* format, TINYFORMAT_VARARGS(n))                     \
+ {                                                                                \
+        if(!LogAcceptCategory(category)) return 0;                                   \
+        return LogPrintStr(tfm::format(format, TINYFORMAT_PASSARGS(n)));             \
+    }                                                                                \
+    /*   Log error and return false */                                               \
+    template<TINYFORMAT_ARGTYPES(n)>                                                 \
+    static inline bool error(const char* format, TINYFORMAT_VARARGS(n))              \
+    {                                                                                \
+        LogPrintStr("ERROR: " + tfm::format(format, TINYFORMAT_PASSARGS(n)) + "\n"); \
+        return false;                                                                \
+    }                                                                                \
+    /*   Log error and return n */                                                   \
+    template<TINYFORMAT_ARGTYPES(n)>                                                 \
+    static inline int errorN(int rv, const char* format, TINYFORMAT_VARARGS(n))      \
     {                                                                         \
         LogPrintStr("ERROR: " + tfm::format(format, TINYFORMAT_PASSARGS(n)) + "\n"); \
-        return false;                                                         \
+        return rv;                                                         \
     }
 
 TINYFORMAT_FOREACH_ARGNUM(MAKE_ERROR_AND_LOG_FUNC)
@@ -189,7 +192,17 @@ static inline bool error(const char* format)
     LogPrintStr(std::string("ERROR: ") + format + "\n");
     return false;
 }
+static inline int errorN(int n, const char* format)
+{
+    LogPrintStr(std::string("ERROR: ") + format + "\n");
+    return n;
+}
 
+void RandAddSeed();
+void RandAddSeedPerfmon();
+
+extern std::map<std::string, std::string> mapArgs;
+extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
 
 void PrintException(std::exception* pex, const char* pszThread);
 void PrintExceptionContinue(std::exception* pex, const char* pszThread);
