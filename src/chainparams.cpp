@@ -25,7 +25,7 @@ struct SeedSpec6 {
 //
 
 // Convert the pnSeeds array into usable address objects.
-static void convertSeeds(std::vector<CAddress> &vSeedsOut, const unsigned int *data, unsigned int count, int port)
+static void convertSeeds(std::vector<CAddress> &vSeedsOut, const unsigned int *data, unsigned int count)
 {
      // It'll only connect to one or two seed nodes because once it connects,
      // it'll get a pile of addresses with newer timestamps.
@@ -45,7 +45,7 @@ static void convertSeeds(std::vector<CAddress> &vSeedsOut, const unsigned int *d
         
         memcpy(&ip, &t, sizeof(ip));
         
-        CAddress addr(CService(ip, port));
+        CAddress addr(CService(ip, data[k].port));
         addr.nTime = GetTime()-GetRand(nOneWeek)-nOneWeek;
         vSeedsOut.push_back(addr);
     }
