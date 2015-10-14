@@ -1,4 +1,4 @@
-sudo: false
+sudo: true
 os:
   - linux
 addons:
@@ -31,7 +31,7 @@ before_install:
   - mkdir build-aux/m4
   - ./autogen.sh
   - ./configure
-  - make install
+  - sudo make install
   - cd ../..
 script: 
   - cd src
