@@ -28,7 +28,7 @@ static const int64_t DARKSEND_POOL_MAX = (100000.99*COIN);
 static const int64_t STATIC_POS_REWARD = 1 * COIN; //Constant reward of 1 TX per COIN i.e. 8% 
 static const int64_t TARGET_SPACING_FORK = 60;
 static const int64_t TARGET_SPACING = 69;
-static const signed int HARD_FORK_BLOCK = 77450;
+static const signed int HARD_FORK_BLOCK = 90000;
 /*
     At 15 signatures, 1/2 of the masternode network can be owned by
     one party without comprimising the security of InstantX
