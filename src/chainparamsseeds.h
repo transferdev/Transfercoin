@@ -37,7 +37,7 @@ static const unsigned int pnSeed[] =
 };
 
 
-static const unsigned int SeedSpec6 pnTestnetSeed[] = {
+static const unsigned int pnTestnetSeed[] = {
 
 };
 #endif
