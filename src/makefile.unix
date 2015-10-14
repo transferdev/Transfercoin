@@ -11,7 +11,7 @@ ARCH:=$(system lscpu | head -n 1 | awk '{print $2}')
 DEFS=-DBOOST_SPIRIT_THREADSAFE
 DEFS += -DUSE_SECP256K1
 DEFS += $(addprefix -I,$(CURDIR) $(CURDIR)/obj $(BOOST_INCLUDE_PATH) $(BDB_INCLUDE_PATH) $(OPENSSL_INCLUDE_PATH) $(CURDIR)/secp256k1 $(CURDIR)/secp256k1/src $(CURDIR)/secp256k1/include)
-LIBS = $(addprefix -L,$(BOOST_LIB_PATH) $(BDB_LIB_PATH) $(OPENSSL_LIB_PATH))
+LIBS = $(addprefix -L,$(BOOST_LIB_PATH) $(BDB_LIB_PATH) $(OPENSSL_LIB_PATH) $(CURDIR)/secp256k1/.libs)
 
 LMODE = dynamic
 LMODE2 = dynamic
@@ -21,6 +21,10 @@ ifdef STATIC
 		LMODE2 = static
 	endif
 endif
+
+LIBS += \
+ -Wl,-B$(LMODE) \
+   -l secp256k1
 
 # for boost 1.37, add -mt to the boost libraries
 LIBS += \
