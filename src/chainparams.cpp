@@ -25,7 +25,7 @@ struct SeedSpec6 {
 //
 
 // Convert the pnSeeds array into usable address objects.
-static void convertSeeds(std::vector<CAddress> &vSeedsOut, const unsigned int *data, unsigned int count)
+static void convertSeeds(std::vector<CAddress> &vSeedsOut, const unsigned int *data, unsigned int count, int port)
 {
      // It'll only connect to one or two seed nodes because once it connects,
      // it'll get a pile of addresses with newer timestamps.
@@ -45,7 +45,7 @@ static void convertSeeds(std::vector<CAddress> &vSeedsOut, const unsigned int *d
         
         memcpy(&ip, &t, sizeof(ip));
         
-        CAddress addr(CService(ip, data[k].port));
+        CAddress addr(CService(ip, port));
         addr.nTime = GetTime()-GetRand(nOneWeek)-nOneWeek;
         vSeedsOut.push_back(addr);
     }
@@ -101,7 +101,7 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x88)(0xB2)(0x1E);
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x88)(0xAD)(0xE4);
 
-        convertSeeds(vFixedSeeds, pnSeed, ARRAYLEN(pnSeed));
+        convertSeeds(vFixedSeeds, pnSeed, ARRAYLEN(pnSeed), nDefaultPort);
 
         nLastPOWBlock = 15000;
         nPOSStartBlock = 1000;
@@ -155,7 +155,7 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x35)(0x87)(0xCF);
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x35)(0x83)(0x94);
 
-        convertSeeds(vFixedSeeds, pnTestnetSeed, ARRAYLEN(pnTestnetSeed));
+        convertSeeds(vFixedSeeds, pnTestnetSeed, ARRAYLEN(pnTestnetSeed), nDefaultPort);
 
         nLastPOWBlock = 0x7fffffff;
     }
