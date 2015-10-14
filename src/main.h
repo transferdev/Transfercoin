@@ -91,7 +91,6 @@ inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MO
 /** Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp. */
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
 
-static const unsigned int TARGET_SPACING = 60;
 static const int64_t DRIFT = 600;
 inline int64_t FutureDrift(int64_t nTime) { return nTime + DRIFT; }
 
