@@ -3733,7 +3733,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             CMasternode* pmn = mnodeman.Find(vin);
             if(pmn != NULL)
             {
-                if(!pmn.allowFreeTx){
+                if(!pmn->allowFreeTx){
                     //multiple peers can send us a valid masternode transaction
                     if(fDebug) LogPrintf("dstx: Masternode sending too many transactions %s\n", tx.GetHash().ToString().c_str());
                     return true;
@@ -3742,7 +3742,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 std::string strMessage = tx.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
 
                 std::string errorMessage = "";
-                if(!darkSendSigner.VerifyMessage(pmn.pubkey2, vchSig, strMessage, errorMessage)){
+                if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)){
                     LogPrintf("dstx: Got bad masternode address signature %s \n", vin.ToString().c_str());
                     //pfrom->Misbehaving(20);
                     return false;
@@ -3751,7 +3751,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString().c_str());
 
                 allowFree = true;
-                pmn.allowFreeTx = false;
+                pmn->allowFreeTx = false;
 
                 if(!mapDarksendBroadcastTxes.count(tx.GetHash())){
                     CDarksendBroadcastTx dstx;
