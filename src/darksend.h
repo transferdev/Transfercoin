@@ -160,10 +160,10 @@ public:
 
     bool GetAddress(CService &addr)
     {
-        CMasternode* mn = mnodeman.Find(vin);
-        if(mn)
+        CMasternode* pmn = mnodeman.Find(vin);
+        if(pmn != NULL)
         {
-            addr = mn->addr;
+            addr = pmn->addr;
             return true;
         }
         return false;
@@ -171,10 +171,10 @@ public:
 
     bool GetProtocolVersion(int &protocolVersion)
     {
-        CMasternode* mn = mnodeman.Find(vin);
-        if(mn)
+        CMasternode* pmn = mnodeman.Find(vin);
+        if(pmn != NULL)
         {
-            protocolVersion = mn->protocolVersion;
+            protocolVersion = pmn->protocolVersion;
             return true;
         }
         return false;
@@ -289,7 +289,7 @@ public:
 
         SetNull();
     }
-    
+
     void ProcessMasternodeConnections();
 
     void InitCollateralAddress(){

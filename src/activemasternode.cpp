@@ -194,10 +194,10 @@ bool CActiveMasternode::Dseep(CTxIn vin, CService service, CKey keyMasternode, C
     }
 
     // Update Last Seen timestamp in masternode list
-    CMasternode* mn = mnodeman.Find(vin);
-    if(mn)
+    CMasternode* pmn = mnodeman.Find(vin);
+    if(pmn != NULL)
     {
-        mn->UpdateLastSeen();
+        pmn->UpdateLastSeen();
     } else {
     	// Seems like we are trying to send a ping while the masternode is not registered in the network
     	retErrorMessage = "Darksend Masternode List doesn't include our masternode, Shutting down masternode pinging service! " + vin.ToString();
