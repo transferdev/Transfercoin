@@ -8,7 +8,7 @@
 #include "walletmodel.h"
 #include "activemasternode.h"
 #include "masternodeconfig.h"
-#include "masternode.h"
+#include "masternodeman.h"
 #include "walletdb.h"
 #include "wallet.h"
 #include "init.h"
