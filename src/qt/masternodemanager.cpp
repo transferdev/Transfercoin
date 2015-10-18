@@ -152,7 +152,7 @@ void MasternodeManager::updateNodeList()
     ui->countLabel->setText("Updating...");
     ui->tableWidget->clearContents();
     ui->tableWidget->setRowCount(0);
-    BOOST_FOREACH(CMasternode mn, vecMasternodes) 
+    BOOST_FOREACH(CMasternode mn, mn->vin) 
     {
         int mnRow = 0;
         ui->tableWidget->insertRow(0);
