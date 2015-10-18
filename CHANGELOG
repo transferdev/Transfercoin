@@ -31,6 +31,9 @@ Solve performance problems by caching and fix probable security issue
 https://github.com/SCDeveloper/All-Work-Done-Prior-to-DarkSilk-RC-Repo/commit/9d0e11afad97e4dcd979c2d6ac0e795f0ce9bc4b
 https://github.com/SCDeveloper/All-Work-Done-Prior-to-DarkSilk-RC-Repo/commit/c49309131fe47dabf683d9dd81bbe29ae6ba34f6
 
+Fix payee selectoin on CMasternodePayments::ProcessBlock
+https://github.com/dashpay/dash/commit/428d5976c7630cc4e1f0a0a66d22ae061ce87dfd
+
 
 
 Removal of old code:
