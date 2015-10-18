@@ -612,14 +612,13 @@ Value masternodelist(const Array& params, bool fHelp)
             if(strFilter !="" && address2.ToString().find(strFilter) == string::npos) continue;
             obj.push_back(Pair(strAddr,       address2.ToString().c_str()));
         } else if (strMode == "protocol") {
-            if(strFilter !="" && stoi(strFilter) != mn.protocolVersion) continue;
             obj.push_back(Pair(strAddr,       (int64_t)mn.protocolVersion));
         } else if (strMode == "lastseen") {
             obj.push_back(Pair(strAddr,       (int64_t)mn.lastTimeSeen));
         } else if (strMode == "activeseconds") {
             obj.push_back(Pair(strAddr,       (int64_t)(mn.lastTimeSeen - mn.now)));
         } else if (strMode == "rank") {
-            obj.push_back(Pair(strAddr,       (int)(mnodeman.GetMasternodeRank(mn.vin, chainActive.Tip()->nHeight))));
+            obj.push_back(Pair(strAddr,       (int)(mnodeman.GetMasternodeRank(mn.vin, pindexBest->nHeight))));
         } else if (strMode == "full") {
             CScript pubkey;
             pubkey.SetDestination(mn.pubkey.GetID());
