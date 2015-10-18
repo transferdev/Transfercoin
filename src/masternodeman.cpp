@@ -340,14 +340,14 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         bool isLocal = addr.IsRFC1918() || addr.IsLocal();
-        if(RegTest()) isLocal = false;
+        //if(RegTest()) isLocal = false;
 
         std::string vchPubKey(pubkey.begin(), pubkey.end());
         std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
 
         strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
-        if(protocolVersion < nMasternodeMinProtocol) {
+        if(protocolVersion < MIN_MN_PROTO_VERSION) {
             LogPrintf("dsee - ignoring outdated masternode %s protocol version %d\n", vin.ToString().c_str(), protocolVersion);
             return;
         }
