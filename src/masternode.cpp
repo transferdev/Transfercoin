@@ -8,7 +8,7 @@
 #include <boost/lexical_cast.hpp>
 
 
-int CMasterNode::minProtoVersion = MIN_MN_PROTO_VERSION;
+int CMasternode::minProtoVersion = MIN_MN_PROTO_VERSION;
 
 CCriticalSection cs_masternodes;
 
