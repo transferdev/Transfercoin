@@ -597,7 +597,6 @@ Value masternodelist(const Array& params, bool fHelp)
 
         std::string strAddr = mn.addr.ToString().c_str();
         if(strMode == "active"){
-            if(strFilter !="" && stoi(strFilter) != mn.IsEnabled()) continue;
             obj.push_back(Pair(strAddr,       (int)mn.IsEnabled()));
         } else if (strMode == "vin") {
             if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos) continue;
