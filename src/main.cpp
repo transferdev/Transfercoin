@@ -19,7 +19,7 @@
 #include "ui_interface.h"
 #include "instantx.h"
 #include "darksend.h"
-#include "masternode.h"
+#include "masternodeman.h"
 #include "spork.h"
 #include "smessage.h"
 
@@ -3951,7 +3951,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             SecureMsgReceiveData(pfrom, strCommand, vRecv);
 
         ProcessMessageDarksend(pfrom, strCommand, vRecv);
-        ProcessMessageMasternode(pfrom, strCommand, vRecv);
+        mnodeman.ProcessMessage(pfrom, strCommand, vRecv);
         ProcessMessageInstantX(pfrom, strCommand, vRecv);
         ProcessSpork(pfrom, strCommand, vRecv);
 
