@@ -144,6 +144,7 @@ OBJS= \
     obj/eccryptoverify.o \
     obj/instantx.o \
     obj/masternodeconfig.o \
+    obj/masternodeman.o \
     obj/masternode.o \
     obj/rpcdarksend.o \
     obj/spork.o \
