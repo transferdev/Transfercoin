@@ -2494,6 +2494,14 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                 BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
                 {
                     int64_t nCredit = pcoin.first->vout[pcoin.second].nValue;
+                    //The coin age after the next block (depth+1) is used instead of the current,
+                    //reflecting an assumption the user would accept a bit more delay for
+                    //a chance at a free transaction.
+                    //But mempool inputs might still be in the mempool, so their age stays 0
+                    int age = pcoin.first->GetDepthInMainChain();
+                    if (age != 0)
+                        age += 1;
+                    dPriority += (double)nCredit * age;
                     dPriority += (double)nCredit * pcoin.first->GetDepthInMainChain();
                 }
 

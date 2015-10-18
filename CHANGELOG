@@ -34,6 +34,12 @@ https://github.com/SCDeveloper/All-Work-Done-Prior-to-DarkSilk-RC-Repo/commit/c4
 Fix payee selectoin on CMasternodePayments::ProcessBlock
 https://github.com/dashpay/dash/commit/428d5976c7630cc4e1f0a0a66d22ae061ce87dfd
 
+fix log output / more notCapableReason-s
+https://github.com/dashpay/dash/commit/b861e7ac4ca871626e75953ed833f9195b762932
+
+Fix priority calculation in CreateTransaction
+https://github.com/dashpay/dash/commit/9cd1dd9f6b5aace6c0e780bf4365fb2900757c1a
+
 
 
 Removal of old code:
