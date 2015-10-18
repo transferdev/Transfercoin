@@ -6,6 +6,7 @@ cache:
   directories:
   - $HOME/Transfercoin/src/leveldb
   - $HOME/Transfercoin/src/secp256k1
+  - $HOME/secp256k1
 addons:
   apt:
     sources:
