@@ -43,6 +43,20 @@ https://github.com/dashpay/dash/commit/9cd1dd9f6b5aace6c0e780bf4365fb2900757c1a
 HasCollateralInputs should check only for at least 1 collateral (not 2)
 https://github.com/dashpay/dash/commit/74551e9f31f10e351de1ec07f60513662ccdb06a
 
+CMasternodeman
+https://github.com/dashpay/dash/commits/v0.11.2.x?page=12
+
+move list logic back to rpcdarkcsend
+https://github.com/dashpay/dash/commit/dd610900516b615c4f1ed9d3cd279485683c4d52
+
+add masternodelist to command list
+https://github.com/dashpay/dash/commit/0cd0e9de6d65c66b5f0df566acc7f9cc1f5edb94
+
+track lastTimeChanged for mnodeman
+https://github.com/dashpay/dash/commit/003a1b7d72cbf753b7394c473d88a6be0df5a643
+
+show active/total MNs on info tab / update it in separate timer
+https://github.com/dashpay/dash/commit/d2e3d67a1d632912e83684e2a8b8e5780eae4216
 
 
 
