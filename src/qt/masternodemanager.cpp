@@ -9,6 +9,7 @@
 #include "activemasternode.h"
 #include "masternodeconfig.h"
 #include "masternodeman.h"
+#include "masternode.h"
 #include "walletdb.h"
 #include "wallet.h"
 #include "init.h"
