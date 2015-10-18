@@ -40,6 +40,10 @@ https://github.com/dashpay/dash/commit/b861e7ac4ca871626e75953ed833f9195b762932
 Fix priority calculation in CreateTransaction
 https://github.com/dashpay/dash/commit/9cd1dd9f6b5aace6c0e780bf4365fb2900757c1a
 
+HasCollateralInputs should check only for at least 1 collateral (not 2)
+https://github.com/dashpay/dash/commit/74551e9f31f10e351de1ec07f60513662ccdb06a
+
+
 
 
 Removal of old code:
