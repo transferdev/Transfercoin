@@ -6,6 +6,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include "alert.h"
 #include "chainparams.h"
@@ -3711,12 +3712,58 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     }
 
 
-    else if (strCommand == "tx")
+    else if (strCommand == "tx"|| strCommand == "dstx")
     {
         vector<uint256> vWorkQueue;
         vector<uint256> vEraseQueue;
         CTransaction tx;
-        vRecv >> tx;
+
+        //masternode signed transaction
+        bool allowFree = false;
+        CTxIn vin;
+        vector<unsigned char> vchSig;
+        int64_t sigTime;
+
+        if(strCommand == "tx") {
+            vRecv >> tx;
+        } else if (strCommand == "dstx") {
+            //these allow masternodes to publish a limited amount of free transactions
+            vRecv >> tx >> vin >> vchSig >> sigTime;
+
+            BOOST_FOREACH(CMasterNode& mn, vecMasternodes) {
+                if(mn.vin == vin) {
+                    if(!mn.allowFreeTx){
+                        //multiple peers can send us a valid masternode transaction
+                        if(fDebug) LogPrintf("dstx: Masternode sending too many transactions %s\n", tx.GetHash().ToString().c_str());
+                        return true;
+                    }
+
+                    std::string strMessage = tx.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
+
+                    std::string errorMessage = "";
+                    if(!darkSendSigner.VerifyMessage(mn.pubkey2, vchSig, strMessage, errorMessage)){
+                        LogPrintf("dstx: Got bad masternode address signature %s \n", vin.ToString().c_str());
+                        //pfrom->Misbehaving(20);
+                        return false;
+                    }
+
+                    LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString().c_str());
+
+                    allowFree = true;
+                    mn.allowFreeTx = false;
+
+                    if(!mapDarksendBroadcastTxes.count(tx.GetHash())){
+                        CDarksendBroadcastTx dstx;
+                        dstx.tx = tx;
+                        dstx.vin = vin;
+                        dstx.vchSig = vchSig;
+                        dstx.sigTime = sigTime;
+
+                        mapDarksendBroadcastTxes.insert(make_pair(tx.GetHash(), dstx));
+                    }
+                }
+            }
+        }
 
         CInv inv(MSG_TX, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
@@ -3727,7 +3774,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         mapAlreadyAskedFor.erase(inv);
 
-        if (AcceptToMemoryPool(mempool, tx, true, &fMissingInputs))
+        if (AcceptToMemoryPool(mempool, tx, true, &fMissingInputs, allowFree))
         {
             RelayTransaction(tx, inv.hash);
             vWorkQueue.push_back(inv.hash);
