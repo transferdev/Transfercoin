@@ -152,22 +152,22 @@ void MasternodeManager::updateNodeList()
     ui->countLabel->setText("Updating...");
     ui->tableWidget->clearContents();
     ui->tableWidget->setRowCount(0);
-    CMasternode* mn = mnodeman.Find(activeMasternode.vin);
-    if(mn)
+    CMasternode* MN = mnodeman.Find(activeMasternode.vin);
+    if(MN)
     {
         int mnRow = 0;
         ui->tableWidget->insertRow(0);
 
         // populate list
         // Address, Rank, Active, Active Seconds, Last Seen, Pub Key
-        QTableWidgetItem *activeItem = new QTableWidgetItem(QString::number(activeMasternode.IsEnabled()));
-        QTableWidgetItem *addressItem = new QTableWidgetItem(QString::fromStdString(activeMasternode.addr.ToString()));
-        QTableWidgetItem *rankItem = new QTableWidgetItem(QString::number(mnodeman.GetMasternodeRank(activeMasternode.vin, pindexBest->nHeight)));
-        QTableWidgetItem *activeSecondsItem = new QTableWidgetItem(seconds_to_DHMS((qint64)(activeMasternode.lastTimeSeen - mn.now)));
-        QTableWidgetItem *lastSeenItem = new QTableWidgetItem(QString::fromStdString(DateTimeStrFormat(activeMasternode.lastTimeSeen)));
+        QTableWidgetItem *activeItem = new QTableWidgetItem(QString::number(mn.IsEnabled()));
+        QTableWidgetItem *addressItem = new QTableWidgetItem(QString::fromStdString(mn.addr.ToString()));
+        QTableWidgetItem *rankItem = new QTableWidgetItem(QString::number(mnodeman.GetMasternodeRank(mn.vin, pindexBest->nHeight)));
+        QTableWidgetItem *activeSecondsItem = new QTableWidgetItem(seconds_to_DHMS((qint64)(mn.lastTimeSeen - mn.now)));
+        QTableWidgetItem *lastSeenItem = new QTableWidgetItem(QString::fromStdString(DateTimeStrFormat(mn.lastTimeSeen)));
 	
         CScript pubkey;
-        pubkey =GetScriptForDestination(activeMasternode.pubkey.GetID());
+        pubkey =GetScriptForDestination(mn.pubkey.GetID());
         CTxDestination address1;
         ExtractDestination(pubkey, address1);
         CBitcoinAddress address2(address1);
