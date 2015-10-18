@@ -1,7 +1,7 @@
 #include "masternode.h"
 #include "masternodeman.h"
 #include "darksend.h"
-//#include "primitives/transaction.h"
+#include "core.h"
 #include "main.h"
 #include "util.h"
 #include "addrman.h"
