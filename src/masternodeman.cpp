@@ -129,7 +129,6 @@ void DumpMasternodes()
 
 CMasternodeMan::CMasternodeMan() {}
 
-
 bool CMasternodeMan::Add(CMasternode &mn)
 {
     LOCK(cs);
