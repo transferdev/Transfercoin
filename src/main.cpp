@@ -3751,7 +3751,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
                 LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString().c_str());
 
-                allowFree = true;
+                //allowFree = true;
                 pmn->allowFreeTx = false;
 
                 if(!mapDarksendBroadcastTxes.count(tx.GetHash())){
