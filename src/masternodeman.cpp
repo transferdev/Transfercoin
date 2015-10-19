@@ -142,32 +142,6 @@ CMasternode *CMasternodeMan::Find(const CTxIn &vin)
 }
 
 
-CMasternode *CMasternodeMan::FindNotInVec(const std::vector<CTxIn> &vVins)
-{
-    LOCK(cs);
-
-    BOOST_FOREACH(CMasternode &mn, vMasternodes)
-    {
-        mn.Check();
-        UpdateLastTimeChanged();
-        if(!mn.IsEnabled()) continue;
-
-        bool found = false;
-        BOOST_FOREACH(const CTxIn& vin, vVins)
-            if(mn.vin == vin)
-            {
-                found = true;
-                break;
-            }
-
-        if(found) continue;
-
-        return &mn;
-    }
-
-    return NULL;
-}
-
 bool CMasternodeMan::Add(CMasternode &mn)
 {
     LOCK(cs);
@@ -249,6 +223,32 @@ int CMasternodeMan::CountEnabled()
     }
 
     return i;
+}
+
+CMasternode *CMasternodeMan::FindNotInVec(const std::vector<CTxIn> &vVins)
+{
+    LOCK(cs);
+
+    BOOST_FOREACH(CMasternode &mn, vMasternodes)
+    {
+        mn.Check();
+        UpdateLastTimeChanged();
+        if(!mn.IsEnabled()) continue;
+
+        bool found = false;
+        BOOST_FOREACH(const CTxIn& vin, vVins)
+            if(mn.vin == vin)
+            {
+                found = true;
+                break;
+            }
+
+        if(found) continue;
+
+        return &mn;
+    }
+
+    return NULL;
 }
 
 CMasternode *CMasternodeMan::FindRandom()
