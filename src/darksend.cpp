@@ -53,7 +53,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
 {
     if(fLiteMode) return; //disable all darksend/masternode related functionality
     if(IsInitialBlockDownload()) return;
-
+    
     if (strCommand == "dsf") { //DarkSend Final tx
         if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
             return;
@@ -1568,11 +1568,12 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
                 // connect to masternode and submit the queue request
                 if(ConnectNode((CAddress)addr, NULL, true)){
+                    submittedToMasternode = addr;
 
                     LOCK(cs_vNodes);
                     BOOST_FOREACH(CNode* pnode, vNodes)
                     {
-                    	if((CNetAddr)pnode->addr != (CNetAddr)addr) continue;
+                    	if((CNetAddr)pnode->addr != (CNetAddr)submittedToMasternode) continue;
 
                         std::string strReason;
                         if(txCollateral == CTransaction()){
@@ -1582,7 +1583,6 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                             }
                         }
 
-                        submittedToMasternode = addr;
                         vecMasternodesUsed.push_back(dsq.vin);
                         sessionDenom = dsq.nDenom;
 
@@ -1606,38 +1606,34 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         // otherwise, try one randomly
         while(i < 10)
         {
-            CMasternode* pmn = mnodeman.FindRandom();
-            if(pmn == NULL)
-            {
-                LogPrintf("DoAutomaticDenominating --- masternode list is empty!\n");
-                return false;
-            }
+            CMasternode* mn = mnodeman.FindRandom();
             //don't reuse masternodes
             BOOST_FOREACH(CTxIn usedVin, vecMasternodesUsed) {
-                if(pmn->vin == usedVin){
+                if(mn->vin == usedVin){
                     i++;
                     continue;
                 }
             }
-            if(pmn->protocolVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+            if(mn->protocolVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
                 i++;
                 continue;
             }
 
-            if(pmn->nLastDsq != 0 &&
-                pmn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(darkSendPool.MIN_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
+            if(mn->nLastDsq != 0 &&
+                mn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(darkSendPool.MIN_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
                 i++;
                 continue;
             }
 
             lastTimeChanged = GetTimeMillis();
-            LogPrintf("DoAutomaticDenominating -- attempt %d connection to masternode %s\n", i, pmn->addr.ToString().c_str());
-            if(ConnectNode((CAddress)pmn->addr, NULL, true)){
+            LogPrintf("DoAutomaticDenominating -- attempt %d connection to masternode %s\n", i, mn->addr.ToString().c_str());
+            if(ConnectNode((CAddress)mn->addr, NULL, true)){
+                submittedToMasternode = mn->addr;
 
                 LOCK(cs_vNodes);
                 BOOST_FOREACH(CNode* pnode, vNodes)
                 {
-                    if((CNetAddr)pnode->addr != (CNetAddr)pmn->addr) continue;
+                    if((CNetAddr)pnode->addr != (CNetAddr)mn->addr) continue;
 
                     std::string strReason;
                     if(txCollateral == CTransaction()){
@@ -1647,8 +1643,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                         }
                     }
 
-                    submittedToMasternode = pmn->addr;
-                    vecMasternodesUsed.push_back(pmn->vin);
+                    vecMasternodesUsed.push_back(mn->vin);
 
                     std::vector<int64_t> vecAmounts;
                     pwalletMain->ConvertList(vCoins, vecAmounts);
