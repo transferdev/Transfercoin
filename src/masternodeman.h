@@ -94,12 +94,12 @@ public:
     // Clear masternode vector
     void Clear();
 
-    // Get the current winner for this block
-    CMasternode* GetCurrentMasterNode(int mod=1, int64_t nBlockHeight=0, int minProtocol=0);
+    int CountEnabled();
 
     int CountMasternodesAboveProtocol(int protocolVersion);
 
-    int CountEnabled();
+    // Get the current winner for this block
+    CMasternode* GetCurrentMasterNode(int mod=1, int64_t nBlockHeight=0, int minProtocol=0);
 
     std::vector<CMasternode> GetFullMasternodeVector() { Check(); return vMasternodes; }
 
