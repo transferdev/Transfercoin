@@ -97,14 +97,14 @@ public:
     // Get the current winner for this block
     CMasternode* GetCurrentMasterNode(int mod=1, int64_t nBlockHeight=0, int minProtocol=0);
 
-    int GetMasternodeRank(const CTxIn &vin, int64_t nBlockHeight, int minProtocol=0);
-
     int CountMasternodesAboveProtocol(int protocolVersion);
 
     int CountEnabled();
 
     std::vector<CMasternode> GetFullMasternodeVector() { Check(); return vMasternodes; }
 
+    int GetMasternodeRank(const CTxIn &vin, int64_t nBlockHeight, int minProtocol=0);
+    
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
     // Return the number of (unique) masternodes
