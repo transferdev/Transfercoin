@@ -178,10 +178,10 @@ void CMasternodeMan::CheckAndRemove()
     }
 
     // check who we asked for the masternode list
-    map<CNetAddr, int64_t>::iterator it1 = mWeAskedForMasternodeList.begin();
+    it1 = mWeAskedForMasternodeList.begin();
     while(it1 != mWeAskedForMasternodeList.end()){
         if((*it1).second < GetTime())
-            map<CNetAddr, int64_t>::iterator it1 = mWeAskedForMasternodeList.erase(it1);
+            it1 = mWeAskedForMasternodeList.erase(it1);
         else ++it1;
     }
 
