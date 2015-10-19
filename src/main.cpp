@@ -887,7 +887,7 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
     }
 
 
-    LogPrintf("mempool", "AcceptableInputs : accepted %s (poolsz %u)\n",
+    LogPrint("mempool", "AcceptableInputs : accepted %s (poolsz %u)\n",
            hash.ToString(),
            pool.mapTx.size());
     return true;

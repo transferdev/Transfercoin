@@ -154,7 +154,7 @@ void MasternodeManager::updateNodeList()
     ui->tableWidget->clearContents();
     ui->tableWidget->setRowCount(0);
     CMasternode* mn = mnodeman.Find(activeMasternode.vin);
-    if(mn != NULL)
+    if(mn)
     {
         int mnRow = 0;
         ui->tableWidget->insertRow(0);
