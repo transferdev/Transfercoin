@@ -114,6 +114,8 @@ public:
 
     bool UpdateNeeded() { return lastTimeChanged < GetAdjustedTime() - MASTERNODE_REMOVAL_SECONDS; }
 
+    std::string ToString();
+
 };
 
 #endif

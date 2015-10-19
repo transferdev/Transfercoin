@@ -82,6 +82,9 @@ https://github.com/dashpay/dash/commit/1ded1b9ec2de5687b38ac9178cc4b58375201e03
 Fix versions:
 https://github.com/dashpay/dash/commit/0747da6b36a51f24efa7ca7fcb4f2ffa3332a118
 
+check and remove expired masternodes on client start
+https://github.com/dashpay/dash/commit/4af7c7411ac6837260ff5ff04ee4a4a944ac2082
+
 Removal of old code:
 IsProtocolV1/IsProtocolV2 hard fork switches removed
 FutureDriftV1/FutureDriftV2 reverted back to FutureDrift
