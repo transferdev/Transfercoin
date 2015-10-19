@@ -127,7 +127,7 @@ CMasternodeMan::CMasternodeMan() {}
 
 bool CMasternodeMan::Add(CMasternode &mn)
 {
-    LOCK(cs);
+    lock(cs_masternodes);
 
     if (!mn.IsEnabled())
         return false;
@@ -145,7 +145,7 @@ bool CMasternodeMan::Add(CMasternode &mn)
 
 void CMasternodeMan::Check()
 {
-    LOCK(cs);
+    lock(cs_masternodes);
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes)
         mn.Check();
@@ -153,7 +153,7 @@ void CMasternodeMan::Check()
 
 void CMasternodeMan::CheckAndRemove()
 {
-    LOCK(cs);
+    lock(cs_masternodes);
 
     Check();
 
@@ -201,7 +201,7 @@ void CMasternodeMan::CheckAndRemove()
 
 void CMasternodeMan::Clear()
 {
-    LOCK(cs);
+    lock(cs_masternodes);
     vMasternodes.clear();
     mAskedUsForMasternodeList.clear();
     mWeAskedForMasternodeList.clear();
@@ -235,7 +235,7 @@ int CMasternodeMan::CountMasternodesAboveProtocol(int protocolVersion)
 
 void CMasternodeMan::DsegUpdate(CNode* pnode)
 {
-    LOCK(cs);
+    lock(cs_masternodes);
 
     std::map<CNetAddr, int64_t>::iterator it = mWeAskedForMasternodeList.find(pnode->addr);
     if (it != mWeAskedForMasternodeList.end())
@@ -252,7 +252,7 @@ void CMasternodeMan::DsegUpdate(CNode* pnode)
 
 CMasternode *CMasternodeMan::Find(const CTxIn &vin)
 {
-    LOCK(cs);
+    lock(cs_masternodes);
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes)
     {
@@ -264,7 +264,7 @@ CMasternode *CMasternodeMan::Find(const CTxIn &vin)
 
 CMasternode *CMasternodeMan::FindNotInVec(const std::vector<CTxIn> &vVins)
 {
-    LOCK(cs);
+    lock(cs_masternodes);
 
     BOOST_FOREACH(CMasternode &mn, vMasternodes)
     {
@@ -289,7 +289,7 @@ CMasternode *CMasternodeMan::FindNotInVec(const std::vector<CTxIn> &vVins)
 
 CMasternode *CMasternodeMan::FindRandom()
 {
-    LOCK(cs);
+    lock(cs_masternodes);
 
     if(size() == 0) return NULL;
 
@@ -363,7 +363,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
     if(fLiteMode) return; //disable all darksend/masternode related functionality
     if(IsInitialBlockDownload()) return;
 
-    LOCK(cs);
+    lock(cs_masternodes);
 
     if (strCommand == "dsee") { //DarkSend Election Entry
 
