@@ -19,85 +19,73 @@ class CMasternodeConfig
 {
 
 public:
+	class CMasternodeEntry {
 
-    class CMasternodeEntry {
+	private:
+		std::string alias;
+		std::string ip;
+		std::string privKey;
+		std::string txHash;
+		std::string outputIndex;
 
-    private:
-        std::string alias;
-        std::string ip;
-        std::string privKey;
-        std::string txHash;
-        std::string outputIndex;
-        std::string donationAddress;
-        std::string donationPercent;
-    public:
+	public:
 
-        CMasternodeEntry(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex, std::string donationAddress, std::string donationPercent) {
-            this->alias = alias;
-            this->ip = ip;
-            this->privKey = privKey;
-            this->txHash = txHash;
-            this->outputIndex = outputIndex;
-            this->donationAddress = donationAddress;
-            this->donationPercent = donationPercent;
-        }
+		CMasternodeEntry(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex) {
+			this->alias = alias;
+			this->ip = ip;
+			this->privKey = privKey;
+			this->txHash = txHash;
+			this->outputIndex = outputIndex;
+		}
 
-        const std::string& getAlias() const {
-            return alias;
-        }
+		const std::string& getAlias() const {
+			return alias;
+		}
 
-        void setAlias(const std::string& alias) {
-            this->alias = alias;
-        }
+		void setAlias(const std::string& alias) {
+			this->alias = alias;
+		}
 
-        const std::string& getOutputIndex() const {
-            return outputIndex;
-        }
+		const std::string& getOutputIndex() const {
+			return outputIndex;
+		}
 
-        void setOutputIndex(const std::string& outputIndex) {
-            this->outputIndex = outputIndex;
-        }
+		void setOutputIndex(const std::string& outputIndex) {
+			this->outputIndex = outputIndex;
+		}
 
-        const std::string& getPrivKey() const {
-            return privKey;
-        }
+		const std::string& getPrivKey() const {
+			return privKey;
+		}
 
-        void setPrivKey(const std::string& privKey) {
-            this->privKey = privKey;
-        }
+		void setPrivKey(const std::string& privKey) {
+			this->privKey = privKey;
+		}
 
-        const std::string& getTxHash() const {
-            return txHash;
-        }
+		const std::string& getTxHash() const {
+			return txHash;
+		}
 
-        void setTxHash(const std::string& txHash) {
-            this->txHash = txHash;
-        }
+		void setTxHash(const std::string& txHash) {
+			this->txHash = txHash;
+		}
 
-        const std::string& getIp() const {
-            return ip;
-        }
+		const std::string& getIp() const {
+			return ip;
+		}
 
-        void setIp(const std::string& ip) {
-            this->ip = ip;
-        }
+		void setIp(const std::string& ip) {
+			this->ip = ip;
+		}
+	};
 
-        const std::string& getDonationAddress() const {
-            return donationAddress;
-        }
+	CMasternodeConfig() {
+		entries = std::vector<CMasternodeEntry>();
+	}
 
-        const std::string& getDonationPercentage() const {
-            return donationPercent;
-        }
-    };
-
-    CMasternodeConfig() {
-        entries = std::vector<CMasternodeEntry>();
-    }
-
-    void clear();
+	void clear();
     bool read(boost::filesystem::path path);
-	void add(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex, std::string donationAddress, std::string donationPercent);
+	void add(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex);
 
 	std::vector<CMasternodeEntry>& getEntries() {
 		return entries;
