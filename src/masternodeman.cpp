@@ -212,6 +212,23 @@ int CMasternodeMan::CountMasternodesAboveProtocol(int protocolVersion)
     return i;
 }
 
+void CMasternodeMan::DsegUpdate(CNode* pnode)
+{
+    LOCK(cs);
+
+    std::map<CNetAddr, int64_t>::iterator it = askedForMasternodeList.find(pnode->addr);
+    if (it != askedForMasternodeList.end())
+    {
+        if (GetTime() < (*it).second) {
+            LogPrintf("dseg - we already asked %s for the list; skipping...\n", pnode->addr.ToString());
+            return;
+        }
+    }
+    pnode->PushMessage("dseg", CTxIn());
+    int64_t askAgain = GetTime() + MASTERNODES_DSEG_SECONDS;
+    askedForMasternodeList[pnode->addr] = askAgain;
+}
+
 CMasternode *CMasternodeMan::Find(const CTxIn &vin)
 {
     LOCK(cs);
