@@ -594,7 +594,9 @@ std::string CMasternodeMan::ToString()
 {
     std::ostringstream info;
 
-    info << "masternodes: " << (int)vMasternodes.size();
+    info << "masternodes: " << (int)vMasternodes.size() <<
+            ", peers who asked us for masternode list: " << (int)askedForMasternodeList.size() <<
+            ", entries in masternode list we asked for: " << (int)askedForMasternodeListEntry.size();
 
     return info.str();
 }
