@@ -1610,7 +1610,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
             if(pmn == NULL)
             {
                 LogPrintf("DoAutomaticDenominating --- masternode list is empty!\n");
-               return false;
+                return false;
             }
             //don't reuse masternodes
             BOOST_FOREACH(CTxIn usedVin, vecMasternodesUsed) {
