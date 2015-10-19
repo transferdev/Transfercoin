@@ -136,7 +136,7 @@ Value masternode(const Array& params, bool fHelp)
                 "2. \"passphrase\"     (string, optional) The wallet passphrase\n"
                 "\nAvailable commands:\n"
                 "  count        - Print number of all known masternodes (optional: 'enabled', 'both')\n"
-               "  current      - Print info on current masternode winner\n"
+                "  current      - Print info on current masternode winner\n"
                 "  debug        - Print masternode status\n"
                 "  genkey       - Generate new masternodeprivkey\n"
                 "  enforce      - Enforce masternode payments\n"
@@ -650,22 +650,19 @@ Value masternodelist(const Array& params, bool fHelp)
 
             if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
                 mn.addr.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr,       address2.ToString().c_str()));
+                obj.push_back(Pair(strAddr,       address2.ToString().c_str()));
         } else if (strMode == "protocol") {
             if(strFilter !="" && strFilter != boost::lexical_cast<std::string>(mn.protocolVersion) &&
                 mn.addr.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr,       (int64_t)mn.protocolVersion));
+                obj.push_back(Pair(strAddr,       (int64_t)mn.protocolVersion));
         } else if (strMode == "lastseen") {
             if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
-
             obj.push_back(Pair(strAddr,       (int64_t)mn.lastTimeSeen));
         } else if (strMode == "activeseconds") {
             if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
-
             obj.push_back(Pair(strAddr,       (int64_t)(mn.lastTimeSeen - mn.now)));
         } else if (strMode == "rank") {
             if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
-            
             obj.push_back(Pair(strAddr,       (int)(mnodeman.GetMasternodeRank(mn.vin, pindexBest->nHeight))));
         } else if (strMode == "full") {
             CScript pubkey;
