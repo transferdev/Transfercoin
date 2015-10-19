@@ -512,7 +512,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
             "        { ... }                       (json object) vote candidate\n"
             "        ,...\n"
             "  ],\n"
-           "  \"masternode_payments\" : true|false,         (boolean) true, if masternode payments are enabled"
+            "  \"masternode_payments\" : true|false,         (boolean) true, if masternode payments are enabled"
             "  \"enforce_masternode_payments\" : true|false  (boolean) true, if masternode payments are enforced"
             "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.");
 
