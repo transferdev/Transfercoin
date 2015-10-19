@@ -1039,7 +1039,8 @@ bool CDarkSendPool::IsCollateralValid(const CTransaction& txCollateral){
 
     CValidationState state;
     //if(!AcceptableInputs(mempool, state, txCollateral)){
-    bool* pfMissingInputs;
+    bool* pfMissingInputs = new bool;
+    *pfMissingInputs = false;
     if(!AcceptableInputs(mempool, txCollateral, false, pfMissingInputs)){
         if(fDebug) LogPrintf ("CDarkSendPool::IsCollateralValid - didn't pass IsAcceptable\n");
         return false;
