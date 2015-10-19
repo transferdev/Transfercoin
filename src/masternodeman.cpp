@@ -186,6 +186,7 @@ void CMasternodeMan::CheckAndRemove()
         } else {
             it1++;
         }
+    }
 
     // check which masternodes we've asked for
     map<COutPoint, int64_t>::iterator it2 = mWeAskedForMasternodeListEntry.begin();
@@ -195,6 +196,7 @@ void CMasternodeMan::CheckAndRemove()
         } else {
             it2++;
         }
+    }
 }
 
 int CMasternodeMan::CountEnabled()
