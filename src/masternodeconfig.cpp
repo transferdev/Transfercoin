@@ -2,12 +2,11 @@
 #include "net.h"
 #include "masternodeconfig.h"
 #include "util.h"
-#include <base58.h>
 
 CMasternodeConfig masternodeConfig;
 
-void CMasternodeConfig::add(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex, std::string donationAddress, std::string donationPercent) {
-    CMasternodeEntry cme(alias, ip, privKey, txHash, outputIndex, donationAddress, donationPercent);
+void CMasternodeConfig::add(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex) {
+    CMasternodeEntry cme(alias, ip, privKey, txHash, outputIndex);
     entries.push_back(cme);
 }
 
@@ -23,34 +22,13 @@ bool CMasternodeConfig::read(boost::filesystem::path path) {
             continue;
         }
         std::istringstream iss(line);
-        std::string alias, ip, privKey, txHash, outputIndex, donation, donationAddress, donationPercent;
-        if (!(iss >> alias >> ip >> privKey >> txHash >> outputIndex >> donation)) {
-            donationAddress = "";
-            donationPercent = "";
-            iss.str(line);
-            iss.clear();
-            if (!(iss >> alias >> ip >> privKey >> txHash >> outputIndex)) {
-                strErr = "Could not parse masternode.conf line: " + line;
-                streamConfig.close();
-                return false;
-            }
-        } else {
-            size_t pos = donation.find_first_of(":");
-            if(pos == string::npos) { // no ":" found
-                donationPercent = "100";
-                donationAddress = donation;
-            } else {
-                donationPercent = donation.substr(pos + 1);
-                donationAddress = donation.substr(0, pos);
-            }
-            CBitcoinAddress address(donationAddress);
-            if (!address.IsValid()) {
-                strErr = "Invalid Darkcoin address in masternode.conf line: " + line;
-                streamConfig.close();
-                return false;
-            }
+        std::string alias, ip, privKey, txHash, outputIndex;
+        if (!(iss >> alias >> ip >> privKey >> txHash >> outputIndex)) {
+            LogPrintf("CMasternodeConfig::read - Could not parse masternode.conf. Line: %s\n", line.c_str());
+            streamConfig.close();
+            return false;
         }
-        add(alias, ip, privKey, txHash, outputIndex, donationAddress, donationPercent);
+        add(alias, ip, privKey, txHash, outputIndex);
     }
 
     streamConfig.close();

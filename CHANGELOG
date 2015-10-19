@@ -67,12 +67,6 @@ https://github.com/dashpay/dash/commit/13246598b8b84af2ade8b3d0368655fc64f5cca0
 Change the way changes are handled:
 https://github.com/dashpay/dash/commit/2e05bf212eaf5e0fe98161f673483dc62e5c0a95
 
-rpc fixes:
-https://github.com/dashpay/dash/commit/558585039696096b355a9e75beb70b36a3b7cec9
-
-v0.11.2.x mn-donations - read from masternode.conf
-https://github.com/dashpay/dash/commit/19bb9932be176ba17f6c09114340f62181c0b8d1
-
 
 Removal of old code:
 IsProtocolV1/IsProtocolV2 hard fork switches removed

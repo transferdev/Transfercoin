@@ -129,28 +129,7 @@ Value masternode(const Array& params, bool fHelp)
         (strCommand != "start" && strCommand != "start-alias" && strCommand != "start-many" && strCommand != "stop" && strCommand != "stop-alias" && strCommand != "stop-many" && strCommand != "list" && strCommand != "list-conf" && strCommand != "count"  && strCommand != "enforce"
             && strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" && strCommand != "outputs"))
         throw runtime_error(
-                "masternode \"command\"... ( \"passphrase\" )\n"
-                "Set of commands to execute masternode related actions\n"
-                "\nArguments:\n"
-                "1. \"command\"        (string or set of strings, required) The command to execute\n"
-                "2. \"passphrase\"     (string, optional) The wallet passphrase\n"
-                "\nAvailable commands:\n"
-                "  count        - Print number of all known masternodes (optional: 'enabled', 'both')\n"
-                "  current      - Print info on current masternode winner\n"
-                "  debug        - Print masternode status\n"
-                "  genkey       - Generate new masternodeprivkey\n"
-                "  enforce      - Enforce masternode payments\n"
-                "  outputs      - Print masternode compatible outputs\n"
-                "  start        - Start masternode configured in darkcoin.conf\n"
-                "  start-alias  - Start single masternode by assigned alias configured in masternode.conf\n"
-                "  start-many   - Start all masternodes configured in masternode.conf\n"
-                "  stop         - Stop masternode configured in darkcoin.conf\n"
-                "  stop-alias   - Stop single masternode by assigned alias configured in masternode.conf\n"
-                "  stop-many    - Stop all masternodes configured in masternode.conf\n"
-                "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
-                "  list-conf    - Print masternode.conf in JSON format\n"
-                "  winners      - Print list of masternode winners\n"
-                );
+            "masternode <start|start-alias|start-many|stop|stop-alias|stop-many|list|list-conf|count|debug|current|winners|genkey|enforce|outputs> [passphrase]\n");
 
     if (strCommand == "stop")
     {
@@ -306,11 +285,7 @@ Value masternode(const Array& params, bool fHelp)
                 "too many parameters\n");
         }
 
-        if (params.size() == 2)
-        {
-            if(params[1] == "enabled") return mnodeman.CountEnabled();
-            if(params[1] == "both") return boost::lexical_cast<std::string>(mnodeman.CountEnabled()) + " / " + boost::lexical_cast<std::string>(mnodeman.size());
-        }
+        if (params.size() == 2) return mnodeman.CountEnabled();
         return mnodeman.size();
     }
 
@@ -491,20 +466,7 @@ Value masternode(const Array& params, bool fHelp)
     {
         CMasternode* winner = mnodeman.GetCurrentMasterNode(1);
         if(winner) {
-            Object obj;
-            CScript pubkey;
-            pubkey.SetDestination(winner->pubkey.GetID());
-            CTxDestination address1;
-            ExtractDestination(pubkey, address1);
-            CBitcoinAddress address2(address1);
-
-            obj.push_back(Pair("IP:port",       winner->addr.ToString().c_str()));
-            obj.push_back(Pair("protocol",      (int64_t)winner->protocolVersion));
-            obj.push_back(Pair("vin",           winner->vin.prevout.hash.ToString().c_str()));
-            obj.push_back(Pair("pubkey",        address2.ToString().c_str()));
-            obj.push_back(Pair("lastseen",      (int64_t)winner->lastTimeSeen));
-            obj.push_back(Pair("activeseconds", (int64_t)(winner->lastTimeSeen - winner->now)));
-            return obj;
+            return winner->addr.ToString().c_str();
         }
 
         return "unknown";
@@ -570,16 +532,14 @@ Value masternode(const Array& params, bool fHelp)
         Object resultObj;
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
-            Object mnObj;
-            mnObj.push_back(Pair("alias", mne.getAlias()));
-            mnObj.push_back(Pair("address", mne.getIp()));
-            mnObj.push_back(Pair("privateKey", mne.getPrivKey()));
-            mnObj.push_back(Pair("txHash", mne.getTxHash()));
-            mnObj.push_back(Pair("outputIndex", mne.getOutputIndex()));
-            mnObj.push_back(Pair("donationAddress", mne.getDonationAddress()));
-            mnObj.push_back(Pair("donationPercent", mne.getDonationPercentage()));
-            resultObj.push_back(Pair("masternode", mnObj));
-        }
+    		Object mnObj;
+    		mnObj.push_back(Pair("alias", mne.getAlias()));
+    		mnObj.push_back(Pair("address", mne.getIp()));
+    		mnObj.push_back(Pair("privateKey", mne.getPrivKey()));
+    		mnObj.push_back(Pair("txHash", mne.getTxHash()));
+    		mnObj.push_back(Pair("outputIndex", mne.getOutputIndex()));
+    		resultObj.push_back(Pair("masternode", mnObj));
+    	}
 
     	return resultObj;
     }
@@ -618,7 +578,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 "\nArguments:\n"
                 "1. \"mode\"      (string, optional, defauls = active) The mode to run list in\n"
                 "2. \"filter\"    (string, optional) Filter results, can be applied in few modes only\n"
-                "\nAvailable modes:\n"
+                "Available modes:\n"
                 "  active         - Print '1' if active and '0' otherwise (can be filtered, exact match)\n"
                 "  activeseconds  - Print number of seconds masternode recognized by the network as enabled\n"
                 "  full           - Print info in format 'active | protocol | pubkey | vin | lastseen | activeseconds' (can be filtered, partial match)\n"
