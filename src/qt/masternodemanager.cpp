@@ -153,6 +153,7 @@ void MasternodeManager::updateNodeList()
     ui->countLabel->setText("Updating...");
     ui->tableWidget->clearContents();
     ui->tableWidget->setRowCount(0);
+    std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
     BOOST_FOREACH(CMasternode& mn, vMasternodes)
     {
         int mnRow = 0;
