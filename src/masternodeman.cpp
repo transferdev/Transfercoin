@@ -536,7 +536,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         LogPrintf("dseep - Asking source node for missing entry %s\n", vin.ToString().c_str());
         pfrom->PushMessage("dseg", vin);
-        int64_t askAgain = GetTime()+(60*60*24);
+        int64_t askAgain = GetTime() + MASTERNODE_MIN_DSEEP_SECONDS;
         askedForMasternodeListEntry[vin.prevout] = askAgain;
 
     } else if (strCommand == "dseg") { //Get masternode list or specific entry
@@ -559,7 +559,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                     }
                 }
 
-                int64_t askAgain = GetTime()+(60*60*3);
+                int64_t askAgain = GetTime() + MASTERNODES_DSEG_SECONDS;
                 askedForMasternodeList[pfrom->addr] = askAgain;
             }
         } //else, asking for a specific node which is ok
