@@ -648,9 +648,11 @@ Value masternodelist(const Array& params, bool fHelp)
 
             if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
                 mn.addr.ToString().find(strFilter) == string::npos) continue;
+                obj.push_back(Pair(strAddr,       address2.ToString().c_str()));
         } else if (strMode == "protocol") {
             if(strFilter !="" && strFilter != boost::lexical_cast<std::string>(mn.protocolVersion) &&
                 mn.addr.ToString().find(strFilter) == string::npos) continue;
+                obj.push_back(Pair(strAddr,       (int64_t)mn.protocolVersion));
         } else if (strMode == "lastseen") {
             if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
             obj.push_back(Pair(strAddr,       (int64_t)mn.lastTimeSeen));
