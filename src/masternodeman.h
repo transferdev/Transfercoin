@@ -73,15 +73,6 @@ public:
     CMasternodeMan();
     CMasternodeMan(CMasternodeMan& other);
 
-    // Find an entry
-    CMasternode* Find(const CTxIn& vin);
-
-    // Find a random entry
-    CMasternode* FindRandom();
-
-    //Find an entry thta do not match every entry provided vector
-    CMasternode* FindNotInVec(const std::vector<CTxIn> &vVins);
-
     // Add an entry
     bool Add(CMasternode &mn);
 
@@ -97,6 +88,15 @@ public:
     int CountEnabled();
 
     int CountMasternodesAboveProtocol(int protocolVersion);
+
+    // Find an entry
+    CMasternode* Find(const CTxIn& vin);
+
+    //Find an entry thta do not match every entry provided vector
+    CMasternode* FindNotInVec(const std::vector<CTxIn> &vVins);
+
+    // Find a random entry
+    CMasternode* FindRandom();
 
     // Get the current winner for this block
     CMasternode* GetCurrentMasterNode(int mod=1, int64_t nBlockHeight=0, int minProtocol=0);
