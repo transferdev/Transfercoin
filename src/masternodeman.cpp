@@ -223,7 +223,7 @@ int CMasternodeMan::CountEnabled()
 int CMasternodeMan::CountMasternodesAboveProtocol(int protocolVersion)
 {
     int i = 0;
-
+    LOCK(cs_masternodes);
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
         mn.Check();
         if(mn.protocolVersion < protocolVersion || !mn.IsEnabled()) continue;
@@ -301,6 +301,7 @@ CMasternode* CMasternodeMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight,
     unsigned int score = 0;
     CMasternode* winner = NULL;
 
+    LOCK(cs_masternodes);
     // scan for winner
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
         mn.Check();
@@ -325,6 +326,7 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
 {
     std::vector<pair<unsigned int, CTxIn> > vecMasternodeScores;
 
+    LOCK(cs_masternodes);
     // scan for winner
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
 
@@ -424,6 +426,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
+        LOCK(cs_masternodes);
         //search existing masternode list, this is where we update existing masternodes with new dsee broadcasts
         CMasternode* pmn = this->Find(vin);
         if(pmn != NULL)
@@ -529,6 +532,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
+        LOCK(cs_masternodes);
         // see if we have this masternode
         CMasternode* pmn = this->Find(vin);
         if(pmn != NULL)
@@ -605,6 +609,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             }
         } //else, asking for a specific node which is ok
 
+        LOCK(cs_masternodes);
         int count = this->size();
         int i = 0;
 
