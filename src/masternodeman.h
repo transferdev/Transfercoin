@@ -50,6 +50,12 @@ private:
 
     // map to hold all MNs
     std::vector<CMasternode> vMasternodes;
+    // who's asked for the masternode list and the last time
+    std::map<CNetAddr, int64_t> mAskedUsForMasternodeList;
+    // who we asked for the masternode list and the last time
+    std::map<CNetAddr, int64_t> mWeAskedForMasternodeList;
+    // which masternodes we've asked for
+    std::map<COutPoint, int64_t> mWeAskedForMasternodeListEntry;
 
     // keep track of latest time whem vMasternodes was changed
     int64_t lastTimeChanged;
@@ -67,6 +73,9 @@ public:
                 READWRITE(nVersion);
                 READWRITE(lastTimeChanged);
                 READWRITE(vMasternodes);
+                READWRITE(mAskedUsForMasternodeList);
+                READWRITE(mWeAskedForMasternodeList);
+                READWRITE(mWeAskedForMasternodeListEntry);
         }
     )
 
