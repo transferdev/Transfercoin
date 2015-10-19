@@ -36,7 +36,8 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
 {
     if(fLiteMode) return; //disable all darksend/masternode related functionality
     if(!IsSporkActive(SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT)) return;
-
+    if(IsInitialBlockDownload()) return;
+    
     if (strCommand == "txlreq")
     {
         //LogPrintf("ProcessMessageInstantX::txlreq\n");
