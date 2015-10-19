@@ -177,6 +177,7 @@ void CMasternodeMan::CheckAndRemove()
         } else {
             it1++;
         }
+    }
 
     // check who we asked for the masternode list
     map<CNetAddr, int64_t>::iterator it1 = mWeAskedForMasternodeList.begin();
