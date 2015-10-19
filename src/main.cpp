@@ -791,7 +791,6 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
         return error("AcceptableInputs : nonstandard transaction: %s",
                      reason);
 
-    LogPrintf("AcceptableInputs(): PASSED TESTS\n"
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();
     if (pool.exists(hash))
@@ -888,7 +887,7 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
     }
 
 
-    LogPrint("mempool", "AcceptableInputs : accepted %s (poolsz %u)\n",
+    LogPrintf("mempool", "AcceptableInputs : accepted %s (poolsz %u)\n",
            hash.ToString(),
            pool.mapTx.size());
     return true;
