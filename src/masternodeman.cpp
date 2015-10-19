@@ -129,18 +129,6 @@ void DumpMasternodes()
 
 CMasternodeMan::CMasternodeMan() {}
 
-CMasternode *CMasternodeMan::Find(const CTxIn &vin)
-{
-    LOCK(cs);
-
-    BOOST_FOREACH(CMasternode& mn, vMasternodes)
-    {
-        if(mn.vin == vin)
-            return &mn;
-    }
-    return NULL;
-}
-
 
 bool CMasternodeMan::Add(CMasternode &mn)
 {
@@ -223,6 +211,18 @@ int CMasternodeMan::CountEnabled()
     }
 
     return i;
+}
+
+CMasternode *CMasternodeMan::Find(const CTxIn &vin)
+{
+    LOCK(cs);
+
+    BOOST_FOREACH(CMasternode& mn, vMasternodes)
+    {
+        if(mn.vin == vin)
+            return &mn;
+    }
+    return NULL;
 }
 
 CMasternode *CMasternodeMan::FindNotInVec(const std::vector<CTxIn> &vVins)
