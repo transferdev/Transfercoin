@@ -181,7 +181,7 @@ void CMasternodeMan::CheckAndRemove()
     it1 = mWeAskedForMasternodeList.begin();
     while(it1 != mWeAskedForMasternodeList.end()){
         if((*it1).second < GetTime())
-            map<CNetAddr, long int>::iterator it1 = mWeAskedForMasternodeList.erase(it1);
+            it1 = mWeAskedForMasternodeList.erase(it1);
         else ++it1;
     }
 
@@ -189,7 +189,7 @@ void CMasternodeMan::CheckAndRemove()
     map<COutPoint, int64_t>::iterator it2 = mWeAskedForMasternodeListEntry.begin();
     while(it2 != mWeAskedForMasternodeListEntry.end()){
         if((*it2).second < GetTime())
-            map<CNetAddr, long int>::iterator it2 = mWeAskedForMasternodeListEntry.erase(it2);
+            map<COutPoint, int64_t>::iterator it2 = mWeAskedForMasternodeListEntry.erase(it2);
         else ++it2;
     }
 }
