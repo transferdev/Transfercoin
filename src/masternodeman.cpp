@@ -238,6 +238,15 @@ int CMasternodeMan::CountMasternodesAboveProtocol(int protocolVersion)
     return i;
 }
 
+void CMasternodeMan::Clear()
+{
+    LOCK(cs);
+    lastTimeChanged = 0;
+    vMasternodes.clear();
+    askedForMasternodeList.clear();
+    askedForMasternodeListEntry.clear();
+}
+
 int CMasternodeMan::CountEnabled()
 {
     int i = 0;

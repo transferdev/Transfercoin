@@ -92,7 +92,7 @@ public:
     void CheckAndRemove();
 
     // Clear masternode vector
-    void Clear() { vMasternodes.clear(); lastTimeChanged = 0; }
+    void Clear();
 
     // Return the number of (unique) masternodes
     int size() { return vMasternodes.size(); }
