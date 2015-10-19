@@ -70,6 +70,9 @@ https://github.com/dashpay/dash/commit/558585039696096b355a9e75beb70b36a3b7cec9
 rpc: allow "darksend" only with ENABLE_WALLET
 https://github.com/dashpay/dash/commit/0d82275d05e9fb81d8d550a58c3d6202bdfce4e5
 
+fix DoAutomaticDenominating:
+https://github.com/dashpay/dash/commit/56471f83304cff936f2ad09242f9a2462389e75b
+
 Removal of old code:
 IsProtocolV1/IsProtocolV2 hard fork switches removed
 FutureDriftV1/FutureDriftV2 reverted back to FutureDrift
