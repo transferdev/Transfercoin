@@ -1632,7 +1632,6 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
             lastTimeChanged = GetTimeMillis();
             LogPrintf("DoAutomaticDenominating -- attempt %d connection to masternode %s\n", i, pmn->addr.ToString().c_str());
             if(ConnectNode((CAddress)pmn->addr, NULL, true)){
-                submittedToMasternode = mn->addr;
 
                 LOCK(cs_vNodes);
                 BOOST_FOREACH(CNode* pnode, vNodes)
