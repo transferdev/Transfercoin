@@ -89,6 +89,8 @@ public:
 
     int CountMasternodesAboveProtocol(int protocolVersion);
 
+    void DsegUpdate(CNode* pnode);
+
     // Find an entry
     CMasternode* Find(const CTxIn& vin);
 
