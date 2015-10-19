@@ -178,7 +178,6 @@ void OverviewPage::handleTransactionClicked(const QModelIndex &index)
 
 OverviewPage::~OverviewPage()
 {
-    disconnect(timer, SIGNAL(timeout()), this, SLOT(darkSendStatus()));
     delete ui;
 }
 
