@@ -141,15 +141,6 @@ CMasternode *CMasternodeMan::Find(const CTxIn &vin)
     return NULL;
 }
 
-CMasternode *CMasternodeMan::FindRandom()
-{
-    LOCK(cs);
-
-    if(size() == 0) return NULL;
-
-    return &vMasternodes[GetRandInt(vMasternodes.size())];
-}
-
 
 CMasternode *CMasternodeMan::FindNotInVec(const std::vector<CTxIn> &vVins)
 {
@@ -258,6 +249,15 @@ int CMasternodeMan::CountEnabled()
     }
 
     return i;
+}
+
+CMasternode *CMasternodeMan::FindRandom()
+{
+    LOCK(cs);
+
+    if(size() == 0) return NULL;
+
+    return &vMasternodes[GetRandInt(vMasternodes.size())];
 }
 
 CMasternode* CMasternodeMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight, int minProtocol)
