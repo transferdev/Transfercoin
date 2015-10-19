@@ -177,20 +177,6 @@ void CMasternodeMan::CheckAndRemove()
     }
 }
 
-int CMasternodeMan::CountMasternodesAboveProtocol(int protocolVersion)
-{
-    int i = 0;
-
-    BOOST_FOREACH(CMasternode& mn, vMasternodes) {
-        mn.Check();
-        UpdateLastTimeChanged();
-        if(mn.protocolVersion < protocolVersion || !mn.IsEnabled()) continue;
-        i++;
-    }
-
-    return i;
-}
-
 void CMasternodeMan::Clear()
 {
     LOCK(cs);
@@ -208,6 +194,20 @@ int CMasternodeMan::CountEnabled()
         mn.Check();
         UpdateLastTimeChanged();
         if(mn.IsEnabled()) i++;
+    }
+
+    return i;
+}
+
+int CMasternodeMan::CountMasternodesAboveProtocol(int protocolVersion)
+{
+    int i = 0;
+
+    BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+        mn.Check();
+        UpdateLastTimeChanged();
+        if(mn.protocolVersion < protocolVersion || !mn.IsEnabled()) continue;
+        i++;
     }
 
     return i;
