@@ -104,7 +104,7 @@ public:
     std::vector<CMasternode> GetFullMasternodeVector() { Check(); return vMasternodes; }
 
     int GetMasternodeRank(const CTxIn &vin, int64_t nBlockHeight, int minProtocol=0);
-    
+
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
     // Return the number of (unique) masternodes
