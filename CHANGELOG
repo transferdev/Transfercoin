@@ -79,6 +79,8 @@ https://github.com/dashpay/dash/commit/736e6da6b852119332b41b4da955af4d1b4ed8f9
 Few fixes for processing extra messages:
 https://github.com/dashpay/dash/commit/1ded1b9ec2de5687b38ac9178cc4b58375201e03
 
+Fix versions:
+https://github.com/dashpay/dash/commit/0747da6b36a51f24efa7ca7fcb4f2ffa3332a118
 
 Removal of old code:
 IsProtocolV1/IsProtocolV2 hard fork switches removed
