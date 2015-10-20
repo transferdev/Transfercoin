@@ -508,17 +508,17 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             }
 
             // if sub-cent change is required, the fee must be raised to at least CTransaction::nMinTxFee
-            if (nPayFee < CTransaction::nMinTxFee && nChange > 0 && nChange < CENT)
+            if (nPayFee < MIN_TX_FEE && nChange > 0 && nChange < CENT)
             {
-                if (nChange < CTransaction::nMinTxFee) // change < 0.0001 => simply move all change to fees
+                if (nChange < MIN_TX_FEE) // change < 0.0001 => simply move all change to fees
                 {
                     nPayFee += nChange;
                     nChange = 0;
                 }
                 else
                 {
-                    nChange = nChange + nPayFee - CTransaction::nMinTxFee;
-                    nPayFee = CTransaction::nMinTxFee;
+                    nChange = nChange + nPayFee - MIN_TX_FEE;
+                    nPayFee = MIN_TX_FEE;
                 }
             }
  
@@ -526,7 +526,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             if (nChange > 0 && nChange < CENT)
             {
                 CTxOut txout(nChange, (CScript)vector<unsigned char>(24, 0));
-                if (txout.IsDust(CTransaction::nMinRelayTxFee))
+                if (txout.IsDust(MIN_RELAY_TX_FEE))
                 {
                     nPayFee += nChange;
                     nChange = 0;
