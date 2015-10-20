@@ -175,7 +175,7 @@ void CMasternodeMan::CheckAndRemove()
         }
     }
 
-
+    LogPrintf("passed it\n");
     // check who's asked for the masternode list
     map<CNetAddr, int64_t>::iterator it1 = mAskedUsForMasternodeList.begin();
     while(it1 != mAskedUsForMasternodeList.end()){
@@ -185,7 +185,7 @@ void CMasternodeMan::CheckAndRemove()
             ++it1;
         }
     }
-
+    LogPrintf("passed it1\n");
     // check who we asked for the masternode list
     while(it1 != mWeAskedForMasternodeList.end()){
         if((*it1).second < GetTime()){
@@ -194,7 +194,7 @@ void CMasternodeMan::CheckAndRemove()
             ++it1;
         }
     }
-
+    LogPrintf("passed it1 #2\n");
     // check which masternodes we've asked for
     map<COutPoint, int64_t>::iterator it2 = mWeAskedForMasternodeListEntry.begin();
     while(it2 != mWeAskedForMasternodeListEntry.end()){
@@ -204,6 +204,7 @@ void CMasternodeMan::CheckAndRemove()
             ++it2;
         }
     }
+    LogPrintf("passed it2\n");
 }
 
 void CMasternodeMan::Clear()
