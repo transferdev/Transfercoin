@@ -101,7 +101,11 @@ Cleanup copiler
 fix filtering for "active" (was broken after IP filtering)
 https://github.com/dashpay/dash/commit/62800573cc49ce77162de6af3f75765677a74384
 
+add spaces to table-fy console view of "masternode list"
+https://github.com/dashpay/dash/commit/3a4c3e401b9b5ae3054135e405110cf2f8372425
 
+remove "|" to make full mode a bit more compact
+https://github.com/dashpay/dash/commit/64c1a8b147e3b5e39751ab908b77c6e9a2a5e058
 
 
 
