@@ -187,6 +187,7 @@ void CMasternodeMan::CheckAndRemove()
     }
     LogPrintf("passed it1\n");
     // check who we asked for the masternode list
+    it1 = mWeAskedForMasternodeList.begin();
     while(it1 != mWeAskedForMasternodeList.end()){
         if((*it1).second < GetTime()){
             mWeAskedForMasternodeList.erase(it1++);
