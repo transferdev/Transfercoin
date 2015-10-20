@@ -65,6 +65,7 @@ Added dstx support for free transactions ( NEEDS FIXED - AcceptToMemoryPool)
 https://github.com/dashpay/dash/commit/13246598b8b84af2ade8b3d0368655fc64f5cca0
 
 
+
 Change the way changes are handled:
 https://github.com/dashpay/dash/commit/2e05bf212eaf5e0fe98161f673483dc62e5c0a95
 
@@ -82,6 +83,9 @@ https://github.com/dashpay/dash/commit/736e6da6b852119332b41b4da955af4d1b4ed8f9
 
 Few fixes for processing extra messages:
 https://github.com/dashpay/dash/commit/1ded1b9ec2de5687b38ac9178cc4b58375201e03
+
+Fix crashes on remove from vector
+https://github.com/dashpay/dash/commit/4fe845bf1530ad1b59dcfddebe50f323e1977402
 
 Fix versions:
 https://github.com/dashpay/dash/commit/0747da6b36a51f24efa7ca7fcb4f2ffa3332a118
