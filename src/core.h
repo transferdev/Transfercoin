@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 
+extern int64_t MIN_RELAY_TX_FEE;
 class CScript;
 class CTransaction;
 
