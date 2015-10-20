@@ -10,10 +10,6 @@
 
 /** Masternode manager */
 CMasternodeMan mnodeman;
-// who's asked for the masternode list and the last time
-std::map<CNetAddr, int64_t> askedForMasternodeList;
-// which masternodes we've asked for
-std::map<COutPoint, int64_t> askedForMasternodeListEntry;
 
 struct CompareValueOnly
 {
@@ -141,7 +137,6 @@ bool CMasternodeMan::Add(CMasternode &mn)
     if (pmn == NULL)
     {
         vMasternodes.push_back(mn);
-        UpdateLastTimeChanged();
         return true;
     }
 
@@ -152,7 +147,6 @@ void CMasternodeMan::Check()
 {
     LOCK(cs);
 
-    UpdateLastTimeChanged();
     BOOST_FOREACH(CMasternode& mn, vMasternodes)
         mn.Check();
 }
@@ -162,7 +156,6 @@ void CMasternodeMan::CheckAndRemove()
     LOCK(cs);
 
     Check();
-    UpdateLastTimeChanged();
 
     //remove inactive
     vector<CMasternode>::iterator it = vMasternodes.begin();
@@ -175,7 +168,6 @@ void CMasternodeMan::CheckAndRemove()
         }
     }
 
-    LogPrintf("passed it\n");
     // check who's asked for the masternode list
     map<CNetAddr, int64_t>::iterator it1 = mAskedUsForMasternodeList.begin();
     while(it1 != mAskedUsForMasternodeList.end()){
@@ -185,7 +177,7 @@ void CMasternodeMan::CheckAndRemove()
             ++it1;
         }
     }
-    LogPrintf("passed it1\n");
+
     // check who we asked for the masternode list
     it1 = mWeAskedForMasternodeList.begin();
     while(it1 != mWeAskedForMasternodeList.end()){
@@ -195,7 +187,7 @@ void CMasternodeMan::CheckAndRemove()
             ++it1;
         }
     }
-    LogPrintf("passed it1 #2\n");
+
     // check which masternodes we've asked for
     map<COutPoint, int64_t>::iterator it2 = mWeAskedForMasternodeListEntry.begin();
     while(it2 != mWeAskedForMasternodeListEntry.end()){
@@ -205,19 +197,16 @@ void CMasternodeMan::CheckAndRemove()
             ++it2;
         }
     }
-    LogPrintf("passed it2\n");
+
 }
 
 void CMasternodeMan::Clear()
 {
     LOCK(cs);
-    lastTimeChanged = 0;
     vMasternodes.clear();
     mAskedUsForMasternodeList.clear();
     mWeAskedForMasternodeList.clear();
     mWeAskedForMasternodeListEntry.clear();
-    askedForMasternodeList.clear();
-    askedForMasternodeListEntry.clear();
 }
 
 int CMasternodeMan::CountEnabled()
@@ -226,7 +215,6 @@ int CMasternodeMan::CountEnabled()
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
         mn.Check();
-        UpdateLastTimeChanged();
         if(mn.IsEnabled()) i++;
     }
 
@@ -239,7 +227,6 @@ int CMasternodeMan::CountMasternodesAboveProtocol(int protocolVersion)
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
         mn.Check();
-        UpdateLastTimeChanged();
         if(mn.protocolVersion < protocolVersion || !mn.IsEnabled()) continue;
         i++;
     }
@@ -283,7 +270,6 @@ CMasternode *CMasternodeMan::FindNotInVec(const std::vector<CTxIn> &vVins)
     BOOST_FOREACH(CMasternode &mn, vMasternodes)
     {
         mn.Check();
-        UpdateLastTimeChanged();
         if(!mn.IsEnabled()) continue;
 
         bool found = false;
@@ -319,7 +305,6 @@ CMasternode* CMasternodeMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight,
     // scan for winner
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
         mn.Check();
-        UpdateLastTimeChanged();
         if(mn.protocolVersion < minProtocol || !mn.IsEnabled()) continue;
 
         // calculate the score for each masternode
@@ -345,7 +330,6 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
 
         mn.Check();
-        UpdateLastTimeChanged();
 
         if(mn.protocolVersion < minProtocol) continue;
         if(!mn.IsEnabled()) {
@@ -451,7 +435,6 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             //   after that they just need to match
             if(count == -1 && pmn->pubkey == pubkey && !pmn->UpdatedWithin(MASTERNODE_MIN_DSEE_SECONDS)){
                 pmn->UpdateLastSeen();
-                UpdateLastTimeChanged();
 
                 if(pmn->now < sigTime){ //take the newest entry
                     LogPrintf("dsee - Got updated entry for %s\n", addr.ToString().c_str());
@@ -570,7 +553,6 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
                 if(!pmn->UpdatedWithin(MASTERNODE_MIN_DSEEP_SECONDS))
                 {
-                    UpdateLastTimeChanged();
                     if(stop) pmn->Disable();
                     else
                     {

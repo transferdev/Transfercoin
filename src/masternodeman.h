@@ -25,9 +25,6 @@ using namespace std;
 class CMasternodeMan;
 
 extern CMasternodeMan mnodeman;
-extern std::vector<CTxIn> vecMasternodeAskedFor;
-extern map<uint256, CMasternodePaymentWinner> mapSeenMasternodeVotes;
-extern map<int64_t, uint256> mapCacheBlockHashes;
 
 void DumpMasternodes();
 
@@ -57,9 +54,6 @@ private:
     // which masternodes we've asked for
     std::map<COutPoint, int64_t> mWeAskedForMasternodeListEntry;
 
-    // keep track of latest time whem vMasternodes was changed
-    int64_t lastTimeChanged;
-
 public:
 
     IMPLEMENT_SERIALIZE
@@ -71,7 +65,6 @@ public:
                 LOCK(cs);
                 unsigned char nVersion = 0;
                 READWRITE(nVersion);
-                READWRITE(lastTimeChanged);
                 READWRITE(vMasternodes);
                 READWRITE(mAskedUsForMasternodeList);
                 READWRITE(mWeAskedForMasternodeList);
@@ -120,10 +113,6 @@ public:
 
     // Return the number of (unique) masternodes
     int size() { return vMasternodes.size(); }
-
-    void UpdateLastTimeChanged() { lastTimeChanged = GetAdjustedTime(); }
-
-    bool UpdateNeeded() { return lastTimeChanged < GetAdjustedTime() - MASTERNODE_REMOVAL_SECONDS; }
 
     std::string ToString();
 
