@@ -607,8 +607,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             //local network
             if(!pfrom->addr.IsRFC1918() && Params().NetworkID() == CChainParams::MAIN)
             {
-                std::map<CNetAddr, int64_t>::iterator i = mWeAskedForMasternodeList.find(pfrom->addr);
-                if (i != mWeAskedForMasternodeList.end())
+                std::map<CNetAddr, int64_t>::iterator i = mAskedUsForMasternodeList.find(pfrom->addr);
+                if (i != mAskedUsForMasternodeList.end())
                 {
                     int64_t t = (*i).second;
                     if (GetTime() < t) {
@@ -619,7 +619,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                 }
 
                 int64_t askAgain = GetTime() + MASTERNODES_DSEG_SECONDS;
-                mWeAskedForMasternodeList[pfrom->addr] = askAgain;
+                mAskedUsForMasternodeList[pfrom->addr] = askAgain;
             }
         } //else, asking for a specific node which is ok
 
