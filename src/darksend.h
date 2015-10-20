@@ -38,6 +38,8 @@ class CActiveMasternode;
 #define DARKSEND_QUEUE_TIMEOUT                 120
 #define DARKSEND_SIGNING_TIMEOUT               30
 
+static const int MIN_POOL_PEER_PROTO_VERSION = 61400; // minimum peer version accepted by DarkSendPool
+
 extern CDarkSendPool darkSendPool;
 extern CDarkSendSigner darkSendSigner;
 extern std::vector<CDarksendQueue> vecDarksendQueue;
@@ -225,8 +227,6 @@ class CDarksendSession
 class CDarkSendPool
 {
 public:
-    static const int MIN_PEER_PROTO_VERSION = 60020;
-
     // clients entries
     std::vector<CDarkSendEntry> myEntries;
     // masternode entries

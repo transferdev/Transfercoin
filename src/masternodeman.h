@@ -18,15 +18,13 @@
 #include "masternode.h"
 
 #define MASTERNODES_DUMP_SECONDS               (15*60)
+#define MASTERNODES_DSEG_SECONDS               (3*60*60)
 
 using namespace std;
 
 class CMasternodeMan;
 
 extern CMasternodeMan mnodeman;
-extern std::vector<CTxIn> vecMasternodeAskedFor;
-extern map<uint256, CMasternodePaymentWinner> mapSeenMasternodeVotes;
-extern map<int64_t, uint256> mapCacheBlockHashes;
 
 void DumpMasternodes();
 
@@ -49,9 +47,12 @@ private:
 
     // map to hold all MNs
     std::vector<CMasternode> vMasternodes;
-
-    // keep track of latest time whem vMasternodes was changed
-    int64_t lastTimeChanged;
+    // who's asked for the masternode list and the last time
+    std::map<CNetAddr, int64_t> mAskedUsForMasternodeList;
+    // who we asked for the masternode list and the last time
+    std::map<CNetAddr, int64_t> mWeAskedForMasternodeList;
+    // which masternodes we've asked for
+    std::map<COutPoint, int64_t> mWeAskedForMasternodeListEntry;
 
 public:
 
@@ -64,22 +65,15 @@ public:
                 LOCK(cs);
                 unsigned char nVersion = 0;
                 READWRITE(nVersion);
-                READWRITE(lastTimeChanged);
                 READWRITE(vMasternodes);
+                READWRITE(mAskedUsForMasternodeList);
+                READWRITE(mWeAskedForMasternodeList);
+                READWRITE(mWeAskedForMasternodeListEntry);
         }
     )
 
     CMasternodeMan();
     CMasternodeMan(CMasternodeMan& other);
-
-    // Find an entry
-    CMasternode* Find(const CTxIn& vin);
-
-    // Find a random entry
-    CMasternode* FindRandom();
-
-    //Find an entry thta do not match every entry provided vector
-    CMasternode* FindNotInVec(const std::vector<CTxIn> &vVins);
 
     // Add an entry
     bool Add(CMasternode &mn);
@@ -91,27 +85,36 @@ public:
     void CheckAndRemove();
 
     // Clear masternode vector
-    void Clear() { vMasternodes.clear(); lastTimeChanged = 0; }
+    void Clear();
 
-    // Return the number of (unique) masternodes
-    int size() { return vMasternodes.size(); }
+    int CountEnabled();
+
+    int CountMasternodesAboveProtocol(int protocolVersion);
+
+    void DsegUpdate(CNode* pnode);
+
+    // Find an entry
+    CMasternode* Find(const CTxIn& vin);
+
+    //Find an entry thta do not match every entry provided vector
+    CMasternode* FindOldestNotInVec(const std::vector<CTxIn> &vVins);
+
+    // Find a random entry
+    CMasternode* FindRandom();
 
     // Get the current winner for this block
     CMasternode* GetCurrentMasterNode(int mod=1, int64_t nBlockHeight=0, int minProtocol=0);
 
-    int GetMasternodeRank(const CTxIn &vin, int64_t nBlockHeight, int minProtocol=0);
-
-    int CountMasternodesAboveProtocol(int protocolVersion);
-
-    int CountEnabled();
-
     std::vector<CMasternode> GetFullMasternodeVector() { Check(); return vMasternodes; }
+
+    int GetMasternodeRank(const CTxIn &vin, int64_t nBlockHeight, int minProtocol=0);
 
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
-    void UpdateLastTimeChanged() { lastTimeChanged = GetAdjustedTime(); }
+    // Return the number of (unique) masternodes
+    int size() { return vMasternodes.size(); }
 
-    bool UpdateNeeded() { return lastTimeChanged < GetAdjustedTime() - MASTERNODE_REMOVAL_SECONDS; }
+    std::string ToString();
 
 };
 

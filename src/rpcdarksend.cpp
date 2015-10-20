@@ -503,7 +503,7 @@ Value masternode(const Array& params, bool fHelp)
             obj.push_back(Pair("vin",           winner->vin.prevout.hash.ToString().c_str()));
             obj.push_back(Pair("pubkey",        address2.ToString().c_str()));
             obj.push_back(Pair("lastseen",      (int64_t)winner->lastTimeSeen));
-            obj.push_back(Pair("activeseconds", (int64_t)(winner->lastTimeSeen - winner->now)));
+            obj.push_back(Pair("activeseconds", (int64_t)(winner->lastTimeSeen - winner->sigTime)));
             return obj;
         }
 
@@ -660,7 +660,7 @@ Value masternodelist(const Array& params, bool fHelp)
             obj.push_back(Pair(strAddr,       (int64_t)mn.lastTimeSeen));
         } else if (strMode == "activeseconds") {
             if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr,       (int64_t)(mn.lastTimeSeen - mn.now)));
+            obj.push_back(Pair(strAddr,       (int64_t)(mn.lastTimeSeen - mn.sigTime)));
         } else if (strMode == "rank") {
             if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
             obj.push_back(Pair(strAddr,       (int)(mnodeman.GetMasternodeRank(mn.vin, pindexBest->nHeight))));
@@ -677,7 +677,7 @@ Value masternodelist(const Array& params, bool fHelp)
                            address2.ToString() << " | " <<
                            mn.vin.prevout.hash.ToString() << " | " <<
                            mn.lastTimeSeen << " | " <<
-                           (mn.lastTimeSeen - mn.now);
+                           (mn.lastTimeSeen - mn.sigTime);
             std::string output = stringStream.str();
             stringStream << " " << strAddr;
             if(strFilter !="" && stringStream.str().find(strFilter) == string::npos) continue;

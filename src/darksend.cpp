@@ -55,7 +55,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
     if(IsInitialBlockDownload()) return;
 
     if (strCommand == "dsf") { //DarkSend Final tx
-        if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
         }
 
@@ -78,7 +78,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
     }
 
     else if (strCommand == "dsc") { //DarkSend Complete
-        if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
         }
 
@@ -102,7 +102,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
 
     else if (strCommand == "dsa") { //DarkSend Acceptable
 
-        if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             std::string strError = _("Incompatible version.");
             LogPrintf("dsa -- incompatible version! \n");
             pfrom->PushMessage("dssu", darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_REJECTED, strError);
@@ -133,7 +133,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
 
         if(darkSendPool.sessionUsers == 0) {
             if(pmn->nLastDsq != 0 &&
-                pmn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(darkSendPool.MIN_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
+                pmn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(MIN_POOL_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
                 LogPrintf("dsa -- last dsq too recent, must wait. %s \n", pmn->addr.ToString().c_str());                std::string strError = _("Last Darksend was too recent.");
                 pfrom->PushMessage("dssu", darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_REJECTED, strError);
                 return;
@@ -152,7 +152,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
         }
     } else if (strCommand == "dsq") { //DarkSend Queue
 
-        if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
         }
 
@@ -186,7 +186,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
             if(fDebug) LogPrintf("dsq last %d last2 %d count %d\n", pmn->nLastDsq, pmn->nLastDsq + mnodeman.size()/5, darkSendPool.nDsqCount);
             //don't allow a few nodes to dominate the queuing process
             if(pmn->nLastDsq != 0 &&
-                pmn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(darkSendPool.MIN_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
+                pmn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(MIN_POOL_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
                 if(fDebug) LogPrintf("dsq -- masternode sending too many dsq messages. %s \n", pmn->addr.ToString().c_str());
                 return;
             }
@@ -202,7 +202,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
 
     } else if (strCommand == "dsi") { //DarkSend vIn
         std::string error = "";
-        if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             LogPrintf("dsi -- incompatible version! \n");
             error = _("Incompatible version.");
             pfrom->PushMessage("dssu", darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_REJECTED, error);
@@ -327,7 +327,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
     }
 
     else if (strCommand == "dssub") { //DarkSend Subscribe To
-        if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
         }
 
@@ -340,7 +340,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
 
     else if (strCommand == "dssu") { //DarkSend status update
 
-        if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
         }
 
@@ -368,7 +368,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
     }
 
     else if (strCommand == "dss") { //DarkSend Sign Final Tx
-        if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
         }
 
@@ -1039,7 +1039,8 @@ bool CDarkSendPool::IsCollateralValid(const CTransaction& txCollateral){
 
     CValidationState state;
     //if(!AcceptableInputs(mempool, state, txCollateral)){
-    bool* pfMissingInputs = false;
+    bool* pfMissingInputs = new bool;
+    *pfMissingInputs = false;
     if(!AcceptableInputs(mempool, txCollateral, false, pfMissingInputs)){
         if(fDebug) LogPrintf ("CDarkSendPool::IsCollateralValid - didn't pass IsAcceptable\n");
         return false;
@@ -1548,7 +1549,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
                 int protocolVersion;
                 if(!dsq.GetProtocolVersion(protocolVersion)) continue;
-                if(protocolVersion < MIN_PEER_PROTO_VERSION) continue;
+                if(protocolVersion < MIN_POOL_PEER_PROTO_VERSION) continue;
 
                 //non-denom's are incompatible
                 if((dsq.nDenom & (1 << 4))) continue;
@@ -1610,7 +1611,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
             if(pmn == NULL)
             {
                 LogPrintf("DoAutomaticDenominating --- masternode list is empty!\n");
-               return false;
+                return false;
             }
             //don't reuse masternodes
             BOOST_FOREACH(CTxIn usedVin, vecMasternodesUsed) {
@@ -1619,13 +1620,13 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                     continue;
                 }
             }
-            if(pmn->protocolVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+            if(pmn->protocolVersion < MIN_POOL_PEER_PROTO_VERSION) {
                 i++;
                 continue;
             }
 
             if(pmn->nLastDsq != 0 &&
-                pmn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(darkSendPool.MIN_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
+                pmn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(MIN_POOL_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
                 i++;
                 continue;
             }
@@ -2185,25 +2186,18 @@ void ThreadCheckDarkSendPool()
         MilliSleep(2500);
         //LogPrintf("ThreadCheckDarkSendPool::check timeout\n");
         darkSendPool.CheckTimeout();
-
-        if(c % 60 == 0){
+        if(c % 60 == 0)
+        {
+            LOCK(cs_main);
+            /*
+                cs_main is required for doing CMasternode.Check because something
+                is modifying the coins view without a mempool lock. It causes
+                segfaults from this code without the cs_main lock.
+            */
+            mnodeman.CheckAndRemove();
             darkSendPool.ProcessMasternodeConnections();
             masternodePayments.CleanPaymentList();
             CleanTransactionLocksList();
-
-            // nodes refuse to relay dseep if it was less then MASTERNODE_MIN_DSEEP_SECONDS ago
-            // MASTERNODE_PING_WAIT_SECONDS gives some additional time on top of it
-            // so we have a timeout for this check on start unless we need to
-            if(c > MASTERNODE_MIN_DSEEP_SECONDS + MASTERNODE_PING_WAIT_SECONDS || mnodeman.UpdateNeeded())
-            {
-                LOCK(cs_main);
-                /*
-                    cs_main is required for doing CMasternode.Check because something
-                    is modifying the coins view without a mempool lock. It causes
-                    segfaults from this code without the cs_main lock.
-                */
-                mnodeman.CheckAndRemove();
-            }
 	    }
 
         if(c % MASTERNODE_PING_SECONDS == 0) activeMasternode.ManageStatus();
@@ -2217,7 +2211,7 @@ void ThreadCheckDarkSendPool()
                 LOCK(cs_vNodes);
                 BOOST_FOREACH(CNode* pnode, vNodes)
                 {
-                    if (pnode->nVersion >= darkSendPool.MIN_PEER_PROTO_VERSION) {
+                    if (pnode->nVersion >= MIN_POOL_PEER_PROTO_VERSION) {
 
                         //keep track of who we've asked for the list
                         if(pnode->HasFulfilledRequest("mnsync")) continue;
@@ -2226,7 +2220,7 @@ void ThreadCheckDarkSendPool()
                         LogPrintf("Successfully synced, asking for Masternode list and payment list\n");
 
                         //request full mn list only if masternodes.dat was updated quite a long time ago
-                        if(mnodeman.UpdateNeeded()) pnode->PushMessage("dseg", CTxIn());
+                        mnodeman.DsegUpdate(pnode);
 
                         pnode->PushMessage("mnget"); //sync payees
                         pnode->PushMessage("getsporks"); //get current network sporks

@@ -2502,7 +2502,6 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                     if (age != 0)
                         age += 1;
                     dPriority += (double)nCredit * age;
-                    dPriority += (double)nCredit * pcoin.first->GetDepthInMainChain();
                 }
 
                 int64_t nChange = nValueIn - nValue - nFeeRet;
@@ -3361,7 +3360,6 @@ uint64_t CWallet::GetStakeWeight() const
 
     uint64_t nWeight = 0;
 
-    int64_t nCurrentTime = GetTime();
     CTxDB txdb("r");
 
     LOCK2(cs_main, cs_wallet);

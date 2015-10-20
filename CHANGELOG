@@ -64,6 +64,11 @@ https://github.com/dashpay/dash/commit/0d51e1c90df98f649ea3062efa448c1c5bb9827b
 Added dstx support for free transactions ( NEEDS FIXED - AcceptToMemoryPool)
 https://github.com/dashpay/dash/commit/13246598b8b84af2ade8b3d0368655fc64f5cca0
 
+
+
+Change the way changes are handled:
+https://github.com/dashpay/dash/commit/2e05bf212eaf5e0fe98161f673483dc62e5c0a95
+
 rpc fixes:
 https://github.com/dashpay/dash/commit/558585039696096b355a9e75beb70b36a3b7cec9
 
@@ -75,6 +80,28 @@ https://github.com/dashpay/dash/commit/56471f83304cff936f2ad09242f9a2462389e75b
 
 allow searching masternode list by ip address
 https://github.com/dashpay/dash/commit/736e6da6b852119332b41b4da955af4d1b4ed8f9
+
+Few fixes for processing extra messages:
+https://github.com/dashpay/dash/commit/1ded1b9ec2de5687b38ac9178cc4b58375201e03
+
+Fix crashes on remove from vector
+https://github.com/dashpay/dash/commit/4fe845bf1530ad1b59dcfddebe50f323e1977402
+
+Fix versions:
+https://github.com/dashpay/dash/commit/0747da6b36a51f24efa7ca7fcb4f2ffa3332a118
+
+check and remove expired masternodes on client start
+https://github.com/dashpay/dash/commit/4af7c7411ac6837260ff5ff04ee4a4a944ac2082
+
+clear maps in mnodeman
+https://github.com/dashpay/dash/commit/80ce3f5a061e069145db81850e1afcffa52c7e12
+
+Cleanup copiler
+
+
+
+
+
 
 
 Removal of old code:

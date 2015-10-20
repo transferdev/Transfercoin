@@ -762,6 +762,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree,
     LogPrint("mempool", "AcceptToMemoryPool : accepted %s (poolsz %u)\n",
            hash.ToString(),
            pool.mapTx.size());
+    
     return true;
 }
 
@@ -790,6 +791,7 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
     if (!TestNet() && !IsStandardTx(tx, reason))
         return error("AcceptableInputs : nonstandard transaction: %s",
                      reason);
+
 
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();
@@ -887,9 +889,10 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
     }
 
 
-    LogPrint("mempool", "AcceptableInputs : accepted %s (poolsz %u)\n",
+    /*LogPrint("mempool", "AcceptableInputs : accepted %s (poolsz %u)\n",
            hash.ToString(),
            pool.mapTx.size());
+    */
     return true;
 }
 
@@ -3719,7 +3722,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CTransaction tx;
 
         //masternode signed transaction
-        bool allowFree = false;
+        //bool allowFree = false;
         CTxIn vin;
         vector<unsigned char> vchSig;
         int64_t sigTime;
@@ -3750,7 +3753,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
                 LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString().c_str());
 
-                allowFree = true;
+                //allowFree = true;
                 pmn->allowFreeTx = false;
 
                 if(!mapDarksendBroadcastTxes.count(tx.GetHash())){

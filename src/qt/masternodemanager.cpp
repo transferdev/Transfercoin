@@ -164,7 +164,7 @@ void MasternodeManager::updateNodeList()
         QTableWidgetItem *activeItem = new QTableWidgetItem(QString::number(mn.IsEnabled()));
         QTableWidgetItem *addressItem = new QTableWidgetItem(QString::fromStdString(mn.addr.ToString()));
         QTableWidgetItem *rankItem = new QTableWidgetItem(QString::number(mnodeman.GetMasternodeRank(mn.vin, pindexBest->nHeight)));
-        QTableWidgetItem *activeSecondsItem = new QTableWidgetItem(seconds_to_DHMS((qint64)(mn.lastTimeSeen - mn.now)));
+        QTableWidgetItem *activeSecondsItem = new QTableWidgetItem(seconds_to_DHMS((qint64)(mn.lastTimeSeen - mn.sigTime)));
         QTableWidgetItem *lastSeenItem = new QTableWidgetItem(QString::fromStdString(DateTimeStrFormat(mn.lastTimeSeen)));
 	
         CScript pubkey;

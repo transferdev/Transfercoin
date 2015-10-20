@@ -135,7 +135,7 @@ CMasternode::CMasternode()
     pubkey2 = CPubKey();
     sig = std::vector<unsigned char>();
     activeState = MASTERNODE_ENABLED;
-    now = GetTime();
+    sigTime = GetAdjustedTime();
     lastDseep = 0;
     lastTimeSeen = 0;
     cacheInputAge = 0;
@@ -155,7 +155,7 @@ CMasternode::CMasternode(const CMasternode& other)
     pubkey2 = other.pubkey2;
     sig = other.sig;
     activeState = other.activeState;
-    now = other.now;
+    sigTime = other.sigTime;
     lastDseep = other.lastDseep;
     lastTimeSeen = other.lastTimeSeen;
     cacheInputAge = other.cacheInputAge;
@@ -166,7 +166,7 @@ CMasternode::CMasternode(const CMasternode& other)
     nLastDsq = other.nLastDsq;
 }
 
-CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newNow, CPubKey newPubkey2, int protocolVersionIn)
+CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn)
 {
     LOCK(cs);
     vin = newVin;
@@ -175,7 +175,7 @@ CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std:
     pubkey2 = newPubkey2;
     sig = newSig;
     activeState = MASTERNODE_ENABLED;
-    now = newNow;
+    sigTime = newSigTime;
     lastDseep = 0;
     lastTimeSeen = 0;
     cacheInputAge = 0;
@@ -232,7 +232,8 @@ void CMasternode::Check()
         tx.vout.push_back(vout);
 
         //if(!AcceptableInputs(mempool, state, tx)){
-        bool* pfMissingInputs = false;
+        bool* pfMissingInputs = new bool;
+        *pfMissingInputs = false;
 	if(!AcceptableInputs(mempool, tx, false, pfMissingInputs)){
             activeState = MASTERNODE_VIN_SPENT;
             return;
@@ -379,6 +380,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     LOCK(cs_masternodes);
     if(!enabled) return false;
     CMasternodePaymentWinner newWinner;
+    int nEnabled = mnodeman.CountEnabled();
 
     std::vector<CTxIn> vecLastPayments;
     BOOST_REVERSE_FOREACH(CMasternodePaymentWinner& winner, vWinning)
@@ -389,8 +391,9 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         vecLastPayments.push_back(winner.vin);
     }
 
-    CMasternode* pmn = mnodeman.FindNotInVec(vecLastPayments);
-    if(pmn != NULL)
+    // pay to the oldest MN that still had no payment but its input is old enough and it was active long enough
+    CMasternode *pmn = mnodeman.FindOldestNotInVec(vecLastPayments);
+    if(pmn != NULL && pmn->GetMasternodeInputAge() > nEnabled && pmn->lastTimeSeen - pmn->sigTime > nEnabled * 2.5 * 60)
     {
         newWinner.score = 0;
         newWinner.nBlockHeight = nBlockHeight;
@@ -399,7 +402,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     }
 
     //if we can't find new MN to get paid, pick first active MN counting back from the end of vecLastPayments list
-    if(newWinner.nBlockHeight == 0 && mnodeman.CountEnabled() > 0)
+    if(newWinner.nBlockHeight == 0 && nEnabled > 0)
     {
         BOOST_REVERSE_FOREACH(CTxIn& vinLP, vecLastPayments)
         {
