@@ -249,8 +249,8 @@ void CMasternodeMan::DsegUpdate(CNode* pnode)
 {
     LOCK(cs);
 
-    std::map<CNetAddr, int64_t>::iterator it = askedForMasternodeList.find(pnode->addr);
-    if (it != askedForMasternodeList.end())
+    std::map<CNetAddr, int64_t>::iterator it = mWeAskedForMasternodeList.find(pnode->addr);
+    if (it != mWeAskedForMasternodeList.end())
     {
         if (GetTime() < (*it).second) {
             LogPrintf("dseg - we already asked %s for the list; skipping...\n", pnode->addr.ToString());
@@ -259,7 +259,7 @@ void CMasternodeMan::DsegUpdate(CNode* pnode)
     }
     pnode->PushMessage("dseg", CTxIn());
     int64_t askAgain = GetTime() + MASTERNODES_DSEG_SECONDS;
-    askedForMasternodeList[pnode->addr] = askAgain;
+    mWeAskedForMasternodeList[pnode->addr] = askAgain;
 }
 
 CMasternode *CMasternodeMan::Find(const CTxIn &vin)
@@ -584,8 +584,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         if(fDebug) LogPrintf("dseep - Couldn't find masternode entry %s\n", vin.ToString().c_str());
 
-        std::map<COutPoint, int64_t>::iterator i = askedForMasternodeListEntry.find(vin.prevout);
-        if (i != askedForMasternodeListEntry.end())
+        std::map<COutPoint, int64_t>::iterator i = mWeAskedForMasternodeListEntry.find(vin.prevout);
+        if (i != mWeAskedForMasternodeListEntry.end())
         {
             int64_t t = (*i).second;
             if (GetTime() < t) return; // we've asked recently
@@ -595,8 +595,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         LogPrintf("dseep - Asking source node for missing entry %s\n", vin.ToString().c_str());
         pfrom->PushMessage("dseg", vin);
-        int64_t askAgain = GetTime() + MASTERNODE_MIN_DSEEP_SECONDS;
-        askedForMasternodeListEntry[vin.prevout] = askAgain;
+        int64_t askAgain = GetTime()+ MASTERNODE_MIN_DSEEP_SECONDS;
+        mWeAskedForMasternodeListEntry[vin.prevout] = askAgain;
 
     } else if (strCommand == "dseg") { //Get masternode list or specific entry
 
@@ -607,8 +607,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             //local network
             if(!pfrom->addr.IsRFC1918() && Params().NetworkID() == CChainParams::MAIN)
             {
-                std::map<CNetAddr, int64_t>::iterator i = askedForMasternodeList.find(pfrom->addr);
-                if (i != askedForMasternodeList.end())
+                std::map<CNetAddr, int64_t>::iterator i = mWeAskedForMasternodeList.find(pfrom->addr);
+                if (i != mWeAskedForMasternodeList.end())
                 {
                     int64_t t = (*i).second;
                     if (GetTime() < t) {
@@ -619,7 +619,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                 }
 
                 int64_t askAgain = GetTime() + MASTERNODES_DSEG_SECONDS;
-                askedForMasternodeList[pfrom->addr] = askAgain;
+                mWeAskedForMasternodeList[pfrom->addr] = askAgain;
             }
         } //else, asking for a specific node which is ok
 
@@ -654,8 +654,9 @@ std::string CMasternodeMan::ToString()
     std::ostringstream info;
 
     info << "masternodes: " << (int)vMasternodes.size() <<
-            ", peers who asked us for masternode list: " << (int)askedForMasternodeList.size() <<
-            ", entries in masternode list we asked for: " << (int)askedForMasternodeListEntry.size();
+            ", peers who asked us for masternode list: " << (int)mAskedUsForMasternodeList.size() <<
+            ", peers we asked for masternode list: " << (int)mWeAskedForMasternodeList.size() <<
+            ", entries in masternode list we asked for: " << (int)mWeAskedForMasternodeListEntry.size();
 
     return info.str();
 }
