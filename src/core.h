@@ -191,7 +191,7 @@ public:
     {
         return SerializeHash(*this);
     }
-
+    /*
     bool IsDust(int64_t MIN_RELAY_TX_FEE) const
     {
         // "Dust" is defined in terms of CTransaction::nMinRelayTxFee,
@@ -204,7 +204,7 @@ public:
         // with default nMinRelayTxFee.
         return ((nValue*1000)/(3*((int)GetSerializeSize(SER_DISK,0)+148)) < MIN_RELAY_TX_FEE);
     }
-    
+    */
     friend bool operator==(const CTxOut& a, const CTxOut& b)
     {
         return (a.nValue       == b.nValue &&
