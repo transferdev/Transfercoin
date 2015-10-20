@@ -522,7 +522,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
                     nPayFee = MIN_TX_FEE;
                 }
             }
-            /*
+
             // Never create dust outputs; if we would, just add the dust to the fee.
             if (nChange > 0 && nChange < CENT)
             {
@@ -533,7 +533,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
                     nChange = 0;
                 }
             }
-            */
+
             if (nChange == 0)
                 nBytes -= 34;
         }
