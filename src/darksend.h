@@ -38,7 +38,7 @@ class CActiveMasternode;
 #define DARKSEND_QUEUE_TIMEOUT                 120
 #define DARKSEND_SIGNING_TIMEOUT               30
 
-static const int MIN_POOL_PEER_PROTO_VERSION = 61401; // minimum peer version accepted by DarkSendPool
+static const int MIN_POOL_PEER_PROTO_VERSION = 61400; // minimum peer version accepted by DarkSendPool
 
 extern CDarkSendPool darkSendPool;
 extern CDarkSendSigner darkSendSigner;
