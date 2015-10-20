@@ -13,6 +13,7 @@
 #include "ui_interface.h"
 #include "checkpoints.h"
 #include "activemasternode.h"
+#include "masternodeman.h"
 #include "masternodeconfig.h"
 #include "spork.h"
 #include "smessage.h"
@@ -108,6 +109,7 @@ void Shutdown()
         bitdb.Flush(false);
 #endif
     StopNode();
+    DumpMasternodes();
     {
         LOCK(cs_main);
 #ifdef ENABLE_WALLET
@@ -530,7 +532,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     //ignore masternodes below protocol version
-    CMasterNode::minProtoVersion = GetArg("-masternodeminprotocol", MIN_MN_PROTO_VERSION);
+    CMasternode::minProtoVersion = GetArg("-masternodeminprotocol", MIN_MN_PROTO_VERSION);
 
     if (fDaemon)
         fprintf(stdout, "Transfer server starting\n");
@@ -881,6 +883,22 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     if (!strErrors.str().empty())
         return InitError(strErrors.str());
+
+    uiInterface.InitMessage(_("Loading masternode list..."));
+
+    nStart = GetTimeMillis();
+
+    {
+        CMasternodeDB mndb;
+        if (!mndb.Read(mnodeman))
+            LogPrintf("Invalid or missing masternodes.dat; recreating\n");
+        else
+            mnodeman.CheckAndRemove(); // clean out expired
+    }
+
+    LogPrintf("Loaded info from masternodes.dat  %dms\n", GetTimeMillis() - nStart);
+    LogPrintf("  %s\n", mnodeman.ToString());
+
 
     fMasterNode = GetBoolArg("-masternode", false);
     if(fMasterNode) {

@@ -40,6 +40,68 @@ https://github.com/dashpay/dash/commit/b861e7ac4ca871626e75953ed833f9195b762932
 Fix priority calculation in CreateTransaction
 https://github.com/dashpay/dash/commit/9cd1dd9f6b5aace6c0e780bf4365fb2900757c1a
 
+HasCollateralInputs should check only for at least 1 collateral (not 2)
+https://github.com/dashpay/dash/commit/74551e9f31f10e351de1ec07f60513662ccdb06a
+
+CMasternodeman
+https://github.com/dashpay/dash/commits/v0.11.2.x?page=12
+
+move list logic back to rpcdarkcsend
+https://github.com/dashpay/dash/commit/dd610900516b615c4f1ed9d3cd279485683c4d52
+
+add masternodelist to command list
+https://github.com/dashpay/dash/commit/0cd0e9de6d65c66b5f0df566acc7f9cc1f5edb94
+
+track lastTimeChanged for mnodeman
+https://github.com/dashpay/dash/commit/003a1b7d72cbf753b7394c473d88a6be0df5a643
+
+show active/total MNs on info tab / update it in separate timer
+https://github.com/dashpay/dash/commit/d2e3d67a1d632912e83684e2a8b8e5780eae4216
+
+better naming/readability (Find)
+https://github.com/dashpay/dash/commit/0d51e1c90df98f649ea3062efa448c1c5bb9827b
+
+Added dstx support for free transactions ( NEEDS FIXED - AcceptToMemoryPool)
+https://github.com/dashpay/dash/commit/13246598b8b84af2ade8b3d0368655fc64f5cca0
+
+
+
+Change the way changes are handled:
+https://github.com/dashpay/dash/commit/2e05bf212eaf5e0fe98161f673483dc62e5c0a95
+
+rpc fixes:
+https://github.com/dashpay/dash/commit/558585039696096b355a9e75beb70b36a3b7cec9
+
+rpc: allow "darksend" only with ENABLE_WALLET
+https://github.com/dashpay/dash/commit/0d82275d05e9fb81d8d550a58c3d6202bdfce4e5
+
+fix DoAutomaticDenominating:
+https://github.com/dashpay/dash/commit/56471f83304cff936f2ad09242f9a2462389e75b
+
+allow searching masternode list by ip address
+https://github.com/dashpay/dash/commit/736e6da6b852119332b41b4da955af4d1b4ed8f9
+
+Few fixes for processing extra messages:
+https://github.com/dashpay/dash/commit/1ded1b9ec2de5687b38ac9178cc4b58375201e03
+
+Fix crashes on remove from vector
+https://github.com/dashpay/dash/commit/4fe845bf1530ad1b59dcfddebe50f323e1977402
+
+Fix versions:
+https://github.com/dashpay/dash/commit/0747da6b36a51f24efa7ca7fcb4f2ffa3332a118
+
+check and remove expired masternodes on client start
+https://github.com/dashpay/dash/commit/4af7c7411ac6837260ff5ff04ee4a4a944ac2082
+
+clear maps in mnodeman
+https://github.com/dashpay/dash/commit/80ce3f5a061e069145db81850e1afcffa52c7e12
+
+Cleanup copiler
+
+
+
+
+
 
 
 Removal of old code:

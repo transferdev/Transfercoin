@@ -1,6 +1,12 @@
 sudo: false
 os:
   - linux
+cache: 
+  apt: true
+  directories:
+  - $HOME/Transfercoin/src/leveldb
+  - $HOME/Transfercoin/src/secp256k1
+  - $HOME/secp256k1
 addons:
   apt:
     sources:
