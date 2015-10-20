@@ -8,11 +8,11 @@
 #include "uint256.h"
 #include "serialize.h"
 #include "util.h"
+#include "main.h"
 #include "script.h"
 
 #include <stdio.h>
 
-extern int64_t MIN_RELAY_TX_FEE;
 class CScript;
 class CTransaction;
 
