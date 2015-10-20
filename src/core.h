@@ -8,7 +8,6 @@
 #include "uint256.h"
 #include "serialize.h"
 #include "util.h"
-#include "main.h"
 #include "script.h"
 
 #include <stdio.h>
