@@ -192,7 +192,7 @@ public:
         return SerializeHash(*this);
     }
 
-    bool IsDust() const
+    bool IsDust(int64_t MIN_RELAY_TX_FEE) const
     {
         // "Dust" is defined in terms of CTransaction::nMinRelayTxFee,
         // which has units satoshis-per-kilobyte.
