@@ -1,6 +1,7 @@
 #include "coincontroldialog.h"
 #include "ui_coincontroldialog.h"
 
+#include "core.h"
 #include "init.h"
 #include "base58.h"
 #include "bitcoinunits.h"
@@ -488,6 +489,9 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         // Fee
         int64_t nFee = nTransactionFee * (1 + (int64_t)nBytes / 1000);
         
+        // IX Fee
+        if(coinControl->useInstantX) nFee = max(nFee, CENT);
+
         // Min Fee
         int64_t nMinFee = GetMinFee(txDummy, 1, GMF_SEND, nBytes);
         
@@ -496,7 +500,40 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         if (nPayAmount > 0)
         {
             nChange = nAmount - nPayFee - nPayAmount;
-            
+
+            // DS Fee = overpay
+            if(coinControl->useDarkSend && nChange > 0)
+            {
+                nPayFee += nChange;
+                nChange = 0;
+            }
+
+            // if sub-cent change is required, the fee must be raised to at least CTransaction::nMinTxFee
+            if (nPayFee < MIN_TX_FEE && nChange > 0 && nChange < CENT)
+            {
+                if (nChange < MIN_TX_FEE) // change < 0.0001 => simply move all change to fees
+                {
+                    nPayFee += nChange;
+                    nChange = 0;
+                }
+                else
+                {
+                    nChange = nChange + nPayFee - MIN_TX_FEE;
+                    nPayFee = MIN_TX_FEE;
+                }
+            }
+
+            // Never create dust outputs; if we would, just add the dust to the fee.
+            if (nChange > 0 && nChange < CENT)
+            {
+                CTxOut txout(nChange, (CScript)vector<unsigned char>(24, 0));
+                if (txout.IsDust(MIN_RELAY_TX_FEE))
+                {
+                    nPayFee += nChange;
+                    nChange = 0;
+                }
+            }
+
             if (nChange == 0)
                 nBytes -= 34;
         }

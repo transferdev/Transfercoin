@@ -98,6 +98,8 @@ https://github.com/dashpay/dash/commit/80ce3f5a061e069145db81850e1afcffa52c7e12
 
 Cleanup copiler
 
+fix filtering for "active" (was broken after IP filtering)
+https://github.com/dashpay/dash/commit/62800573cc49ce77162de6af3f75765677a74384
 
 
 
