@@ -181,20 +181,12 @@ void CMasternodeMan::CheckAndRemove()
     while(it1 != mAskedUsForMasternodeList.end()){
         if((*it1).second < GetTime()) {
             mAskedUsForMasternodeList.erase(it1++);
-        } else {
-            ++it1;
-        }
-    }
-    LogPrintf("passed it1\n");
-    // check who we asked for the masternode list
-    while(it1 != mWeAskedForMasternodeList.end()){
-        if((*it1).second < GetTime()){
             mWeAskedForMasternodeList.erase(it1++);
         } else {
             ++it1;
         }
     }
-    LogPrintf("passed it1 #2\n");
+    LogPrintf("passed it1\n");
     // check which masternodes we've asked for
     map<COutPoint, int64_t>::iterator it2 = mWeAskedForMasternodeListEntry.begin();
     while(it2 != mWeAskedForMasternodeListEntry.end()){
