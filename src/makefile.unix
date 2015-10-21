@@ -141,6 +141,7 @@ OBJS= \
     obj/stealth.o \
     obj/activemasternode.o \
     obj/darksend.o \
+    obj/darksend-relay.o \
     obj/eccryptoverify.o \
     obj/instantx.o \
     obj/masternodeconfig.o \
