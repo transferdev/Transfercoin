@@ -86,12 +86,12 @@ void SendCoinsDialog::setModel(WalletModel *model)
     this->model = model;
     for(int i = 0; i < ui->entries->count(); ++i)
     {
-
-        entry->setModel(model);
+        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
+        if(entry)
+        {
+            entry->setModel(model);
+        }
     }
-
-
-
     if(model && model->getOptionsModel())
     {
         setBalance(model->getBalance(), model->getStake(), model->getUnconfirmedBalance(), model->getImmatureBalance());
