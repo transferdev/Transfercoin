@@ -21,9 +21,8 @@ class CValidationState;
 #define START_MASTERNODE_PAYMENTS_TESTNET 1429456427 
 #define START_MASTERNODE_PAYMENTS 1429456427
 
-static const int64_t DARKSEND_COLLATERAL = (10000*COIN);
-static const int64_t DARKSEND_FEE = (0.0001*COIN);
-static const int64_t DARKSEND_POOL_MAX = (100000.99*COIN);
+static const int64_t DARKSEND_COLLATERAL = (0.01*COIN);
+static const int64_t DARKSEND_POOL_MAX = (99999.99*COIN);
 
 static const int64_t STATIC_POS_REWARD = 1 * COIN; //Constant reward of 1 TX per COIN i.e. 8% 
 static const int64_t TARGET_SPACING_FORK = 60;
