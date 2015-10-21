@@ -13,6 +13,7 @@
 #include "ui_interface.h"
 #include "checkpoints.h"
 #include "activemasternode.h"
+#include "darksend-relay.h"
 #include "masternodeman.h"
 #include "masternodeconfig.h"
 #include "spork.h"
@@ -532,7 +533,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     //ignore masternodes below protocol version
-    CMasternode::minProtoVersion = GetArg("-masternodeminprotocol", MIN_MN_PROTO_VERSION);
+    CMasternode::minProtoVersion = GetArg("-masternodeminprotocol", MIN_PEER_PROTO_VERSION);
 
     if (fDaemon)
         fprintf(stdout, "Transfer server starting\n");
@@ -884,20 +885,14 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (!strErrors.str().empty())
         return InitError(strErrors.str());
 
-    uiInterface.InitMessage(_("Loading masternode list..."));
+    uiInterface.InitMessage(_("Loading masternode cache..."));
 
-    nStart = GetTimeMillis();
-
-    {
-        CMasternodeDB mndb;
-        if (!mndb.Read(mnodeman))
-            LogPrintf("Invalid or missing masternodes.dat; recreating\n");
-        else
-            mnodeman.CheckAndRemove(); // clean out expired
-    }
-
-    LogPrintf("Loaded info from masternodes.dat  %dms\n", GetTimeMillis() - nStart);
-    LogPrintf("  %s\n", mnodeman.ToString());
+    CMasternodeDB mndb;
+    CMasternodeDB::ReadResult readResult = mndb.Read(mnodeman);
+    if (readResult == CMasternodeDB::FileError)
+        LogPrintf("Missing masternode cache file - mncache.dat, will try to recreate\n");
+    else if (readResult != CMasternodeDB::Ok)
+        LogPrintf("Masternode cache file mncache.dat has invalid format\n");
 
 
     fMasterNode = GetBoolArg("-masternode", false);

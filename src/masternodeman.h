@@ -28,15 +28,24 @@ extern CMasternodeMan mnodeman;
 
 void DumpMasternodes();
 
-/** Access to the MN database (masternodes.dat) */
+/** Access to the MN database (mncache.dat) */
 class CMasternodeDB
 {
 private:
     boost::filesystem::path pathMN;
 public:
+    enum ReadResult {
+        Ok,
+       FileError,
+        HashReadError,
+        IncorrectHash,
+        IncorrectMagic,
+        IncorrectFormat
+    };
+
     CMasternodeDB();
     bool Write(const CMasternodeMan &mnodemanToSave);
-    bool Read(CMasternodeMan& mnodemanToLoad);
+    ReadResult Read(CMasternodeMan& mnodemanToLoad);
 };
 
 class CMasternodeMan
@@ -55,6 +64,8 @@ private:
     std::map<COutPoint, int64_t> mWeAskedForMasternodeListEntry;
 
 public:
+    // keep track of dsq count to prevent masternodes from gaming darksend queue
+    int64_t nDsqCount;
 
     IMPLEMENT_SERIALIZE
     (
@@ -69,6 +80,7 @@ public:
                 READWRITE(mAskedUsForMasternodeList);
                 READWRITE(mWeAskedForMasternodeList);
                 READWRITE(mWeAskedForMasternodeListEntry);
+                READWRITE(nDsqCount);
         }
     )
 
@@ -108,13 +120,24 @@ public:
     std::vector<CMasternode> GetFullMasternodeVector() { Check(); return vMasternodes; }
 
     int GetMasternodeRank(const CTxIn &vin, int64_t nBlockHeight, int minProtocol=0);
+    CMasternode* GetMasternodeByRank(int nRank, int64_t nBlockHeight, int minProtocol=0);
 
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+
+    void ProcessMasternodeConnections();
 
     // Return the number of (unique) masternodes
     int size() { return vMasternodes.size(); }
 
-    std::string ToString();
+    std::string ToString() const;
+
+    //
+    // Relay Masternode Messages
+    //
+
+    void RelayMasternodeEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion);
+    void RelayMasternodeEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop);
+
 
 };
 

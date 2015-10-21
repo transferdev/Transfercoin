@@ -8,7 +8,7 @@
 #include <boost/lexical_cast.hpp>
 
 
-int CMasternode::minProtoVersion = MIN_MN_PROTO_VERSION;
+int CMasternode::minProtoVersion = MIN_PEER_PROTO_VERSION;
 
 CCriticalSection cs_masternodes;
 
@@ -210,6 +210,8 @@ uint256 CMasternode::CalculateScore(int mod, int64_t nBlockHeight)
 
 void CMasternode::Check()
 {
+    LOCK(cs_main);
+
     //once spent, stop doing the checks
     if(activeState == MASTERNODE_VIN_SPENT) return;
 

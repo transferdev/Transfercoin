@@ -619,7 +619,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 "\nAvailable modes:\n"
                 "  active         - Print '1' if active and '0' otherwise (can be additionally filtered by 'true' (active only) / 'false' (non-active only))\n"
                 "  activeseconds  - Print number of seconds masternode recognized by the network as enabled\n"
-                "  full           - Print info in format 'active | protocol | pubkey | vin | lastseen | activeseconds' (can be additionally filtered, partial match)\n"
+                "  full           - Print info in format 'active protocol pubkey vin lastseen activeseconds' (can be additionally filtered, partial match)\n"
                 "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
                 "  protocol       - Print protocol of a masternode (can be additionally filtered, exact match))\n"
                 "  pubkey         - Print public key associated with a masternode (can be additionally filtered, partial match)\n"
@@ -647,19 +647,22 @@ Value masternodelist(const Array& params, bool fHelp)
             ExtractDestination(pubkey, address1);
             CBitcoinAddress address2(address1);
 
+            std::ostringstream addrStream;
+            addrStream << setw(21) << strAddr;
+
             std::ostringstream stringStream;
-            stringStream << (mn.IsEnabled() ? "1" : "0") << " | " <<
-                           mn.protocolVersion << " | " <<
-                           address2.ToString() << " | " <<
-                           mn.vin.prevout.hash.ToString() << " | " <<
-                           mn.lastTimeSeen << " | " <<
+            stringStream << (mn.IsEnabled() ? "1" : "0") << " " <<
+                           mn.protocolVersion << " " <<
+                           address2.ToString() << " " <<
+                           mn.vin.prevout.hash.ToString() << " " <<
+                           mn.lastTimeSeen << " " << setw(8) <<
                            (mn.lastTimeSeen - mn.sigTime);
             std::string output = stringStream.str();
             stringStream << " " << strAddr;
 
             if(strFilter !="" && stringStream.str().find(strFilter) == string::npos &&
                     mn.addr.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr, output));
+            obj.push_back(Pair(addrStream.str(), output));
         } else if (strMode == "lastseen") {
             if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
             obj.push_back(Pair(strAddr,       (int64_t)mn.lastTimeSeen));

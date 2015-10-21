@@ -26,11 +26,13 @@ struct CompareValueOnly
 
 CMasternodeDB::CMasternodeDB()
 {
-    pathMN = GetDataDir() / "masternodes.dat";
+    pathMN = GetDataDir() / "mncache.dat";
 }
 
 bool CMasternodeDB::Write(const CMasternodeMan& mnodemanToSave)
 {
+    int64_t nStart = GetTimeMillis();
+
     // serialize addresses, checksum data up to that point, then append csum
     CDataStream ssMasternodes(SER_DISK, CLIENT_VERSION);
     ssMasternodes << FLATDATA(Params().MessageStart());
@@ -54,16 +56,23 @@ bool CMasternodeDB::Write(const CMasternodeMan& mnodemanToSave)
     FileCommit(fileout);
     fileout.fclose();
 
+    LogPrintf("Written info to mncache.dat  %dms\n", GetTimeMillis() - nStart);
+    LogPrintf("  %s\n", mnodemanToSave.ToString());
+
     return true;
 }
 
-bool CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
+CMasternodeDB::ReadResult CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
 {
+    int64_t nStart = GetTimeMillis();
     // open input file, and associate with CAutoFile
     FILE *file = fopen(pathMN.string().c_str(), "rb");
     CAutoFile filein = CAutoFile(file, SER_DISK, CLIENT_VERSION);
     if (!filein)
-        return error("%s : Failed to open file %s", __func__, pathMN.string());
+    {
+        error("%s : Failed to open file %s", __func__, pathMN.string());
+        return FileError;
+    }
 
     // use file size to size memory buffer
     int fileSize = boost::filesystem::file_size(pathMN);
@@ -81,7 +90,8 @@ bool CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
         filein >> hashIn;
     }
     catch (std::exception &e) {
-        return error("%s : Deserialize or I/O error - %s", __func__, e.what());
+        error("%s : Deserialize or I/O error - %s", __func__, e.what());
+        return HashReadError;
     }
     filein.fclose();
 
@@ -90,7 +100,10 @@ bool CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
     // verify stored checksum matches input data
     uint256 hashTmp = Hash(ssMasternodes.begin(), ssMasternodes.end());
     if (hashIn != hashTmp)
-        return error("%s : Checksum mismatch, data corrupted", __func__);
+    {
+        error("%s : Checksum mismatch, data corrupted", __func__);
+        return IncorrectHash;
+    }
 
     unsigned char pchMsgTmp[4];
     try {
@@ -99,17 +112,25 @@ bool CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
 
         // ... verify the network matches ours
         if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
-            return error("%s : Invalid network magic number", __func__);
+        {
+            error("%s : Invalid network magic number", __func__);
+            return IncorrectMagic;
+        }
 
         // de-serialize address data into one CMnList object
         ssMasternodes >> mnodemanToLoad;
     }
     catch (std::exception &e) {
-        return error("%s : Deserialize or I/O error - %s", __func__, e.what());
         mnodemanToLoad.Clear();
+        error("%s : Deserialize or I/O error - %s", __func__, e.what());
+        return IncorrectFormat;
     }
 
-    return true;
+    mnodemanToLoad.CheckAndRemove(); // clean out expired
+    LogPrintf("Loaded info from mncache.dat  %dms\n", GetTimeMillis() - nStart);
+    LogPrintf("  %s\n", mnodemanToLoad.ToString());
+
+    return Ok;
 }
 
 void DumpMasternodes()
@@ -117,13 +138,27 @@ void DumpMasternodes()
     int64_t nStart = GetTimeMillis();
 
     CMasternodeDB mndb;
+    CMasternodeMan tempMnodeman;
+
+    LogPrintf("Verifying mnchache.dat format...\n");
+    CMasternodeDB::ReadResult readResult = mndb.Read(tempMnodeman);
+    // there was an error and it was not an error on file openning => do not proceed
+    if (readResult == CMasternodeDB::FileError)
+        LogPrintf("Missing masternode list file - mncache.dat, will try to recreate\n");
+    else if (readResult != CMasternodeDB::Ok)
+    {
+        LogPrintf("Masternode list file mncache.dat has invalid format\n");
+        return;
+    }
+    LogPrintf("Writting info to mncache.dat...\n");
     mndb.Write(mnodeman);
 
-    LogPrintf("Flushed info to masternodes.dat  %dms\n", GetTimeMillis() - nStart);
-    LogPrintf("  %s\n", mnodeman.ToString());
+    LogPrintf("Masternode dump finished  %dms\n", GetTimeMillis() - nStart);
 }
 
-CMasternodeMan::CMasternodeMan() {}
+CMasternodeMan::CMasternodeMan() {
+    nDsqCount = 0;
+}
 
 bool CMasternodeMan::Add(CMasternode &mn)
 {
@@ -208,6 +243,7 @@ void CMasternodeMan::Clear()
     mAskedUsForMasternodeList.clear();
     mWeAskedForMasternodeList.clear();
     mWeAskedForMasternodeListEntry.clear();
+    nDsqCount = 0;
 }
 
 int CMasternodeMan::CountEnabled()
@@ -349,7 +385,7 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
 
     sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareValueOnly());
 
-    unsigned int rank = 0;
+    int rank = 0;
     BOOST_FOREACH (PAIRTYPE(unsigned int, CTxIn)& s, vecMasternodeScores){
         rank++;
         if(s.second == vin) {
@@ -358,6 +394,74 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
     }
 
     return -1;
+}
+
+CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight, int minProtocol)
+{
+    std::vector<pair<unsigned int, CTxIn> > vecMasternodeScores;
+
+    // scan for winner
+    BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+
+        mn.Check();
+
+        if(mn.protocolVersion < minProtocol) continue;
+        if(!mn.IsEnabled()) {
+            continue;
+        }
+
+        uint256 n = mn.CalculateScore(1, nBlockHeight);
+        unsigned int n2 = 0;
+        memcpy(&n2, &n, sizeof(n2));
+
+        vecMasternodeScores.push_back(make_pair(n2, mn.vin));
+    }
+
+    sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareValueOnly());
+
+    int rank = 0;
+    BOOST_FOREACH (PAIRTYPE(unsigned int, CTxIn)& s, vecMasternodeScores){
+        rank++;
+        if(rank == nRank) {
+            return Find(s.second);
+        }
+    }
+
+    return NULL;
+}
+
+void CMasternodeMan::ProcessMasternodeConnections()
+{
+    //we don't care about this for testing
+    if(TestNet()) return;
+
+    LOCK(cs_vNodes);
+
+    if(!darkSendPool.pSubmittedToMasternode) return;
+    
+    BOOST_FOREACH(CNode* pnode, vNodes)
+    {
+        if(darkSendPool.pSubmittedToMasternode->addr == pnode->addr) continue;
+
+        if(pnode->fDarkSendMaster){
+            LogPrintf("Closing masternode connection %s \n", pnode->addr.ToString().c_str());
+            pnode->CloseSocketDisconnect();
+        }
+    }
+}
+
+void CMasternodeMan::RelayMasternodeEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion)
+{
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodes)
+        pnode->PushMessage("dsee", vin, addr, vchSig, nNow, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
+}
+
+void CMasternodeMan::RelayMasternodeEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop)
+{
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodes)
+        pnode->PushMessage("dseep", vin, vchSig, nNow, stop);
 }
 
 void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
@@ -399,7 +503,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
-        if(protocolVersion < MIN_MN_PROTO_VERSION) {
+        if(protocolVersion < MIN_PEER_PROTO_VERSION) {
             LogPrintf("dsee - ignoring outdated masternode %s protocol version %d\n", vin.ToString().c_str(), protocolVersion);
             return;
         }
@@ -449,7 +553,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                     pmn->addr = addr;
                     pmn->Check();
                     if(pmn->IsEnabled())
-                        RelayDarkSendElectionEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
+                        mnodeman.RelayMasternodeEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
                 }
             }
 
@@ -517,7 +621,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             }
 
             if(count == -1 && !isLocal)
-                RelayDarkSendElectionEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
+                mnodeman.RelayMasternodeEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
 
         } else {
             LogPrintf("dsee - Rejected masternode entry %s\n", addr.ToString().c_str());
@@ -555,7 +659,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         // see if we have this masternode
         CMasternode* pmn = this->Find(vin);
-        if(pmn != NULL)
+        if(pmn != NULL && pmn->protocolVersion >= CMasternode::minProtoVersion)
         {
             // LogPrintf("dseep - Found corresponding mn for vin: %s\n", vin.ToString().c_str());
             // take this only if it's newer
@@ -582,7 +686,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                         pmn->Check();
                         if(!pmn->IsEnabled()) return;
                     }
-                    RelayDarkSendElectionEntryPing(vin, vchSig, sigTime, stop);
+                    mnodeman.RelayMasternodeEntryPing(vin, vchSig, sigTime, stop);
                 }
             }
             return;
@@ -655,14 +759,15 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
 }
 
-std::string CMasternodeMan::ToString()
+std::string CMasternodeMan::ToString() const
 {
     std::ostringstream info;
 
     info << "masternodes: " << (int)vMasternodes.size() <<
             ", peers who asked us for masternode list: " << (int)mAskedUsForMasternodeList.size() <<
             ", peers we asked for masternode list: " << (int)mWeAskedForMasternodeList.size() <<
-            ", entries in masternode list we asked for: " << (int)mWeAskedForMasternodeListEntry.size();
+            ", entries in Masternode list we asked for: " << (int)mWeAskedForMasternodeListEntry.size() <<
+            ", nDsqCount: " << (int)nDsqCount;
 
     return info.str();
 }

@@ -101,6 +101,33 @@ Cleanup copiler
 fix filtering for "active" (was broken after IP filtering)
 https://github.com/dashpay/dash/commit/62800573cc49ce77162de6af3f75765677a74384
 
+add spaces to table-fy console view of "masternode list"
+https://github.com/dashpay/dash/commit/3a4c3e401b9b5ae3054135e405110cf2f8372425
+
+remove "|" to make full mode a bit more compact
+https://github.com/dashpay/dash/commit/64c1a8b147e3b5e39751ab908b77c6e9a2a5e058
+
+add spaces to IP only in full mode
+https://github.com/dashpay/dash/commit/d2a1ecf5240415ac4c293bed2db9b3af9103be7d
+
+Merged masternode blinding
+https://github.com/dashpay/dash/commit/a6b58ab1e892cf70936383fd927305a043bd55ff
+
+Make masternodes.dat verification more specific
+https://github.com/dashpay/dash/commit/2a5d588784e87aa275360aab11888ab7ff14eeab
+
+fixed shared key usage
+https://github.com/dashpay/dash/commit/c6f0259d9bc03835a728c3cb4aa600069c7d092f
+
+rename masternodes.dat->mncache.dat / fix strings
+https://github.com/dashpay/dash/commit/e522cbfd6ad286d4a6cfaa670b12e498eea50c1d
+
+save nDsqCount in mncache.dat
+https://github.com/dashpay/dash/commit/b5414e1c3c86e9f99d5a331f41a73191173045aa
+
+Added input/output/sig trickle
+https://github.com/dashpay/dash/commit/c169e49fce95ff587ccdf221e536ccc9737dbd05
+
 
 
 
@@ -126,5 +153,13 @@ BIP66 compatibility
 Replaced NOP7 with CHECKLOCKTIMEVERIFY
 Enforce new script verification flags
 Demand canonical block sig from updated peers
+
 Submitblock: Add submission of stake template
 https://github.com/SCDeveloper/DarkSilk-Release-Candidate/commit/a108b8b0179f1790dd8dba824efc3a15c1ab6066
+
+
+
+SPORK Additions/Changes | SANDSTORM fee removal
+https://github.com/SCDeveloper/DarkSilk-Release-Candidate/commit/e6ebc2ec9a955f1447a9c29e49232c61df97d768
+
+Change DS_COLLATERAL to 0.01 remove DS fee
