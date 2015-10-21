@@ -15,7 +15,6 @@ namespace Ui {
 }
 class WalletModel;
 class CCoinControl;
-class QCheckBox;
 
 class CoinControlDialog : public QDialog
 {
@@ -39,7 +38,6 @@ private:
     WalletModel *model;
     int sortColumn;
     Qt::SortOrder sortOrder;
-    QCheckBox* useDarkSend;
 
     QMenu *contextMenu;
     QTreeWidgetItem *contextMenuItem;

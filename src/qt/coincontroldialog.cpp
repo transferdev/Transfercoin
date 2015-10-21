@@ -382,8 +382,8 @@ void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
                 QMessageBox::warning(this, windowTitle(),
                     tr("Non-anonymized input selected. <b>Darksend will be disabled.</b><br><br>If you still want to use Darksend, please deselect all non-anonymized inputs first and then check Darksend checkbox again."),
                     QMessageBox::Ok, QMessageBox::Ok);
-                useDarkSend->setChecked(false);
-
+                coinControl->useDarkSend = false;
+                coinControl->useDarkSend = ui->checkUseDarksend->setChecked(bool unchecked);
             }
         }
 
