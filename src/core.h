@@ -12,8 +12,6 @@
 
 #include <stdio.h>
 
-static const int MIN_POOL_PEER_PROTO_VERSION = 61401; // minimum peer version accepted by DarkSendPool
-
 class CScript;
 class CTransaction;
 
