@@ -1344,7 +1344,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
             if(fDebug) LogPrintf("dsi -- tx in %s\n", i.ToString().c_str());
         }
 
-        Logprintf("Submitting tx %s\n", tx.ToString().c_str());
+        LogPrintf("Submitting tx %s\n", tx.ToString().c_str());
 
         //if(!AcceptableInputs(mempool, state, tx)){
 	bool* pfMissingInputs;
@@ -1709,7 +1709,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                         sessionDenom = dsq.nDenom;
 
                         pNode->PushMessage("dsa", sessionDenom, txCollateral);
-                        LogPrintf("DoAutomaticDenominating --- connected (from queue), sending dsa for %d %d - %s\n", sessionDenom, GetDenominationsByAmount(sessionTotalValue), pnode->addr.ToString().c_str());
+                        LogPrintf("DoAutomaticDenominating --- connected (from queue), sending dsa for %d %d - %s\n", sessionDenom, GetDenominationsByAmount(sessionTotalValue), pNode->addr.ToString().c_str());
                         strAutoDenomResult = "";
                         return true;
                     }
