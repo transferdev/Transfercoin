@@ -464,7 +464,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
-        if(protocolVersion < MIN_MN_PROTO_VERSION) {
+        if(protocolVersion < MIN_PEER_PROTO_VERSION) {
             LogPrintf("dsee - ignoring outdated masternode %s protocol version %d\n", vin.ToString().c_str(), protocolVersion);
             return;
         }
@@ -620,7 +620,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         // see if we have this masternode
         CMasternode* pmn = this->Find(vin);
-        if(pmn != NULL && pmn->protocolVersion >= nMasternodeMinProtocol)
+        if(pmn != NULL && pmn->protocolVersion >= CMasternode::minProtoVersion)
         {
             // LogPrintf("dseep - Found corresponding mn for vin: %s\n", vin.ToString().c_str());
             // take this only if it's newer
