@@ -1667,8 +1667,8 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         //randomize the amounts we mix
         if(sessionTotalValue > nBalanceNeedsAnonymized) sessionTotalValue = nBalanceNeedsAnonymized;
 
-        double fTransferSubmitted = (sessionTotalValue / CENT);
-        LogPrintf("Submitting Darksend for %f TX CENT - sessionTotalValue %d\n", fTransferSubmitted, sessionTotalValue);
+        double fTransferSubmitted = (sessionTotalValue / COIN);
+        LogPrintf("Submitting Darksend for %f TX COIN - sessionTotalValue %d\n", fTransferSubmitted, sessionTotalValue);
 
         if(pwalletMain->GetDenominatedBalance(true, true) > 0){ //get denominated unconfirmed inputs
             LogPrintf("DoAutomaticDenominating -- Found unconfirmed denominated outputs, will wait till they confirm to continue.\n");
