@@ -1611,7 +1611,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     // if there are no DS collateral inputs yet
     if(!pwalletMain->HasCollateralInputs())
         // should have some additional amount for them
-        nLowestDenom += (DARKSEND_COLLATERAL*4)+DARKSEND_FEE*2;
+        nLowestDenom += DARKSEND_FEE*4;
 
     int64_t nBalanceNeedsAnonymized = nAnonymizeTransferAmount*COIN - pwalletMain->GetAnonymizedBalance();
 
@@ -1967,8 +1967,7 @@ bool CDarksendPool::MakeCollateralAmounts()
     std::string strFail = "";
     vector< pair<CScript, int64_t> > vecSend;
 
-    vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
-    vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
+    vecSend.push_back(make_pair(scriptChange, DARKSEND_FEE*4));
 
     CCoinControl *coinControl=NULL;
     int32_t nChangePos;
@@ -2014,10 +2013,8 @@ bool CDarksendPool::CreateDenominated(int64_t nTotalValue)
 
     // ****** Add collateral outputs ************ /
     if(!pwalletMain->HasCollateralInputs()) {
-        vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
-        nValueLeft -= (DARKSEND_COLLATERAL*2)+DARKSEND_FEE;
-        vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
-        nValueLeft -= (DARKSEND_COLLATERAL*2)+DARKSEND_FEE;
+        vecSend.push_back(make_pair(scriptChange, DARKSEND_FEE*4));
+        nValueLeft -= DARKSEND_FEE*4;
     }
 
     // ****** Add denoms ************ /
