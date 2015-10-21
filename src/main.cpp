@@ -6,6 +6,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include "alert.h"
 #include "chainparams.h"
@@ -19,7 +20,7 @@
 #include "ui_interface.h"
 #include "instantx.h"
 #include "darksend.h"
-#include "masternode.h"
+#include "masternodeman.h"
 #include "spork.h"
 #include "smessage.h"
 
@@ -761,6 +762,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree,
     LogPrint("mempool", "AcceptToMemoryPool : accepted %s (poolsz %u)\n",
            hash.ToString(),
            pool.mapTx.size());
+    
     return true;
 }
 
@@ -789,6 +791,7 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
     if (!TestNet() && !IsStandardTx(tx, reason))
         return error("AcceptableInputs : nonstandard transaction: %s",
                      reason);
+
 
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();
@@ -886,9 +889,10 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
     }
 
 
-    LogPrint("mempool", "AcceptableInputs : accepted %s (poolsz %u)\n",
+    /*LogPrint("mempool", "AcceptableInputs : accepted %s (poolsz %u)\n",
            hash.ToString(),
            pool.mapTx.size());
+    */
     return true;
 }
 
@@ -1853,51 +1857,53 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
             return error("ConnectBlock() : UpdateTxIndex failed");
     }
 
-
-    // Write Address Index
-    BOOST_FOREACH(CTransaction& tx, vtx)
+    if(GetBoolArg("-addrindex", false))
     {
-        uint256 hashTx = tx.GetHash();
-	// inputs
-	if(!tx.IsCoinBase()) 
-	{
-            MapPrevTx mapInputs;
-	    map<uint256, CTxIndex> mapQueuedChangesT;
-	    bool fInvalid;
-            if (!tx.FetchInputs(txdb, mapQueuedChangesT, true, false, mapInputs, fInvalid))
-                return false;
+        // Write Address Index
+        BOOST_FOREACH(CTransaction& tx, vtx)
+        {
+            uint256 hashTx = tx.GetHash();
+            // inputs
+            if(!tx.IsCoinBase()) 
+            {
+                MapPrevTx mapInputs;
+                map<uint256, CTxIndex> mapQueuedChangesT;
+                bool fInvalid;
+                if (!tx.FetchInputs(txdb, mapQueuedChangesT, true, false, mapInputs, fInvalid))
+                    return false;
 
-	    MapPrevTx::const_iterator mi;
-	    for(MapPrevTx::const_iterator mi = mapInputs.begin(); mi != mapInputs.end(); ++mi)
-	    {
-		    BOOST_FOREACH(const CTxOut &atxout, (*mi).second.second.vout)
-		    {
-			std::vector<uint160> addrIds;
-			if(BuildAddrIndex(atxout.scriptPubKey, addrIds))
-			{
+                MapPrevTx::const_iterator mi;
+                for(MapPrevTx::const_iterator mi = mapInputs.begin(); mi != mapInputs.end(); ++mi)
+                {
+                    BOOST_FOREACH(const CTxOut &atxout, (*mi).second.second.vout)
+                    {
+                        std::vector<uint160> addrIds;
+                        if(BuildAddrIndex(atxout.scriptPubKey, addrIds))
+                        {
                             BOOST_FOREACH(uint160 addrId, addrIds)
-		            {
-			        if(!txdb.WriteAddrIndex(addrId, hashTx))
-				    LogPrintf("ConnectBlock(): txins WriteAddrIndex failed addrId: %s txhash: %s\n", addrId.ToString().c_str(), hashTx.ToString().c_str());
+                            {
+                                if(!txdb.WriteAddrIndex(addrId, hashTx))
+                                    LogPrintf("ConnectBlock(): txins WriteAddrIndex failed addrId: %s txhash: %s\n", addrId.ToString().c_str(), hashTx.ToString().c_str());
                             }
-			}
-		    }
-	    }
- 	    
-        }
-
-	// outputs
-	BOOST_FOREACH(const CTxOut &atxout, tx.vout) {
-	    std::vector<uint160> addrIds;
-            if(BuildAddrIndex(atxout.scriptPubKey, addrIds))
-	    {
-		BOOST_FOREACH(uint160 addrId, addrIds)
-		{
-		    if(!txdb.WriteAddrIndex(addrId, hashTx))
-		        LogPrintf("ConnectBlock(): txouts WriteAddrIndex failed addrId: %s txhash: %s\n", addrId.ToString().c_str(), hashTx.ToString().c_str());
+                        }
+                    }
                 }
-	    }
-	}
+            }
+
+            // outputs
+            BOOST_FOREACH(const CTxOut &atxout, tx.vout)
+            {
+                std::vector<uint160> addrIds;
+                if(BuildAddrIndex(atxout.scriptPubKey, addrIds))
+                {
+                    BOOST_FOREACH(uint160 addrId, addrIds)
+                    {
+                        if(!txdb.WriteAddrIndex(addrId, hashTx))
+                            LogPrintf("ConnectBlock(): txouts WriteAddrIndex failed addrId: %s txhash: %s\n", addrId.ToString().c_str(), hashTx.ToString().c_str());
+                    }
+                }
+            }
+        }
     }
 
     // Update block index on disk without changing it in memory.
@@ -3315,9 +3321,8 @@ void static ProcessGetData(CNode* pfrom)
                 if (!pushed && inv.type == MSG_MASTERNODE_WINNER) {
                     if(mapSeenMasternodeVotes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                        int a = 0;
                         ss.reserve(1000);
-                        ss << mapSeenMasternodeVotes[inv.hash] << a;
+                        ss << mapSeenMasternodeVotes[inv.hash];
                         pfrom->PushMessage("mnw", ss);
                         pushed = true;
                     }
@@ -3709,12 +3714,58 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     }
 
 
-    else if (strCommand == "tx")
+    else if (strCommand == "tx"|| strCommand == "dstx")
     {
         vector<uint256> vWorkQueue;
         vector<uint256> vEraseQueue;
         CTransaction tx;
-        vRecv >> tx;
+
+        //masternode signed transaction
+        //bool allowFree = false;
+        CTxIn vin;
+        vector<unsigned char> vchSig;
+        int64_t sigTime;
+
+        if(strCommand == "tx") {
+            vRecv >> tx;
+        } else if (strCommand == "dstx") {
+            //these allow masternodes to publish a limited amount of free transactions
+            vRecv >> tx >> vin >> vchSig >> sigTime;
+
+            CMasternode* pmn = mnodeman.Find(vin);
+            if(pmn != NULL)
+            {
+                if(!pmn->allowFreeTx){
+                    //multiple peers can send us a valid masternode transaction
+                    if(fDebug) LogPrintf("dstx: Masternode sending too many transactions %s\n", tx.GetHash().ToString().c_str());
+                    return true;
+                }
+
+                std::string strMessage = tx.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
+
+                std::string errorMessage = "";
+                if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)){
+                    LogPrintf("dstx: Got bad masternode address signature %s \n", vin.ToString().c_str());
+                    //pfrom->Misbehaving(20);
+                    return false;
+                }
+
+                LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString().c_str());
+
+                //allowFree = true;
+                pmn->allowFreeTx = false;
+
+                if(!mapDarksendBroadcastTxes.count(tx.GetHash())){
+                    CDarksendBroadcastTx dstx;
+                    dstx.tx = tx;
+                    dstx.vin = vin;
+                    dstx.vchSig = vchSig;
+                    dstx.sigTime = sigTime;
+
+                    mapDarksendBroadcastTxes.insert(make_pair(tx.GetHash(), dstx));
+                }
+            }
+        }
 
         CInv inv(MSG_TX, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
@@ -3948,8 +3999,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (fSecMsgEnabled)
             SecureMsgReceiveData(pfrom, strCommand, vRecv);
 
-        ProcessMessageDarksend(pfrom, strCommand, vRecv);
-        ProcessMessageMasternode(pfrom, strCommand, vRecv);
+        darkSendPool.ProcessMessageDarksend(pfrom, strCommand, vRecv);
+        mnodeman.ProcessMessage(pfrom, strCommand, vRecv);
+        ProcessMessageMasternodePayments(pfrom, strCommand, vRecv);
         ProcessMessageInstantX(pfrom, strCommand, vRecv);
         ProcessSpork(pfrom, strCommand, vRecv);
 

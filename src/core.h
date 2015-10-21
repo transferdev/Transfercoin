@@ -143,6 +143,7 @@ class CTxOut
 {
 public:
     int64_t nValue;
+    int nRounds;
     CScript scriptPubKey;
 
     CTxOut()
@@ -165,6 +166,7 @@ public:
     void SetNull()
     {
         nValue = -1;
+        nRounds = -10; // an initial value, should be no way to get this by calculations
         scriptPubKey.clear();
     }
 
@@ -189,9 +191,23 @@ public:
         return SerializeHash(*this);
     }
 
+    bool IsDust(int64_t MIN_RELAY_TX_FEE) const
+    {
+        // "Dust" is defined in terms of CTransaction::nMinRelayTxFee,
+        // which has units satoshis-per-kilobyte.
+        // If you'd pay more than 1/3 in fees
+        // to spend something, then we consider it dust.
+        // A typical txout is 34 bytes big, and will
+        // need a CTxIn of at least 148 bytes to spend,
+        // so dust is a txout less than 546 satoshis
+        // with default nMinRelayTxFee.
+        return ((nValue*1000)/(3*((int)GetSerializeSize(SER_DISK,0)+148)) < MIN_RELAY_TX_FEE);
+    }
+
     friend bool operator==(const CTxOut& a, const CTxOut& b)
     {
         return (a.nValue       == b.nValue &&
+                a.nRounds      == b.nRounds &&
                 a.scriptPubKey == b.scriptPubKey);
     }
 

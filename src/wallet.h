@@ -291,6 +291,7 @@ public:
     bool FindStealthTransactions(const CTransaction& tx, mapValue_t& mapNarr);
 
     std::string PrepareDarksendDenominate(int minRounds, int maxRounds);
+    int GenerateDarksendOutputs(int nTotalValue, std::vector<CTxOut>& vout);
     bool CreateCollateralTransaction(CTransaction& txCollateral, std::string strReason);
     bool ConvertList(std::vector<CTxIn> vCoins, std::vector<int64_t>& vecAmounts);
 
@@ -854,7 +855,6 @@ public:
     //Used with Darksend. Will return fees, then denominations, everything else, then very small inputs that aren't fees
     int Priority() const
     {
-        if(tx->vout[i].nValue == DARKSEND_FEE) return -20000;
         BOOST_FOREACH(int64_t d, darkSendDenominations)
             if(tx->vout[i].nValue == d) return 10000;
         if(tx->vout[i].nValue < 1*COIN) return 20000;

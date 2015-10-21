@@ -4,6 +4,7 @@
 
 #include "protocol.h"
 #include "activemasternode.h"
+#include "masternodeman.h"
 #include <boost/lexical_cast.hpp>
 #include "clientversion.h"
 
@@ -71,7 +72,9 @@ void CActiveMasternode::ManageStatus()
         if(GetMasterNodeVin(vin, pubKeyCollateralAddress, keyCollateralAddress)) {
 
             if(GetInputAge(vin) < MASTERNODE_MIN_CONFIRMATIONS){
-                LogPrintf("CActiveMasternode::ManageStatus() - Input must have least %d confirmations - %d confirmations\n", MASTERNODE_MIN_CONFIRMATIONS, GetInputAge(vin));
+                notCapableReason = "Input must have least " + boost::lexical_cast<string>(MASTERNODE_MIN_CONFIRMATIONS) +
+                        " confirmations - " + boost::lexical_cast<string>(GetInputAge(vin)) + " confirmations";
+                LogPrintf("CActiveMasternode::ManageStatus() - %s\n", notCapableReason.c_str());
                 status = MASTERNODE_INPUT_TOO_NEW;
                 return;
             }
@@ -105,7 +108,7 @@ void CActiveMasternode::ManageStatus()
 
     //send to all peers
     if(!Dseep(errorMessage)) {
-    	LogPrintf("CActiveMasternode::ManageStatus() - Error on Ping: %s", errorMessage.c_str());
+    	LogPrintf("CActiveMasternode::ManageStatus() - Error on Ping: %s\n", errorMessage.c_str());
     }
 }
 
@@ -191,16 +194,11 @@ bool CActiveMasternode::Dseep(CTxIn vin, CService service, CKey keyMasternode, C
     }
 
     // Update Last Seen timestamp in masternode list
-    bool found = false;
-    BOOST_FOREACH(CMasterNode& mn, vecMasternodes) {
-        //LogPrintf(" -- %s\n", mn.vin.ToString().c_str());
-        if(mn.vin == vin) {
-            found = true;
-            mn.UpdateLastSeen();
-        }
-    }
-
-    if(!found){
+    CMasternode* pmn = mnodeman.Find(vin);
+    if(pmn != NULL)
+    {
+        pmn->UpdateLastSeen();
+    } else {
     	// Seems like we are trying to send a ping while the masternode is not registered in the network
     	retErrorMessage = "Darksend Masternode List doesn't include our masternode, Shutting down masternode pinging service! " + vin.ToString();
     	LogPrintf("CActiveMasternode::Dseep() - Error: %s\n", retErrorMessage.c_str());
@@ -210,8 +208,8 @@ bool CActiveMasternode::Dseep(CTxIn vin, CService service, CKey keyMasternode, C
     }
 
     //send to all peers
-    LogPrintf("CActiveMasternode::Dseep() - SendDarkSendElectionEntryPing vin = %s\n", vin.ToString().c_str());
-    SendDarkSendElectionEntryPing(vin, vchMasterNodeSignature, masterNodeSignatureTime, stop);
+    LogPrintf("CActiveMasternode::Dseep() - RelayMasternodeEntryPing vin = %s\n", vin.ToString().c_str());
+    mnodeman.RelayMasternodeEntryPing(vin, vchMasterNodeSignature, masterNodeSignatureTime, stop);
 
     return true;
 }
@@ -281,22 +279,19 @@ bool CActiveMasternode::Register(CTxIn vin, CService service, CKey keyCollateral
 		return false;
 	}
 
-    bool found = false;
     LOCK(cs_masternodes);
-    BOOST_FOREACH(CMasterNode& mn, vecMasternodes)
-        if(mn.vin == vin)
-            found = true;
-
-    if(!found) {
+    CMasternode* mn = mnodeman.Find(vin);
+    if(!mn)
+    {
         LogPrintf("CActiveMasternode::Register() - Adding to masternode list service: %s - vin: %s\n", service.ToString().c_str(), vin.ToString().c_str());
-        CMasterNode mn(service, vin, pubKeyCollateralAddress, vchMasterNodeSignature, masterNodeSignatureTime, pubKeyMasternode, PROTOCOL_VERSION);
+        CMasternode mn(service, vin, pubKeyCollateralAddress, vchMasterNodeSignature, masterNodeSignatureTime, pubKeyMasternode, PROTOCOL_VERSION);
         mn.UpdateLastSeen(masterNodeSignatureTime);
-        vecMasternodes.push_back(mn);
+        mnodeman.Add(mn);
     }
 
     //send to all peers
-    LogPrintf("CActiveMasternode::Register() - SendDarkSendElectionEntry vin = %s\n", vin.ToString().c_str());
-    SendDarkSendElectionEntry(vin, service, vchMasterNodeSignature, masterNodeSignatureTime, pubKeyCollateralAddress, pubKeyMasternode, -1, -1, masterNodeSignatureTime, PROTOCOL_VERSION);
+    LogPrintf("CActiveMasternode::Register() - RelayElectionEntry vin = %s\n", vin.ToString().c_str());
+    mnodeman.RelayMasternodeEntry(vin, service, vchMasterNodeSignature, masterNodeSignatureTime, pubKeyCollateralAddress, pubKeyMasternode, -1, -1, masterNodeSignatureTime, PROTOCOL_VERSION);
 
     return true;
 }

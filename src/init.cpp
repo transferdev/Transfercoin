@@ -13,6 +13,8 @@
 #include "ui_interface.h"
 #include "checkpoints.h"
 #include "activemasternode.h"
+#include "darksend-relay.h"
+#include "masternodeman.h"
 #include "masternodeconfig.h"
 #include "spork.h"
 #include "smessage.h"
@@ -108,6 +110,7 @@ void Shutdown()
         bitdb.Flush(false);
 #endif
     StopNode();
+    DumpMasternodes();
     {
         LOCK(cs_main);
 #ifdef ENABLE_WALLET
@@ -270,6 +273,7 @@ std::string HelpMessage()
 strUsage += "\n" + _("Masternode options:") + "\n";
     strUsage += "  -masternode=<n>            " + _("Enable the client to act as a masternode (0-1, default: 0)") + "\n";
     strUsage += "  -mnconf=<file>             " + _("Specify masternode configuration file (default: masternode.conf)") + "\n";
+    strUsage += "  -mnconflock=<n>            " + _("Lock masternodes from masternode configuration file (default: 1)") + "\n";
     strUsage += "  -masternodeprivkey=<n>     " + _("Set the masternode private key") + "\n";
     strUsage += "  -masternodeaddr=<n>        " + _("Set external address:port to get to this masternode (example: address:port)") + "\n";
     strUsage += "  -masternodeminprotocol=<n> " + _("Ignore masternodes less than version (example: 70007; default : 0)") + "\n";
@@ -529,7 +533,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     //ignore masternodes below protocol version
-    CMasterNode::minProtoVersion = GetArg("-masternodeminprotocol", MIN_MN_PROTO_VERSION);
+    CMasternode::minProtoVersion = GetArg("-masternodeminprotocol", MIN_PEER_PROTO_VERSION);
 
     if (fDaemon)
         fprintf(stdout, "Transfer server starting\n");
@@ -881,6 +885,16 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (!strErrors.str().empty())
         return InitError(strErrors.str());
 
+    uiInterface.InitMessage(_("Loading masternode cache..."));
+
+    CMasternodeDB mndb;
+    CMasternodeDB::ReadResult readResult = mndb.Read(mnodeman);
+    if (readResult == CMasternodeDB::FileError)
+        LogPrintf("Missing masternode cache file - mncache.dat, will try to recreate\n");
+    else if (readResult != CMasternodeDB::Ok)
+        LogPrintf("Masternode cache file mncache.dat has invalid format\n");
+
+
     fMasterNode = GetBoolArg("-masternode", false);
     if(fMasterNode) {
         LogPrintf("IS DARKSEND MASTER NODE\n");
@@ -911,6 +925,17 @@ bool AppInit2(boost::thread_group& threadGroup)
 
         } else {
             return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
+        }
+    }
+
+    if(GetBoolArg("-mnconflock", true)) {
+        LogPrintf("Locking Masternodes:\n");
+        uint256 mnTxHash;
+        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+            LogPrintf("  %s %s\n", mne.getTxHash(), mne.getOutputIndex());
+            mnTxHash.SetHex(mne.getTxHash());
+            COutPoint outpoint = COutPoint(mnTxHash, boost::lexical_cast<unsigned int>(mne.getOutputIndex()));
+            pwalletMain->LockCoin(outpoint);
         }
     }
 
