@@ -116,6 +116,13 @@ https://github.com/dashpay/dash/commit/a6b58ab1e892cf70936383fd927305a043bd55ff
 Make masternodes.dat verification more specific
 https://github.com/dashpay/dash/commit/2a5d588784e87aa275360aab11888ab7ff14eeab
 
+fixed shared key usage
+https://github.com/dashpay/dash/commit/c6f0259d9bc03835a728c3cb4aa600069c7d092f
+
+
+
+
+
 
 Removal of old code:
 IsProtocolV1/IsProtocolV2 hard fork switches removed

@@ -1065,12 +1065,19 @@ void CDarksendPool::CheckForCompleteQueue(){
     if(state == POOL_STATUS_QUEUE && sessionUsers == GetMaxPoolTransactions()) {
         printf("Q ready");
         UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
- 
+    
+        if(strMasternodeSharedKey == ""){
+            CKey secret;
+            secret.MakeNewKey(false);
+            strMasternodeSharedKey = CBitcoinSecret(secret).ToString();
+        }
+
         CDarksendQueue dsq;
         dsq.nDenom = sessionDenom;
         dsq.vin = activeMasternode.vin;
         dsq.time = GetTime();
         dsq.ready = true;
+        dsq.SetSharedKey(strMasternodeSharedKey);
         dsq.Sign();
         dsq.Relay();
     }
@@ -2035,6 +2042,7 @@ bool CDarksendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txColla
             dsq.vin = activeMasternode.vin;
             dsq.time = GetTime();
             dsq.Sign();
+            strMasternodeSharedKey = dsq.strSharedKey;
             dsq.Relay();
         }
 
@@ -2295,10 +2303,6 @@ bool CDarksendQueue::Sign()
     nBlockHeight = FindBlockByHeight(pindexBest->nHeight); //sign with our current blockheight
     strMessage = boost::lexical_cast<std::string>(nBlockHeight);
  
-    CKey secret;
-    secret.MakeNewKey(false);
-    strSharedKey = CBitcoinSecret(secret).ToString();
- 
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchRelaySig, key2)) {
         LogPrintf("CDarksendQueue():Relay - Sign message failed");
         return false;
@@ -2310,6 +2314,11 @@ bool CDarksendQueue::Sign()
     }
 
     return true;
+}
+
+void CDarksendQueue::SetSharedKey(std::string strSharedKeyIn)
+{
+    strSharedKey = strSharedKeyIn;
 }
 
 bool CDarksendQueue::Relay()
@@ -2368,8 +2377,8 @@ void CDarksendPool::RelaySignaturesAnon(std::vector<CTxIn>& vin)
  
     BOOST_FOREACH(CTxIn& in, vin){
         LogPrintf("RelaySignaturesAnon - sig %s\n", in.ToString().c_str());
-        CDarkSendRelay dsr(pSubmittedToMasternode->vin, vchMasternodeRelaySig, nMasternodeBlockHeight, DARKSEND_RELAY_SIG, in, out, strMasternodeSharedKey);
-        dsr.Relay();
+        CDarkSendRelay dsr(pSubmittedToMasternode->vin, vchMasternodeRelaySig, nMasternodeBlockHeight, DARKSEND_RELAY_SIG, in, out);
+        dsr.Sign(strMasternodeSharedKey);
     }
 }
  
@@ -2381,14 +2390,14 @@ void CDarksendPool::RelayInAnon(std::vector<CTxIn>& vin, std::vector<CTxOut>& vo
  
     BOOST_FOREACH(CTxIn& in, vin){
         LogPrintf("RelayInAnon - in %s\n", in.ToString().c_str());
-        CDarkSendRelay dsr(pSubmittedToMasternode->vin, vchMasternodeRelaySig, nMasternodeBlockHeight, DARKSEND_RELAY_IN, in, out, strMasternodeSharedKey);
-        dsr.Relay();
+        CDarkSendRelay dsr(pSubmittedToMasternode->vin, vchMasternodeRelaySig, nMasternodeBlockHeight, DARKSEND_RELAY_IN, in, out);
+        dsr.Sign(strMasternodeSharedKey);
     }
  
     BOOST_FOREACH(CTxOut& out, vout){
         LogPrintf("RelayInAnon - out %s\n", out.ToString().c_str());
-        CDarkSendRelay dsr(pSubmittedToMasternode->vin, vchMasternodeRelaySig, nMasternodeBlockHeight, DARKSEND_RELAY_OUT, in, out, strMasternodeSharedKey);
-        dsr.Relay();
+        CDarkSendRelay dsr(pSubmittedToMasternode->vin, vchMasternodeRelaySig, nMasternodeBlockHeight, DARKSEND_RELAY_OUT, in, out);
+        dsr.Sign(strMasternodeSharedKey);
     }
 }
  
