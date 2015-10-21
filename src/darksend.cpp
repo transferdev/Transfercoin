@@ -171,7 +171,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         }
         CDarkSendRelay dsr;
         vRecv >> dsr;
-        if(FindBlockByHeight(nHeight - dsr.nBlockHeight) > 10) return;
+        if(FindBlockByHeight(pindexPrev->nHeight - dsr.nBlockHeight) > 10) return;
         
         if(dsr.nRelayType != DARKSEND_RELAY_IN &&
             dsr.nRelayType != DARKSEND_RELAY_OUT &&
@@ -185,7 +185,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             LogPrintf("dsr -- unknown masternode! %s \n", dsr.vinMasternode.ToString().c_str());
             return;
         }
-        int a = mnodeman.GetMasternodeRank(activeMasternode.vin, FindBlockByHeight(nHeight), MIN_POOL_PEER_PROTO_VERSION);
+        int a = mnodeman.GetMasternodeRank(activeMasternode.vin, FindBlockByHeight(pindexPrev->nHeight), MIN_POOL_PEER_PROTO_VERSION);
         if(a > 20){
             LogPrintf("dsr -- unknown/invalid masternode! %s \n", activeMasternode.vin.ToString().c_str());
             return;
@@ -219,7 +219,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         }
         CDarkSendRelay dsr;
         vRecv >> dsr;
-        if(FindBlockByHeight(nHeight - dsr.nBlockHeight) > 10) return;
+        if(FindBlockByHeight(pindexPrev->nHeight - dsr.nBlockHeight) > 10) return;
         if(darkSendPool.strMasternodeSharedKey == "") return;
         if(dsr.nRelayType != DARKSEND_RELAY_IN &&
             dsr.nRelayType != DARKSEND_RELAY_OUT &&
