@@ -220,10 +220,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             settings.setValue("nDarksendRounds", nDarksendRounds);
             emit darksendRoundsChanged(nDarksendRounds);
             break;
-        case anonymizeTransferAmount:
+        case AnonymizeTransferAmount:
             nAnonymizeTransferAmount = value.toInt();
             settings.setValue("nAnonymizeTransferAmount", nAnonymizeTransferAmount);
-            emit anonymizeTransferAmountChanged(nAnonymizeTransferAmount);
+            emit AnonymizeTransferAmountChanged(nAnonymizeTransferAmount);
             break;
         default:
             break;
