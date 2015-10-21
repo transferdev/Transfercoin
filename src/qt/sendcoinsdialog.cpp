@@ -365,7 +365,6 @@ void SendCoinsDialog::updateDisplayUnit()
         // Update labelBalance with the current balance and the current unit
         ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), model->getBalance()));
     }
-    CoinControlDialog::coinControl->useDarkSend = ui->checkUseDarksend->isChecked();
     coinControlUpdateLabels();
 }
 
