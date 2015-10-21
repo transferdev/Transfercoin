@@ -110,6 +110,9 @@ https://github.com/dashpay/dash/commit/64c1a8b147e3b5e39751ab908b77c6e9a2a5e058
 add spaces to IP only in full mode
 https://github.com/dashpay/dash/commit/d2a1ecf5240415ac4c293bed2db9b3af9103be7d
 
+Merged masternode blinding
+https://github.com/dashpay/dash/commit/a6b58ab1e892cf70936383fd927305a043bd55ff
+
 
 
 
@@ -133,5 +136,11 @@ BIP66 compatibility
 Replaced NOP7 with CHECKLOCKTIMEVERIFY
 Enforce new script verification flags
 Demand canonical block sig from updated peers
+
 Submitblock: Add submission of stake template
 https://github.com/SCDeveloper/DarkSilk-Release-Candidate/commit/a108b8b0179f1790dd8dba824efc3a15c1ab6066
+
+
+
+SPORK Additions/Changes | SANDSTORM fee removal
+https://github.com/SCDeveloper/DarkSilk-Release-Candidate/commit/e6ebc2ec9a955f1447a9c29e49232c61df97d768

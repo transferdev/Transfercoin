@@ -2384,12 +2384,12 @@ bool CWallet::CreateCollateralTransaction(CTransaction& txCollateral, std::strin
     }
 
     int vinNumber = 0;
-    BOOST_FOREACH(CTxIn v, txCollateral.vin) {
+    BOOST_FOREACH(CTxIn v, vCoinsCollateral) {
         if(!SignSignature(*this, v.prevPubKey, txCollateral, vinNumber, int(SIGHASH_ALL|SIGHASH_ANYONECANPAY))) {
             BOOST_FOREACH(CTxIn v, vCoinsCollateral)
                 UnlockCoin(v.prevout);
 
-            strReason = "CDarkSendPool::Sign - Unable to sign collateral transaction! \n";
+            strReason = "CDarksendPool::Sign - Unable to sign collateral transaction! \n";
             return false;
         }
         vinNumber++;
