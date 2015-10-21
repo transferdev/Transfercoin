@@ -799,23 +799,6 @@ void CDarksendPool::CheckFinalTransaction()
                 pwalletMain->Lock();
             }
         }
-
-    // move on to next phase, allow 3 seconds incase the masternode wants to send us anything else
-    if((state == POOL_STATUS_TRANSMISSION && fMasterNode) || (state == POOL_STATUS_SIGNING && completedTransaction) ) {
-        if(fDebug) LogPrintf("CDarksendPool::Check() -- COMPLETED -- RESETTING \n");
-        SetNull(true);
-        UnlockCoins();
-        if(fMasterNode) RelayStatus(sessionID, GetState(), GetEntriesCount(), MASTERNODE_RESET);
-        pwalletMain->Lock();
-    }
-
-    // reset if we're here for 10 seconds
-    if((state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) && GetTimeMillis()-lastTimeChanged >= 10000) {
-        if(fDebug) LogPrintf("CDarkSendPool::Check() -- RESETTING MESSAGE \n");
-        SetNull(true);
-        if(fMasterNode) RelayStatus(darksendPool.sessionID, GetState(), GetEntriesCount(), MASTERNODE_RESET);
-        UnlockCoins();
-    }
 }
 
 //
