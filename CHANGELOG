@@ -113,7 +113,8 @@ https://github.com/dashpay/dash/commit/d2a1ecf5240415ac4c293bed2db9b3af9103be7d
 Merged masternode blinding
 https://github.com/dashpay/dash/commit/a6b58ab1e892cf70936383fd927305a043bd55ff
 
-
+Make masternodes.dat verification more specific
+https://github.com/dashpay/dash/commit/2a5d588784e87aa275360aab11888ab7ff14eeab
 
 
 Removal of old code:
