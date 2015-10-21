@@ -171,7 +171,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         }
         CDarkSendRelay dsr;
         vRecv >> dsr;
-        if(chainActive.Tip()->nHeight - dsr.nBlockHeight > 10) return;
+        if(FindBlockByHeight(nHeight - dsr.nBlockHeight) > 10) return;
         
         if(dsr.nRelayType != DARKSEND_RELAY_IN &&
             dsr.nRelayType != DARKSEND_RELAY_OUT &&
@@ -185,7 +185,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             LogPrintf("dsr -- unknown masternode! %s \n", dsr.vinMasternode.ToString().c_str());
             return;
         }
-        int a = mnodeman.GetMasternodeRank(activeMasternode.vin, chainActive.Tip()->nHeight, MIN_POOL_PEER_PROTO_VERSION);
+        int a = mnodeman.GetMasternodeRank(activeMasternode.vin, FindBlockByHeight(nHeight), MIN_POOL_PEER_PROTO_VERSION);
         if(a > 20){
             LogPrintf("dsr -- unknown/invalid masternode! %s \n", activeMasternode.vin.ToString().c_str());
             return;
@@ -219,7 +219,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         }
         CDarkSendRelay dsr;
         vRecv >> dsr;
-        if(chainActive.Tip()->nHeight - dsr.nBlockHeight > 10) return;
+        if(FindBlockByHeight(nHeight - dsr.nBlockHeight) > 10) return;
         if(darkSendPool.strMasternodeSharedKey == "") return;
         if(dsr.nRelayType != DARKSEND_RELAY_IN &&
             dsr.nRelayType != DARKSEND_RELAY_OUT &&
@@ -1361,7 +1361,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
             if(fDebug) LogPrintf("dsi -- tx in %s\n", i.ToString().c_str());
         }
 
-        printf("Submitting tx %s\n", tx.ToString().c_str());
+        Logprintf("Submitting tx %s\n", tx.ToString().c_str());
 
         //if(!AcceptableInputs(mempool, state, tx)){
 	bool* pfMissingInputs;
@@ -2309,7 +2309,7 @@ bool CDarksendQueue::Sign()
 
     // -- second signature, for proving access to the anonymous relay system
  
-    nBlockHeight = chainActive.Tip()->nHeight; //sign with our current blockheight
+    nBlockHeight = FindBlockByHeight(nHeight); //sign with our current blockheight
     strMessage = boost::lexical_cast<std::string>(nBlockHeight);
  
     CKey secret;
