@@ -10,6 +10,7 @@
 #include "coincontrol.h"
 #include "darksend.h"
 
+#include <QMessageBox>
 #include <QApplication>
 #include <QCheckBox>
 #include <QClipboard>
@@ -503,7 +504,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         if(coinControl->useInstantX) nFee = max(nFee, CENT);
 
         // Min Fee
-        int64_t nMinFee = txDummy.GetMinFee(1, GMF_SEND, nBytes);
+        int64_t nMinFee = GetMinFee(txDummy, 1, GMF_SEND, nBytes);
         
         nPayFee = max(nFee, nMinFee);
         
