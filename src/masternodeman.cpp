@@ -433,7 +433,7 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight
 void CMasternodeMan::ProcessMasternodeConnections()
 {
     //we don't care about this for testing
-    if(TestNet() || RegTest()) return;
+    if(TestNet()) return;
 
     LOCK(cs_vNodes);
 
