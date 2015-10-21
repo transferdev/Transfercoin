@@ -174,11 +174,6 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             return;
         }
 
-        if(state != POOL_STATUS_IDLE){
-            LogPrintf("dsr -- wrong state to relay! \n");
-            return;
-        }
-
         CDarkSendRelay dsr;
         vRecv >> dsr;
         if(FindBlockByHeight(pindexBest->nHeight - dsr.nBlockHeight) > 10) return;
