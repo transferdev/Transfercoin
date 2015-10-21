@@ -152,3 +152,5 @@ https://github.com/SCDeveloper/DarkSilk-Release-Candidate/commit/a108b8b0179f179
 
 SPORK Additions/Changes | SANDSTORM fee removal
 https://github.com/SCDeveloper/DarkSilk-Release-Candidate/commit/e6ebc2ec9a955f1447a9c29e49232c61df97d768
+
+Change DS_COLLATERAL to 0.01 remove DS fee
