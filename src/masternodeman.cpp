@@ -156,7 +156,9 @@ void DumpMasternodes()
     LogPrintf("Masternode dump finished  %dms\n", GetTimeMillis() - nStart);
 }
 
-CMasternodeMan::CMasternodeMan() {}
+CMasternodeMan::CMasternodeMan() {
+    nDsqCount = 0;
+}
 
 bool CMasternodeMan::Add(CMasternode &mn)
 {
@@ -241,6 +243,7 @@ void CMasternodeMan::Clear()
     mAskedUsForMasternodeList.clear();
     mWeAskedForMasternodeList.clear();
     mWeAskedForMasternodeListEntry.clear();
+    nDsqCount = 0;
 }
 
 int CMasternodeMan::CountEnabled()
@@ -760,7 +763,8 @@ std::string CMasternodeMan::ToString() const
     info << "masternodes: " << (int)vMasternodes.size() <<
             ", peers who asked us for masternode list: " << (int)mAskedUsForMasternodeList.size() <<
             ", peers we asked for masternode list: " << (int)mWeAskedForMasternodeList.size() <<
-            ", entries in masternode list we asked for: " << (int)mWeAskedForMasternodeListEntry.size();
+            ", entries in Masternode list we asked for: " << (int)mWeAskedForMasternodeListEntry.size() <<
+            ", nDsqCount: " << (int)nDsqCount;
 
     return info.str();
 }
