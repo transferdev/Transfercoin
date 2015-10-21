@@ -514,7 +514,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                     pmn->addr = addr;
                     pmn->Check();
                     if(pmn->IsEnabled())
-                        mnodeman.RelayDarkSendElectionEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
+                        mnodeman.RelayMasternodeEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
                 }
             }
 
@@ -582,7 +582,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             }
 
             if(count == -1 && !isLocal)
-                mnodeman.RelayDarkSendElectionEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
+                mnodeman.RelayMasternodeEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
 
         } else {
             LogPrintf("dsee - Rejected masternode entry %s\n", addr.ToString().c_str());
@@ -647,7 +647,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                         pmn->Check();
                         if(!pmn->IsEnabled()) return;
                     }
-                    mnodeman.RelayDarkSendElectionEntryPing(vin, vchSig, sigTime, stop);
+                    mnodeman.RelayMasternodeEntryPing(vin, vchSig, sigTime, stop);
                 }
             }
             return;
