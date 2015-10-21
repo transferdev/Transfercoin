@@ -799,7 +799,6 @@ void CDarksendPool::CheckFinalTransaction()
                 pwalletMain->Lock();
             }
         }
-    }
 
     // move on to next phase, allow 3 seconds incase the masternode wants to send us anything else
     if((state == POOL_STATUS_TRANSMISSION && fMasterNode) || (state == POOL_STATUS_SIGNING && completedTransaction) ) {
