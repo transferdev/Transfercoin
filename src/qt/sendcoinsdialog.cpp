@@ -84,15 +84,13 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
 void SendCoinsDialog::setModel(WalletModel *model)
 {
     this->model = model;
-
-    SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
-    if(entry)
+    for(int i = 0; i < ui->entries->count(); ++i)
     {
-        for(int i = 0; i < ui->entries->count(); ++i)
-        {
-            entry->setModel(model);
-        }
+
+        entry->setModel(model);
     }
+
+
 
     if(model && model->getOptionsModel())
     {
