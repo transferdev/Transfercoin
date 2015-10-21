@@ -2292,7 +2292,7 @@ bool CDarksendQueue::Sign()
 
     // -- second signature, for proving access to the anonymous relay system
  
-    nBlockHeight = FindBlockByHeight(nHeight); //sign with our current blockheight
+    nBlockHeight = FindBlockByHeight(pindexBest->nHeight); //sign with our current blockheight
     strMessage = boost::lexical_cast<std::string>(nBlockHeight);
  
     CKey secret;
