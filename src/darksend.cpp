@@ -1222,24 +1222,17 @@ bool CDarksendPool::AddEntry(const std::vector<CTxIn>& newInput, const int64_t& 
         }
     }
 
-    if(state == POOL_STATUS_ACCEPTING_ENTRIES) {
-        CDarkSendEntry v;
-        v.Add(newInput, nAmount, txCollateral, newOutput);
-        entries.push_back(v);
+    CDarkSendEntry v;
+    v.Add(newInput, nAmount, txCollateral, newOutput);
+    entries.push_back(v);
 
-        if(fDebug) LogPrintf("CDarksendPool::AddEntry -- adding %s\n", newInput[0].ToString().c_str());
-        error = "";
+    if(fDebug) LogPrintf("CDarksendPool::AddEntry -- adding %s\n", newInput[0].ToString().c_str());
+    error = "";
 
-        return true;
-    }
-
-    if(fDebug) LogPrintf ("CDarksendPool::AddEntry - can't accept new entry, wrong state!\n");
-    error = _("Wrong state.");
-    sessionUsers--;
-    return false;
+    return true;
 }
 
-bool CDarksendPool::AddScriptSig(const CTxIn newVin){
+bool CDarksendPool::AddScriptSig(const CTxIn& newVin){
     if(fDebug) LogPrintf("CDarksendPool::AddScriptSig -- new sig  %s\n", newVin.scriptSig.ToString().substr(0,24).c_str());
 
     BOOST_FOREACH(const CDarkSendEntry& v, entries) {
