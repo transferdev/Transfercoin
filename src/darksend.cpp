@@ -4,6 +4,7 @@
 
 #include "darksend.h"
 #include "main.h"
+#include "darksend-relay.h"
 #include "init.h"
 //#include "script/sign.h"
 #include "util.h"
