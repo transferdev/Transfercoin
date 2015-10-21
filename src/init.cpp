@@ -13,6 +13,7 @@
 #include "ui_interface.h"
 #include "checkpoints.h"
 #include "activemasternode.h"
+#include "darksend-relay.h"
 #include "masternodeman.h"
 #include "masternodeconfig.h"
 #include "spork.h"
