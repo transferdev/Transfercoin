@@ -1237,7 +1237,7 @@ bool CDarksendPool::AddScriptSig(const CTxIn newVin){
 
     BOOST_FOREACH(const CDarkSendEntry& v, entries) {
         BOOST_FOREACH(const CTxDSIn& s, v.sev){
-            if(s.vin.scriptSig == newVin.scriptSig) {
+            if(s.scriptSig == newVin.scriptSig) {
                 LogPrintf("CDarksendPool::AddScriptSig - already exists \n");
                 return false;
             }
