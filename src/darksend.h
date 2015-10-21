@@ -445,7 +445,7 @@ public:
     }
 
     // add signature to a vin
-    bool AddScriptSig(const CTxIn newVin);
+    bool AddScriptSig(const CTxIn& newVin);
     // are all inputs signed?
     bool SignaturesComplete();
     // as a client, send a transaction to a masternode to start the denomination process
