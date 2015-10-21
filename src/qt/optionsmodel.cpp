@@ -120,6 +120,10 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("language", "");
         case CoinControlFeatures:
             return QVariant(fCoinControlFeatures);
+        case DarksendRounds:
+            return QVariant(nDarksendRounds);
+        case AnonymizeTransferAmount:
+            return QVariant(nAnonymizeTransferAmount);
         case MinimizeCoinAge:
             return settings.value("fMinimizeCoinAge", GetBoolArg("-minimizecoinage", false));
         case UseBlackTheme:
