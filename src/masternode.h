@@ -241,7 +241,7 @@ public:
         if(mnse.nBlockHeight == nLastScanningErrorBlockHeight) return;
         nLastScanningErrorBlockHeight = mnse.nBlockHeight;
 
-        if(snse.nErrorType == SCANNING_SUCCESS){
+        if(mnse.nErrorType == SCANNING_SUCCESS){
             nScanningErrorCount--;
             if(nScanningErrorCount < 0) nScanningErrorCount = 0;
         } else { //all other codes are equally as bad
