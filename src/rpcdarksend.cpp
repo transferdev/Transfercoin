@@ -266,7 +266,7 @@ Value masternode(const Array& params, bool fHelp)
 			total++;
 
 			std::string errorMessage;
-			bool result = activeMasternode.StopMasterNode(mne.getIp(), mne.getPrivKey(), sne.getDonationAddress(), sne.getDonationPercentage(), errorMessage);
+			bool result = activeMasternode.StopMasterNode(mne.getIp(), mne.getPrivKey(), mne.getDonationAddress(), mne.getDonationPercentage(), errorMessage);
 
 			Object statusObj;
 			statusObj.push_back(Pair("alias", mne.getAlias()));
