@@ -218,7 +218,7 @@ Value masternode(const Array& params, bool fHelp)
     		if(mne.getAlias() == alias) {
     			found = true;
     			std::string errorMessage;
-    			bool result = activeMasternode.StopMasterNode(mne.getIp(), mne.getPrivKey(), sne.getDonationAddress(), sne.getDonationPercentage(), errorMessage);
+    			bool result = activeMasternode.StopMasterNode(mne.getIp(), mne.getPrivKey(), mne.getDonationAddress(), mne.getDonationPercentage(), errorMessage);
 
 				statusObj.push_back(Pair("result", result ? "successful" : "failed"));
     			if(!result) {
