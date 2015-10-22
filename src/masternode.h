@@ -15,6 +15,8 @@
 #include "main.h"
 #include "timedata.h"
 #include "script.h"
+#include "masternode-pos.h"
+
 class uint256;
 
 #define MASTERNODE_NOT_PROCESSED               0 // initial state
@@ -237,7 +239,7 @@ public:
         if(!mnse.IsValid()) return;
 
         if(mnse.nBlockHeight == nLastScanningErrorBlockHeight) return;
-        nLastScanningErrorBlockHeight = snse.nBlockHeight;
+        nLastScanningErrorBlockHeight = mnse.nBlockHeight;
 
         if(snse.nErrorType == SCANNING_SUCCESS){
             nScanningErrorCount--;
