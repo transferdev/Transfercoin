@@ -232,11 +232,11 @@ public:
         return strStatus;
     }
     
-    void ApplyScanningError(CStormnodeScanningError& snse)
+    void ApplyScanningError(CMasternodeScanningError& mnse)
     {
-        if(!snse.IsValid()) return;
+        if(!mnse.IsValid()) return;
 
-        if(snse.nBlockHeight == nLastScanningErrorBlockHeight) return;
+        if(mnse.nBlockHeight == nLastScanningErrorBlockHeight) return;
         nLastScanningErrorBlockHeight = snse.nBlockHeight;
 
         if(snse.nErrorType == SCANNING_SUCCESS){
@@ -244,7 +244,7 @@ public:
             if(nScanningErrorCount < 0) nScanningErrorCount = 0;
         } else { //all other codes are equally as bad
             nScanningErrorCount++;
-            if(nScanningErrorCount > STORMNODE_SCANNING_ERROR_THESHOLD*2) nScanningErrorCount = STORMNODE_SCANNING_ERROR_THESHOLD*2;
+            if(nScanningErrorCount > MASTERNODE_SCANNING_ERROR_THESHOLD*2) nScanningErrorCount = MASTERNODE_SCANNING_ERROR_THESHOLD*2;
         }
     }
 };
