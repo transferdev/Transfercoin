@@ -26,7 +26,7 @@ struct CompareValueOnly
 
 CMasternodeDB::CMasternodeDB()
 {
-    pathMN = GetDataDir() / "masternodes.dat";
+    pathMN = GetDataDir() / "mncache.dat";
 }
 
 bool CMasternodeDB::Write(const CMasternodeMan& mnodemanToSave)
@@ -56,7 +56,7 @@ bool CMasternodeDB::Write(const CMasternodeMan& mnodemanToSave)
     FileCommit(fileout);
     fileout.fclose();
 
-    LogPrintf("Written info to masternodes.dat  %dms\n", GetTimeMillis() - nStart);
+    LogPrintf("Written info to mncache.dat  %dms\n", GetTimeMillis() - nStart);
     LogPrintf("  %s\n", mnodemanToSave.ToString());
 
     return true;
@@ -127,7 +127,7 @@ CMasternodeDB::ReadResult CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
     }
 
     mnodemanToLoad.CheckAndRemove(); // clean out expired
-    LogPrintf("Loaded info from masternodes.dat  %dms\n", GetTimeMillis() - nStart);
+    LogPrintf("Loaded info from mncache.dat  %dms\n", GetTimeMillis() - nStart);
     LogPrintf("  %s\n", mnodemanToLoad.ToString());
 
     return Ok;
@@ -140,23 +140,25 @@ void DumpMasternodes()
     CMasternodeDB mndb;
     CMasternodeMan tempMnodeman;
 
-    LogPrintf("Verifying masternodes.dat format...\n");
+    LogPrintf("Verifying mnchache.dat format...\n");
     CMasternodeDB::ReadResult readResult = mndb.Read(tempMnodeman);
     // there was an error and it was not an error on file openning => do not proceed
     if (readResult == CMasternodeDB::FileError)
-        LogPrintf("Missing masternode list file - masternodes.dat, will try to recreate\n");
+        LogPrintf("Missing masternode list file - mncache.dat, will try to recreate\n");
     else if (readResult != CMasternodeDB::Ok)
     {
-        LogPrintf("Masternode list file masternodes.dat has invalid format\n");
+        LogPrintf("Masternode list file mncache.dat has invalid format\n");
         return;
     }
-    LogPrintf("Writting info to masternodes.dat...\n");
+    LogPrintf("Writting info to mncache.dat...\n");
     mndb.Write(mnodeman);
 
     LogPrintf("Masternode dump finished  %dms\n", GetTimeMillis() - nStart);
 }
 
-CMasternodeMan::CMasternodeMan() {}
+CMasternodeMan::CMasternodeMan() {
+    nDsqCount = 0;
+}
 
 bool CMasternodeMan::Add(CMasternode &mn)
 {
@@ -241,6 +243,7 @@ void CMasternodeMan::Clear()
     mAskedUsForMasternodeList.clear();
     mWeAskedForMasternodeList.clear();
     mWeAskedForMasternodeListEntry.clear();
+    nDsqCount = 0;
 }
 
 int CMasternodeMan::CountEnabled()
@@ -430,6 +433,9 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight
 
 void CMasternodeMan::ProcessMasternodeConnections()
 {
+    //we don't care about this for testing
+    if(TestNet()) return;
+
     LOCK(cs_vNodes);
 
     if(!darkSendPool.pSubmittedToMasternode) return;
@@ -769,7 +775,8 @@ std::string CMasternodeMan::ToString() const
     info << "masternodes: " << (int)vMasternodes.size() <<
             ", peers who asked us for masternode list: " << (int)mAskedUsForMasternodeList.size() <<
             ", peers we asked for masternode list: " << (int)mWeAskedForMasternodeList.size() <<
-            ", entries in masternode list we asked for: " << (int)mWeAskedForMasternodeListEntry.size();
+            ", entries in Masternode list we asked for: " << (int)mWeAskedForMasternodeListEntry.size() <<
+            ", nDsqCount: " << (int)nDsqCount;
 
     return info.str();
 }

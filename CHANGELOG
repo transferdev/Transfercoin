@@ -119,6 +119,17 @@ https://github.com/dashpay/dash/commit/2a5d588784e87aa275360aab11888ab7ff14eeab
 fixed shared key usage
 https://github.com/dashpay/dash/commit/c6f0259d9bc03835a728c3cb4aa600069c7d092f
 
+rename masternodes.dat->mncache.dat / fix strings
+https://github.com/dashpay/dash/commit/e522cbfd6ad286d4a6cfaa670b12e498eea50c1d
+
+save nDsqCount in mncache.dat
+https://github.com/dashpay/dash/commit/b5414e1c3c86e9f99d5a331f41a73191173045aa
+
+Added input/output/sig trickle
+https://github.com/dashpay/dash/commit/c169e49fce95ff587ccdf221e536ccc9737dbd05
+
+Change DS_COLLATERAL to 0.01 remove DS fee
+
 Stormnode Proof of Service Added
 
 Add structure for donating a percentage of ones earnings to another party via the protocol
@@ -136,6 +147,7 @@ fixed ssee sync
 fixed Stormnode payments FindOldestNotInVec
 
 Disabled masternode blinding / increased rounds defaults 
+
 
 
 
@@ -164,9 +176,8 @@ Demand canonical block sig from updated peers
 Submitblock: Add submission of stake template
 https://github.com/SCDeveloper/DarkSilk-Release-Candidate/commit/a108b8b0179f1790dd8dba824efc3a15c1ab6066
 
-
+check the templates in util.h/util.cpp --phark
+(int64_t)long long has limits on the size of integers
 
 SPORK Additions/Changes | SANDSTORM fee removal
 https://github.com/SCDeveloper/DarkSilk-Release-Candidate/commit/e6ebc2ec9a955f1447a9c29e49232c61df97d768
-
-Change DS_COLLATERAL to 0.01 remove DS fee
