@@ -51,7 +51,8 @@ enum masternodeState {
     MASTERNODE_ENABLED = 1,
     MASTERNODE_EXPIRED = 2,
     MASTERNODE_VIN_SPENT = 3,
-    MASTERNODE_REMOVE = 4
+    MASTERNODE_REMOVE = 4,
+    MASTERNODE_POS_ERROR = 5
 };
 
 // manage the masternode connections
