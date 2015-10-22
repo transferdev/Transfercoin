@@ -191,9 +191,9 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             LogPrintf("dsr -- unknown masternode! %s \n", dsr.vinMasternode.ToString().c_str());
             return;
         }
-        int rank = mnodeman.GetStormnodeRank(activeMasternode.vin, dsr.nBlockHeight, MIN_PEER_POOL_PROTO_VERSION);
+        int rank = mnodeman.GetMasternodeRank(activeMasternode.vin, dsr.nBlockHeight, MIN_PEER_POOL_PROTO_VERSION);
         if(rank > 20){
-            LogPrintf("dsr -- invalid relay Stormnode! %s \n", activeMasternode.vin.ToString().c_str());
+            LogPrintf("dsr -- invalid relay Masternode! %s \n", activeMasternode.vin.ToString().c_str());
             return;
         }
         //check the signature from the target masternode
@@ -1502,7 +1502,7 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
  
         RelaySignaturesAnon(sigs);
     } else {
-        // push all of our signatures to the Stormnode
+        // push all of our signatures to the Masternode
         if(sigs.size() > 0 && node != NULL)
             node->PushMessage("sss", sigs);
     }
@@ -1724,7 +1724,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                         CMasternode* pmn = mnodeman.Find(dsq.vin);
                         if(pmn == NULL)
                         {
-                            LogPrintf("DoAutomaticDenominating --- dsq vin %s is not in stormnode list!", dsq.vin.ToString());
+                            LogPrintf("DoAutomaticDenominating --- dsq vin %s is not in masternode list!", dsq.vin.ToString());
                             continue;
                         }
                         pSubmittedToMasternode = pmn;
