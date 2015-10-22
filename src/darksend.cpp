@@ -190,9 +190,9 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             LogPrintf("dsr -- unknown masternode! %s \n", dsr.vinMasternode.ToString().c_str());
             return;
         }
-        int rank = mnodeman.GetStormnodeRank(activeMasternode.vin, ssr.nBlockHeight, MIN_POOL_PROTO_VERSION);
+        int rank = mnodeman.GetStormnodeRank(activeMasternode.vin, dsr.nBlockHeight, MIN_PEER_POOL_PROTO_VERSION);
         if(rank > 20){
-            LogPrintf("ssr -- invalid relay Stormnode! %s \n", activeMasternode.vin.ToString().c_str());
+            LogPrintf("dsr -- invalid relay Stormnode! %s \n", activeMasternode.vin.ToString().c_str());
             return;
         }
         //check the signature from the target masternode
@@ -2466,7 +2466,7 @@ void CDarksendPool::RelayInAnon(std::vector<CTxIn>& vin, std::vector<CTxOut>& vo
  
     BOOST_FOREACH(CTxIn& in, vin){
         LogPrintf("RelayInAnon - in %s\n", in.ToString().c_str());
-        CDarkSendRelay dsr(pSubmittedToMasternode->vin, vchMasternodeRelaySig, nMasternodeBlockHeight, DARKSEND_RELAY_IN, in, epmtyOut);
+        CDarkSendRelay dsr(pSubmittedToMasternode->vin, vchMasternodeRelaySig, nMasternodeBlockHeight, DARKSEND_RELAY_IN, in, emptyOut);
         dsr.Sign(strMasternodeSharedKey);
     }
  
