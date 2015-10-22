@@ -2529,7 +2529,7 @@ bool CDSAnonTx::AddOutput(const CTxOut out){
     return true;
 }
 
-bool CSSAnonTx::ClearSigs(){
+bool CDSAnonTx::ClearSigs(){
     LOCK(cs_darksend);
 
     BOOST_FOREACH(CTxDSIn& in, vin)
