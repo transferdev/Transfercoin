@@ -216,9 +216,9 @@ uint256 CMasternode::CalculateScore(int mod, int64_t nBlockHeight)
 void CMasternode::Check()
 {
 
-    if(nScanningErrorCount >= STORMNODE_SCANNING_ERROR_THESHOLD) 
+    if(nScanningErrorCount >= MASTERNODE_SCANNING_ERROR_THESHOLD) 
     {
-        activeState = STORMNODE_POS_ERROR;
+        activeState = MASTERNODE_POS_ERROR;
         return;
     }
 
