@@ -168,6 +168,14 @@ bool AbortNode(const std::string &strMessage, const std::string &userMessage) {
     return false;
 }
 
+int GetHeight()
+{
+    while(true){
+        TRY_LOCK(cs_main, lockMain);
+        if(!lockMain) { MilliSleep(50); continue; }
+        return pindexBest->nHeight;
+    }
+}
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2720,6 +2728,14 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
 
+    if(!fLiteMode){
+        if (!fImporting && !fReindex && pindexBest->nHeight > Checkpoints::GetTotalBlocksEstimate()){
+            darkSendPool.NewBlock();
+            masternodePayments.ProcessBlock(GetHeight()+10);
+            mnscan.DoMasternodePOSChecks();
+        }
+    }
+
     LogPrintf("ProcessBlock: ACCEPTED\n");
 
     // ppcoin: if responsible for sync-checkpoint send it
@@ -3324,6 +3340,15 @@ void static ProcessGetData(CNode* pfrom)
                         ss.reserve(1000);
                         ss << mapSeenMasternodeVotes[inv.hash];
                         pfrom->PushMessage("mnw", ss);
+                        pushed = true;
+                    }
+                }
+                if (!pushed && inv.type == MSG_MASTERNODE_SCANNING_ERROR) {
+                    if(mapMasternodeScanningErrors.count(inv.hash)){
+                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        ss.reserve(1000);
+                        ss << mapMasternodeScanningErrors[inv.hash];
+                        pfrom->PushMessage("snse", ss);
                         pushed = true;
                     }
                 }
@@ -4004,6 +4029,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         ProcessMessageMasternodePayments(pfrom, strCommand, vRecv);
         ProcessMessageInstantX(pfrom, strCommand, vRecv);
         ProcessSpork(pfrom, strCommand, vRecv);
+        ProcessMessageMasternodePOS(pfrom, strCommand, vRecv);
 
         // Ignore unknown commands for extensibility
     }

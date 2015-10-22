@@ -119,7 +119,23 @@ https://github.com/dashpay/dash/commit/2a5d588784e87aa275360aab11888ab7ff14eeab
 fixed shared key usage
 https://github.com/dashpay/dash/commit/c6f0259d9bc03835a728c3cb4aa600069c7d092f
 
+Stormnode Proof of Service Added
 
+Add structure for donating a percentage of ones earnings to another party via the protocol
+
+Fixed mnw message issue
+
+fix pubkey/donation conditions
+
+Fixed blinding submission process
+
+increasing ss timeouts
+
+fixed ssee sync
+
+fixed Stormnode payments FindOldestNotInVec
+
+Disabled masternode blinding / increased rounds defaults 
 
 
 

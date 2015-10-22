@@ -244,7 +244,7 @@ int64_t CreateNewLock(CTransaction tx)
 
         CTransactionLock newLock;
         newLock.nBlockHeight = nBlockHeight;
-        newLock.nExpiration = GetTime()+(60*60); //locks expire after 15 minutes (6 confirmations)
+        newLock.nExpiration = GetTime()+(60*60); //locks expire after 60 minutes (6 confirmations)
         newLock.nTimeout = GetTime()+(60*5);
         newLock.txHash = tx.GetHash();
         mapTxLocks.insert(make_pair(tx.GetHash(), newLock));
@@ -449,6 +449,27 @@ void CleanTransactionLocksList()
     while(it != mapTxLocks.end()) {
         if(GetTime() > it->second.nExpiration){ //keep them for an hour
             LogPrintf("Removing old transaction lock %s\n", it->second.txHash.ToString().c_str());
+
+            // loop through masternodes that responded
+            for(int nRank = 0; nRank <= INSTANTX_SIGNATURES_TOTAL; nRank++)
+            {
+                CMasternode* pmn = mnodeman.GetMasternodeByRank(nRank, it->second.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);                
+                if(!pmn) continue;
+
+                bool fFound = false;
+                BOOST_FOREACH(CConsensusVote& v, it->second.vecConsensusVotes)
+                {
+                    if(pmn->vin == v.vinMasternode){ //Stormnode responded
+                        fFound = true;
+                    }
+                }
+
+                if(!fFound){
+                    //increment a scanning error
+                    CMasternodeScanningError snse(pmn->vin, SCANNING_ERROR_IX_NO_RESPONSE, it->second.nBlockHeight);
+                    pmn->ApplyScanningError(mnse);
+                }
+            }
 
             if(mapTxLockReq.count(it->second.txHash)){
                 CTransaction& tx = mapTxLockReq[it->second.txHash];

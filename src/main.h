@@ -34,8 +34,8 @@ static const signed int HARD_FORK_BLOCK = 90000;
     one party without comprimising the security of InstantX
     (1000/2150.0)**15 = 1.031e-05
 */
-#define INSTANTX_SIGNATURES_REQUIRED           20
-#define INSTANTX_SIGNATURES_TOTAL              30
+#define INSTANTX_SIGNATURES_REQUIRED           15
+#define INSTANTX_SIGNATURES_TOTAL              20
 
 #define MASTERNODE_NOT_PROCESSED               0 // initial state
 #define MASTERNODE_IS_CAPABLE                  1

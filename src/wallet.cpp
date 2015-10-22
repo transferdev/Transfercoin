@@ -1212,6 +1212,8 @@ int64_t CWallet::GetBalanceNoLocks() const
 
 CAmount CWallet::GetAnonymizedBalance() const
 {
+    if(fLiteMode) return 0;
+    
     int64_t nTotal = 0;
     {
         LOCK(cs_wallet);

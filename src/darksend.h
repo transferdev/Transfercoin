@@ -37,9 +37,9 @@ class CActiveMasternode;
 #define MASTERNODE_REJECTED                    0
 #define MASTERNODE_RESET                       -1
 
-#define DARKSEND_QUEUE_TIMEOUT                 120
+#define DARKSEND_QUEUE_TIMEOUT                 180
 #define DARKSEND_SIGNING_TIMEOUT               30
-#define DARKSEND_DOWNGRADE_TIMEOUT             30
+#define DARKSEND_DOWNGRADE_TIMEOUT             60
 
 // used for anonymous relaying of inputs/outputs/sigs
 #define DARKSEND_RELAY_IN                 1
@@ -232,6 +232,7 @@ public:
     bool IsTransactionValid();
     bool AddOutput(const CTxOut out);
     bool AddInput(const CTxIn in);
+    bool ClearSigs();
     bool AddSig(const CTxIn in);
     int CountEntries() {return (int)vin.size() + (int)vout.size();}
 };

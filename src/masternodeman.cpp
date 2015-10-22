@@ -194,7 +194,7 @@ void CMasternodeMan::CheckAndRemove()
     //remove inactive
     vector<CMasternode>::iterator it = vMasternodes.begin();
     while(it != vMasternodes.end()){
-        if((*it).activeState == 4 || (*it).activeState == 3){
+        if((*it).activeState == MASTERNODE_REMOVE || (*it).activeState == MASTERNODE_VIN_SPENT){
             if(fDebug) LogPrintf("CMasternodeMan: Removing inactive masternode %s - %i now\n", (*it).addr.ToString().c_str(), size() - 1);
             it = vMasternodes.erase(it);
         } else {
@@ -297,29 +297,30 @@ CMasternode *CMasternodeMan::Find(const CTxIn &vin)
     return NULL;
 }
 
-CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins)
+CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins, int nMinimumAge, int nMinimumActiveSeconds)
 {
     LOCK(cs);
 
     CMasternode *pOldestMasternode = NULL;
 
     BOOST_FOREACH(CMasternode &mn, vMasternodes)
-    {
+    {   
         mn.Check();
         if(!mn.IsEnabled()) continue;
 
         bool found = false;
         BOOST_FOREACH(const CTxIn& vin, vVins)
             if(mn.vin == vin)
-            {
+            {   
                 found = true;
                 break;
             }
-
         if(found) continue;
 
-        if(pOldestMasternode == NULL || pOldestMasternode->GetMasternodeInputAge() < mn.GetMasternodeInputAge())
+        if(pOldestMasternode == NULL || pOldestMasternode->GetMasternodeInputAge() < mn.GetMasternodeInputAge()) 
+        {
             pOldestMasternode = &mn;
+        }
     }
 
     return pOldestMasternode;
@@ -359,7 +360,7 @@ CMasternode* CMasternodeMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight,
     return winner;
 }
 
-int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, int minProtocol)
+int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, int minProtocol, bool fOnlyActive)
 {
     std::vector<pair<unsigned int, CTxIn> > vecMasternodeScores;
 
@@ -369,7 +370,7 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
         mn.Check();
 
         if(mn.protocolVersion < minProtocol) continue;
-        if(!mn.IsEnabled()) {
+        if(fOnlyActive && !mn.IsEnabled()) {
             continue;
         }
 
@@ -393,7 +394,7 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
     return -1;
 }
 
-CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight, int minProtocol)
+CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight, int minProtocol, bool fOnlyActive)
 {
     std::vector<pair<unsigned int, CTxIn> > vecMasternodeScores;
 
@@ -403,7 +404,7 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight
         mn.Check();
 
         if(mn.protocolVersion < minProtocol) continue;
-        if(!mn.IsEnabled()) {
+        if(fOnlyActive && !mn.IsEnabled()) {
             continue;
         }
 
@@ -444,11 +445,11 @@ void CMasternodeMan::ProcessMasternodeConnections()
     }
 }
 
-void CMasternodeMan::RelayMasternodeEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion)
+void CMasternodeMan::RelayMasternodeEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion, CScript donationAddress, int donationPercentage)
 {
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushMessage("dsee", vin, addr, vchSig, nNow, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
+        pnode->PushMessage("dsee", vin, addr, vchSig, nNow, pubkey, pubkey2, count, current, lastUpdated, protocolVersion, donationAddress, donationPercentage);
 }
 
 void CMasternodeMan::RelayMasternodeEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop)
@@ -478,10 +479,12 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         int current;
         int64_t lastUpdated;
         int protocolVersion;
+        CScript donationAddress;
+        int donationPercentage;
         std::string strMessage;
 
         // 70047 and greater
-        vRecv >> vin >> addr >> vchSig >> sigTime >> pubkey >> pubkey2 >> count >> current >> lastUpdated >> protocolVersion;
+        vRecv >> vin >> addr >> vchSig >> sigTime >> pubkey >> pubkey2 >> count >> current >> lastUpdated >> protocolVersion >> donationAddress >> donationPercentage;
 
         // make sure signature isn't in the future (past is OK)
         if (sigTime > GetAdjustedTime() + 60 * 60) {
@@ -495,8 +498,12 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         std::string vchPubKey(pubkey.begin(), pubkey.end());
         std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
 
-        strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
+        strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion)  + donationAddress.ToString() + boost::lexical_cast<std::string>(donationPercentage);
 
+        if(donationPercentage < 0 || donationPercentage > 100){
+            LogPrintf("ssee - donation percentage out of range %d\n", donationPercentage);
+            return;     
+        }
         if(protocolVersion < MIN_PEER_PROTO_VERSION) {
             LogPrintf("dsee - ignoring outdated masternode %s protocol version %d\n", vin.ToString().c_str(), protocolVersion);
             return;
@@ -545,9 +552,11 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                     pmn->sig = vchSig;
                     pmn->protocolVersion = protocolVersion;
                     pmn->addr = addr;
+                    pmn->donationAddress = donationAddress;
+                    pmn->donationPercentage = donationPercentage;
                     pmn->Check();
                     if(pmn->IsEnabled())
-                        mnodeman.RelayMasternodeEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
+                        mnodeman.RelayMasternodeEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion, donationAddress, donationPercentage);
                 }
             }
 
@@ -605,7 +614,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             addrman.Add(CAddress(addr), pfrom->addr, 2*60*60);
 
             // add our masternode
-            CMasternode mn(addr, vin, pubkey, vchSig, sigTime, pubkey2, protocolVersion);
+            CMasternode mn(addr, vin, pubkey, vchSig, sigTime, pubkey2, protocolVersion, donationAddress, donationPercentage);
             mn.UpdateLastSeen(lastUpdated);
             this->Add(mn);
 
@@ -615,7 +624,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             }
 
             if(count == -1 && !isLocal)
-                mnodeman.RelayMasternodeEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
+                mnodeman.RelayMasternodeEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion, donationAddress, donationPercentage);
 
         } else {
             LogPrintf("dsee - Rejected masternode entry %s\n", addr.ToString().c_str());
@@ -738,9 +747,9 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             {
                 if(fDebug) LogPrintf("dseg - Sending masternode entry - %s \n", mn.addr.ToString().c_str());
                 if(vin == CTxIn()){
-                    pfrom->PushMessage("dsee", mn.vin, mn.addr, mn.sig, mn.sigTime, mn.pubkey, mn.pubkey2, count, i, mn.lastTimeSeen, mn.protocolVersion);
+                    pfrom->PushMessage("dsee", mn.vin, mn.addr, mn.sig, mn.sigTime, mn.pubkey, mn.pubkey2, count, i, mn.lastTimeSeen, mn.protocolVersion, mn.donationAddress, mn.donationPercentage);
                 } else if (vin == mn.vin) {
-                    pfrom->PushMessage("dsee", mn.vin, mn.addr, mn.sig, mn.sigTime, mn.pubkey, mn.pubkey2, count, i, mn.lastTimeSeen, mn.protocolVersion);
+                    pfrom->PushMessage("dsee", mn.vin, mn.addr, mn.sig, mn.sigTime, mn.pubkey, mn.pubkey2, count, i, mn.lastTimeSeen, mn.protocolVersion, mn.donationAddress, mn.donationPercentage);
                     LogPrintf("dseg - Sent 1 masternode entries to %s\n", pfrom->addr.ToString().c_str());
                     return;
                 }

@@ -68,6 +68,14 @@ private:
     mutable CCriticalSection cs;
 
 public:
+    enum state {
+        MASTERNODE_ENABLED = 1,
+        MASTERNODE_EXPIRED = 2,
+        MASTERNODE_VIN_SPENT = 3,
+        MASTERNODE_REMOVE = 4,
+        MASTERNODE_POS_ERROR = 5
+    };
+
 	static int minProtoVersion;
     CTxIn vin;  
     CService addr;
@@ -83,11 +91,15 @@ public:
     bool unitTest;
     bool allowFreeTx;
     int protocolVersion;
+    CScript donationAddress;
+    int donationPercentage;
     int64_t nLastDsq; //the dsq count from the last dsq broadcast of this node
+    int nScanningErrorCount;
+    int nLastScanningErrorBlockHeight;
 
     CMasternode();
     CMasternode(const CMasternode& other);
-    CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn);
+    CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn, CScript donationAddress, int donationPercentage);
 
 
     void swap(CMasternode& first, CMasternode& second) // nothrow
@@ -112,6 +124,8 @@ public:
         swap(first.protocolVersion, second.protocolVersion);
         swap(first.unitTest, second.unitTest);
         swap(first.nLastDsq, second.nLastDsq);
+        swap(first.donationAddress, second.donationAddress);
+        swap(first.donationPercentage, second.donationPercentage);
     }
 
     CMasternode& operator=(CMasternode from)
@@ -154,6 +168,8 @@ public:
                 READWRITE(allowFreeTx);
                 READWRITE(protocolVersion);
                 READWRITE(nLastDsq);
+                READWRITE(donationAddress);
+                READWRITE(donationPercentage);
         }
     )
 
@@ -202,6 +218,34 @@ public:
         }
 
         return cacheInputAge+(pindexBest->nHeight-cacheInputAgeBlock);
+    }
+
+    std::string Status() {
+        std::string strStatus = "ACTIVE";
+
+        if(activeState == MASTERNODE_ENABLED) strStatus   = "ENABLED";
+        if(activeState == MASTERNODE_EXPIRED) strStatus   = "EXPIRED";
+        if(activeState == MASTERNODE_VIN_SPENT) strStatus = "VIN_SPENT";
+        if(activeState == MASTERNODE_REMOVE) strStatus    = "REMOVE";
+        if(activeState == MASTERNODE_POS_ERROR) strStatus = "POS_ERROR";
+
+        return strStatus;
+    }
+    
+    void ApplyScanningError(CStormnodeScanningError& snse)
+    {
+        if(!snse.IsValid()) return;
+
+        if(snse.nBlockHeight == nLastScanningErrorBlockHeight) return;
+        nLastScanningErrorBlockHeight = snse.nBlockHeight;
+
+        if(snse.nErrorType == SCANNING_SUCCESS){
+            nScanningErrorCount--;
+            if(nScanningErrorCount < 0) nScanningErrorCount = 0;
+        } else { //all other codes are equally as bad
+            nScanningErrorCount++;
+            if(nScanningErrorCount > STORMNODE_SCANNING_ERROR_THESHOLD*2) nScanningErrorCount = STORMNODE_SCANNING_ERROR_THESHOLD*2;
+        }
     }
 };
 
