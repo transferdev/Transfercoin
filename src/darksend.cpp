@@ -190,7 +190,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             LogPrintf("dsr -- unknown masternode! %s \n", dsr.vinMasternode.ToString().c_str());
             return;
         }
-        int rank = snodeman.GetStormnodeRank(activeStormnode.vin, ssr.nBlockHeight, MIN_SANDSTORM_PROTO_VERSION);
+        int rank = snodeman.GetStormnodeRank(activeStormnode.vin, ssr.nBlockHeight, MIN_POOL_PROTO_VERSION);
         if(rank > 20){
             LogPrintf("ssr -- invalid relay Stormnode! %s \n", activeStormnode.vin.ToString().c_str());
             return;
@@ -2530,9 +2530,9 @@ bool CDSAnonTx::AddOutput(const CTxOut out){
 }
 
 bool CSSAnonTx::ClearSigs(){
-    LOCK(cs_sandstorm);
+    LOCK(cs_darksend);
 
-    BOOST_FOREACH(CTxSSIn& in, vin)
+    BOOST_FOREACH(CTxDSIn& in, vin)
         in.scriptSig = CScript();
     return true;
 }
