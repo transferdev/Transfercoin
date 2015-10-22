@@ -190,7 +190,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             LogPrintf("dsr -- unknown masternode! %s \n", dsr.vinMasternode.ToString().c_str());
             return;
         }
-        int rank = mnodeman.GetMasternodeRank(activeMasternode.vin, dsr.nBlockHeight, MIN_PEER_POOL_PROTO_VERSION);
+        int rank = mnodeman.GetMasternodeRank(activeMasternode.vin, dsr.nBlockHeight, MIN_POOL_PEER_PROTO_VERSION);
         if(rank > 20){
             LogPrintf("dsr -- invalid relay Masternode! %s \n", activeMasternode.vin.ToString().c_str());
             return;
