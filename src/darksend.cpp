@@ -6,7 +6,7 @@
 #include "main.h"
 #include "darksend-relay.h"
 #include "init.h"
-//#include "script/sign.h"
+#include "version.h"
 #include "util.h"
 #include "masternodeman.h"
 #include "instantx.h"
