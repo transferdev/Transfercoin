@@ -190,9 +190,9 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             LogPrintf("dsr -- unknown masternode! %s \n", dsr.vinMasternode.ToString().c_str());
             return;
         }
-        int rank = snodeman.GetStormnodeRank(activeStormnode.vin, ssr.nBlockHeight, MIN_POOL_PROTO_VERSION);
+        int rank = mnodeman.GetStormnodeRank(activeMasternode.vin, ssr.nBlockHeight, MIN_POOL_PROTO_VERSION);
         if(rank > 20){
-            LogPrintf("ssr -- invalid relay Stormnode! %s \n", activeStormnode.vin.ToString().c_str());
+            LogPrintf("ssr -- invalid relay Stormnode! %s \n", activeMasternode.vin.ToString().c_str());
             return;
         }
         //check the signature from the target masternode
@@ -646,7 +646,7 @@ void CDarksendPool::UnlockCoins(){
 //
 void CDarksendPool::Check()
 {
-    if(fDebug && fMasterNode) LogPrintf("CSandstormPool::Check() - entries count %lu\n", entries.size());
+    if(fDebug && fMasterNode) LogPrintf("CDarksendPool::Check() - entries count %lu\n", entries.size());
     //printf("CDarksendPool::Check() %d - %d - %d\n", state, anonTx.CountEntries(), GetTimeMillis()-lastTimeChanged);
 
     // If entries is full, then move on to the next phase
