@@ -3,10 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "darksend.h"
-#include "main.h"
 #include "darksend-relay.h"
+#include "main.h"
 #include "init.h"
-#include "version.h"
 #include "util.h"
 #include "masternodeman.h"
 #include "instantx.h"
