@@ -107,7 +107,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
     } else if (strCommand == "dsq") { //DarkSend Queue
         LOCK(cs_darksend);
 
-        if (pfrom->nVersion < MIN_PEER_POOL_PROTO_VERSION) {
+        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
         }
 
