@@ -214,7 +214,7 @@ int CSporkManager::GetSporkIDByName(std::string strName)
     if(strName == "SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT") return SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT;
     if(strName == "SPORK_2_MAX_VALUE") return SPORK_2_MAX_VALUE;
     if(strName == "SPORK_3_REPLAY_BLOCKS") return SPORK_3_REPLAY_BLOCKS;
-    if(strName == "SPORK_7_MASTERNODE_SCANNING") return = SPORK_7_MASTERNODE_SCANNING;
+    if(strName == "SPORK_7_MASTERNODE_SCANNING") return SPORK_7_MASTERNODE_SCANNING;
 
     return -1;
 }

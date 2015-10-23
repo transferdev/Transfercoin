@@ -115,7 +115,7 @@ int GetCountScanningPerBlock()
 
 void CMasternodeScanning::CleanMasternodeScanningErrors()
 {
-    if(pindexBest->nHeight == NULL) return;
+    if(pindexBest == NULL) return;
 
     std::map<uint256, CMasternodeScanningError>::iterator it = mapMasternodeScanningErrors.begin();
 
