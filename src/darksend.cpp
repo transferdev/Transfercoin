@@ -997,7 +997,7 @@ bool CDarksendPool::IsCollateralValid(const CTransaction& txCollateral){
     if(fDebug) LogPrintf("CDarksendPool::IsCollateralValid %s\n", txCollateral.ToString().c_str());
 
     CValidationState state;
-    if(!AcceptableInputs(mempool, txCollateral)){
+    if(!AcceptableInputs(mempool, txCollateral, false)){
         if(fDebug) LogPrintf ("CDarksendPool::IsCollateralValid - didn't pass IsAcceptable\n");
         return false;
     }
