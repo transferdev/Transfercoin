@@ -487,8 +487,6 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight
     // scan for winner
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
 
-        mn.Check();
-
         if(mn.protocolVersion < minProtocol) continue;
         if(fOnlyActive) {
             mn.Check();
@@ -577,7 +575,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             LogPrintf("dsee - donation percentage out of range %d\n", donationPercentage);
             return;     
         }
-        if(protocolVersion < MIN_PEER_PROTO_VERSION) {
+        if(protocolVersion < MIN_POOL_PEER_PROTO_VERSION) {
             LogPrintf("dsee - ignoring outdated masternode %s protocol version %d\n", vin.ToString().c_str(), protocolVersion);
             return;
         }
