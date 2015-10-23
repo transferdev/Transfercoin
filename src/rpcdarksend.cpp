@@ -634,7 +634,7 @@ Value masternode(const Array& params, bool fHelp)
             CKey keyMasternode;
 
             if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
-                printf(" Error upon calling SetKey for %s\n", sne.getAlias().c_str());
+                printf(" Error upon calling SetKey for %s\n", mne.getAlias().c_str());
                 failed++;
                 continue;
             }
