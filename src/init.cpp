@@ -276,7 +276,7 @@ strUsage += "\n" + _("Masternode options:") + "\n";
     strUsage += "  -mnconflock=<n>            " + _("Lock masternodes from masternode configuration file (default: 1)") + "\n";
     strUsage += "  -masternodeprivkey=<n>     " + _("Set the masternode private key") + "\n";
     strUsage += "  -masternodeaddr=<n>        " + _("Set external address:port to get to this masternode (example: address:port)") + "\n";
-    strUsage += "  -masternodeminprotocol=<n> " + _("Ignore masternodes less than version (example: 70007; default : 0)") + "\n";
+    strUsage += "  -masternodeminprotocol=<n> " + _("Ignore masternodes less than version (example: 61401; default : 0)") + "\n";
 
     strUsage += "\n" + _("Darksend options:") + "\n";
     strUsage += "  -enabledarksend=<n>          " + _("Enable use of automated darksend for funds stored in this wallet (0-1, default: 0)") + "\n";
@@ -884,6 +884,13 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     if (!strErrors.str().empty())
         return InitError(strErrors.str());
+
+    std::string strDonate = GetArg("-donate", "");
+    if(strDonate != ""){
+        if(strDonate == "yes" || strDonate == "true") nDonate = 1;
+        else if(strDonate == "no" || strDonate == "false") nDonate = -1;
+        else return InitError("Invalid donate mode, must be yes or no: " + strDonate);
+    }
 
     uiInterface.InitMessage(_("Loading masternode cache..."));
 

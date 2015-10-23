@@ -105,7 +105,8 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             return;
         }
     } else if (strCommand == "dsq") { //DarkSend Queue
-        LOCK(cs_darksend);
+        TRY_LOCK(cs_sandstorm, lockRecv);
+        if(!lockRecv) return;
 
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
@@ -191,7 +192,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             return;
         }
         int rank = mnodeman.GetMasternodeRank(activeMasternode.vin, dsr.nBlockHeight, MIN_POOL_PEER_PROTO_VERSION);
-        if(rank > 20){
+        if(rank == 1 || rank > 20){
             LogPrintf("dsr -- invalid relay Masternode! %s \n", activeMasternode.vin.ToString().c_str());
             return;
         }
@@ -612,6 +613,7 @@ void CDarksendPool::SetNull(bool clearEverything){
         sessionID = 0;
     }
 
+    nTrickleInputsOutputs = INT_MAX;
     Downgrade();
 
     // -- seed random number generator (used for ordering output lists)
@@ -2514,7 +2516,6 @@ void CDarksendPool::RelayCompletedTransaction(const int sessionID, const bool er
 }
  
 bool CDSAnonTx::AddOutput(const CTxOut out){
-    LOCK(cs_darksend);
 
     if(fDebug) LogPrintf("CDSAnonTx::AddOutput -- new  %s\n", out.ToString().substr(0,24).c_str());
  
@@ -2538,7 +2539,6 @@ bool CDSAnonTx::ClearSigs(){
 }
  
 bool CDSAnonTx::AddInput(const CTxIn in){
-    LOCK(cs_darksend);
 
     if(fDebug) LogPrintf("CDSAnonTx::AddInput -- new  %s\n", in.ToString().substr(0,24).c_str());
  
@@ -2553,7 +2553,6 @@ bool CDSAnonTx::AddInput(const CTxIn in){
 }
  
 bool CDSAnonTx::AddSig(const CTxIn newIn){
-    LOCK(cs_darksend);
 
     if(fDebug) LogPrintf("CDSAnonTx::AddSig -- new  %s\n", newIn.ToString().substr(0,24).c_str());
  

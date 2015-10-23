@@ -61,10 +61,12 @@ https://github.com/dashpay/dash/commit/d2e3d67a1d632912e83684e2a8b8e5780eae4216
 better naming/readability (Find)
 https://github.com/dashpay/dash/commit/0d51e1c90df98f649ea3062efa448c1c5bb9827b
 
+-------------------------------------------------------------------------------
+
 Added dstx support for free transactions ( NEEDS FIXED - AcceptToMemoryPool)
 https://github.com/dashpay/dash/commit/13246598b8b84af2ade8b3d0368655fc64f5cca0
 
-
+-------------------------------------------------------------------------------
 
 Change the way changes are handled:
 https://github.com/dashpay/dash/commit/2e05bf212eaf5e0fe98161f673483dc62e5c0a95
@@ -130,7 +132,7 @@ https://github.com/dashpay/dash/commit/c169e49fce95ff587ccdf221e536ccc9737dbd05
 
 Change DS_COLLATERAL to 0.01 remove DS fee
 
-Stormnode Proof of Service Added
+Masternode Proof of Service Added
 
 Add structure for donating a percentage of ones earnings to another party via the protocol
 
@@ -144,12 +146,38 @@ increasing ss timeouts
 
 fixed ssee sync
 
-fixed Stormnode payments FindOldestNotInVec
+fixed Masternode payments FindOldestNotInVec
 
 Disabled masternode blinding / increased rounds defaults 
 
+Stormnode voting improvements
+
+remove locks
+
+Added easy to use donations
+
+Changed some locks
+
+Disable relay
+
+Changed some locks
+
+Improved donation code/message
+
+Added "masternode list donation
+
+Fixed ranking issues for PoSe
+
+Fixed masternode donation miscalculations
+
+Explicitly grab each piece of data from memory for hashing in CStormnode::CalculateScore
+
+Reducing spam
+
+New Command: Stormnode list pose - Shows proof-of-service score for Stormnodes 
 
 
+-------------------------------------------------------------------------------
 
 
 Removal of old code:
@@ -160,6 +188,7 @@ Remove ComputeMaxBits, ComputeMinWork, ComputeMinStake
 Remove KeePass integration
 
 
+-------------------------------------------------------------------------------
 
 
 To Do:

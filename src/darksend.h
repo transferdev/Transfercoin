@@ -7,8 +7,10 @@
 
 //#include "primitives/transaction.h"
 #include "main.h"
+#include "sync.h"
 #include "masternodeman.h"
 #include "activemasternode.h"
+
 
 class CTxIn;
 class CDarksendPool;

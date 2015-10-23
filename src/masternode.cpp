@@ -3,6 +3,7 @@
 #include "darksend.h"
 #include "core.h"
 #include "main.h"
+#include "sync.h"
 #include "util.h"
 #include "addrman.h"
 #include <boost/lexical_cast.hpp>
@@ -145,6 +146,8 @@ CMasternode::CMasternode()
     nLastDsq = 0;
     donationAddress = CScript();
     donationPercentage = 0;
+    nVote = 0;
+    lastVote = 0;
 }
 
 CMasternode::CMasternode(const CMasternode& other)
@@ -167,6 +170,8 @@ CMasternode::CMasternode(const CMasternode& other)
     nLastDsq = other.nLastDsq;
     donationAddress = other.donationAddress;
     donationPercentage = other.donationPercentage;
+    nVote = other.nVote;
+    lastVote = other.lastVote;
 }
 
 CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn, CScript newDonationAddress, int newDonationPercentage)
@@ -206,7 +211,7 @@ uint256 CMasternode::CalculateScore(int mod, int64_t nBlockHeight)
     if(!GetBlockHash(hash, nBlockHeight)) return 0;
 
     uint256 hash2 = Hash(BEGIN(hash), END(hash));
-    uint256 hash3 = Hash(BEGIN(hash), END(aux));
+    uint256 hash3 = Hash(BEGIN(hash), END(hash), BEGIN(aux), END(aux));
 
     uint256 r = (hash3 > hash2 ? hash3 - hash2 : hash2 - hash3);
 
@@ -215,6 +220,9 @@ uint256 CMasternode::CalculateScore(int mod, int64_t nBlockHeight)
 
 void CMasternode::Check()
 {
+    //TODO: Random segfault with this line removed
+    TRY_LOCK(cs_main, lockRecv);
+    if(!lockRecv) return;
 
     if(nScanningErrorCount >= MASTERNODE_SCANNING_ERROR_THESHOLD) 
     {
@@ -396,7 +404,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 
     uint256 hash;
     if(!GetBlockHash(hash, nBlockHeight-10)) return false;
-    int nHash;
+    unsigned int nHash;
     memcpy(&hash, &nHash, 2);
 
     std::vector<CTxIn> vecLastPayments;
@@ -416,7 +424,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         newWinner.nBlockHeight = nBlockHeight;
         newWinner.vin = pmn->vin;
 
-        if(pmn->donationPercentage > 0 && nHash % 100 > pmn->donationPercentage){
+        if(pmn->donationPercentage > 0 && (nHash % 100) <= pmn->donationPercentage) {
             newWinner.payee.SetDestination(pmn->pubkey.GetID());
         } else {
             newWinner.payee.SetDestination(pmn->donationAddress.GetID());
@@ -439,7 +447,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
                 newWinner.vin = pmn->vin;
                 newWinner.payee.SetDestination(pmn->pubkey.GetID());
 
-                if(pmn->donationPercentage > 0 && nHash % 100 < pmn->donationPercentage){
+                if(pmn->donationPercentage > 0 && (nHash % 100) <= pmn->donationPercentage) {
                     newWinner.payee = pmn->donationAddress;
                 } else {
                     newWinner.payee.SetDestination(pmn->donationAddress.GetID());

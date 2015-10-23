@@ -59,6 +59,7 @@ enum masternodeState {
 void ProcessMasternodeConnections();
 
 void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+bool GetBlockHash(uint256& hash, int nBlockHeight);
 
 //
 // The Masternode Class. For managing the darksend process. It contains the input of the 1000TX, signature to prove
@@ -99,6 +100,8 @@ public:
     int64_t nLastDsq; //the dsq count from the last dsq broadcast of this node
     int nScanningErrorCount;
     int nLastScanningErrorBlockHeight;
+    int nVote;
+    int64_t lastVote;
 
     CMasternode();
     CMasternode(const CMasternode& other);

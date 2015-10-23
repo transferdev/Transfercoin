@@ -1,4 +1,5 @@
 #include "masternodeman.h"
+#include "masternode.h"
 #include "activemasternode.h"
 #include "darksend.h"
 #include "core.h"
@@ -367,6 +368,10 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
 {
     std::vector<pair<unsigned int, CTxIn> > vecMasternodeScores;
 
+    //make sure we know about this block
+    uint256 hash = 0;
+    if(!GetBlockHash(hash, nBlockHeight)) return -1;
+
     // scan for winner
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
 
@@ -395,6 +400,43 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
     }
 
     return -1;
+}
+
+std::vector<pair<int, CStormnode> > CStormnodeMan::GetStormnodeRanks(int64_t nBlockHeight, int minProtocol)
+{
+    std::vector<pair<unsigned int, CStormnode> > vecStormnodeScores;
+    std::vector<pair<int, CStormnode> > vecStormnodeRanks;
+
+    //make sure we know about this block
+    uint256 hash = 0;
+    if(!GetBlockHash(hash, nBlockHeight)) return vecStormnodeRanks;
+
+    // scan for winner
+    BOOST_FOREACH(CMasternode& sn, vMasternodes) {
+
+        mn.Check();
+
+        if(mn.protocolVersion < minProtocol) continue;
+        if(!mn.IsEnabled()) {
+            continue;
+        }
+
+        uint256 n = mn.CalculateScore(1, nBlockHeight);
+        unsigned int n2 = 0;
+        memcpy(&n2, &n, sizeof(n2));
+
+        vecMasternodeScores.push_back(make_pair(n2, mn));
+    }
+
+    sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareValueOnlySN());
+
+    int rank = 0;
+    BOOST_FOREACH (PAIRTYPE(unsigned int, CMasternode)& s, vecMasternodeScores){
+        rank++;
+        vecMasternodeRanks.push_back(make_pair(rank, s.second));
+    }
+
+    return vecMasternodeRanks;
 }
 
 CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight, int minProtocol, bool fOnlyActive)
@@ -716,6 +758,40 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         pfrom->PushMessage("dseg", vin);
         int64_t askAgain = GetTime()+ MASTERNODE_MIN_DSEEP_SECONDS;
         mWeAskedForMasternodeListEntry[vin.prevout] = askAgain;
+
+    } else if (strCommand == "svote") { //Stormnode Vote
+
+        CTxIn vin;
+        vector<unsigned char> vchSig;
+        int nVote;
+        vRecv >> vin >> vchSig >> nVote;
+
+        // see if we have this Stormnode
+        CStormnode* psn = this->Find(vin);
+        if(psn != NULL)
+        {
+            if((GetAdjustedTime() - psn->lastVote) > (60*60))
+            {
+                std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nVote);
+
+                std::string errorMessage = "";
+                if(!sandStormSigner.VerifyMessage(psn->pubkey2, vchSig, strMessage, errorMessage))
+                {
+                    LogPrintf("svote - Got bad Stormnode address signature %s \n", vin.ToString().c_str());
+                    return;
+                }
+
+                psn->nVote = nVote;
+                psn->lastVote = GetAdjustedTime();
+
+                //send to all peers
+                LOCK(cs_vNodes);
+                BOOST_FOREACH(CNode* pnode, vNodes)
+                    pnode->PushMessage("svote", vin, vchSig, nVote);
+            }
+
+            return;
+        }
 
     } else if (strCommand == "dseg") { //Get masternode list or specific entry
 

@@ -92,13 +92,31 @@ void CActiveMasternode::ManageStatus()
 
             if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
             {
-            	LogPrintf("Register::ManageStatus() - Error upon calling SetKey: %s\n", errorMessage.c_str());
+            	LogPrintf("ActiveMasternode::Sseep() - Error upon calling SetKey: %s\n", errorMessage.c_str());
             	return;
             }
 
             /* donations are not supported in darksilk.conf */
             CScript donationAddress = CScript();
             int donationPercentage = 0;
+
+            if(nDonate == 1){
+                std::string strDonationAddress = "";
+                if(Params().NetworkID() == CChainParams::MAIN){
+                    strDonationAddress = "";
+                } else {
+                    strDonationAddress = "";
+                }
+
+                CBitcoinAddress address;
+                if(!address.SetString(strDonationAddress))
+                {
+                    LogPrintf("CActiveMasternode::Register - Invalid Donation Address\n");
+                    return;
+                }
+                donationAddress.SetDestination(address.Get());
+                donationPercentage = 5; //5%
+            }
 
             if(!Register(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, donationAddress, donationPercentage, errorMessage)) {
                 LogPrintf("CActiveMasternode::ManageStatus() - Error on Register: %s\n", errorMessage.c_str());
@@ -235,15 +253,15 @@ bool CActiveMasternode::Register(std::string strService, std::string strKeyMaste
 
     if(!GetMasterNodeVin(vin, pubKeyCollateralAddress, keyCollateralAddress, txHash, strOutputIndex)) {
         errorMessage = "could not allocate vin";
-        LogPrintf("Register::Register() - Error: %s\n", errorMessage.c_str());
+        LogPrintf("CActiveMasternode::Register() - Error: %s\n", errorMessage.c_str());
         return false;
     }
     CBitcoinAddress address;
-    if (strDonationAddress != "") 
+    if (strDonationAddress != "")
     {
         if(!address.SetString(strDonationAddress))
         {
-            LogPrintf("Register::Register - Invalid Donation Address\n");
+            LogPrintf("ActiveMasternode::Register - Invalid Donation Address\n");
             return false;
         }
         donationAddress.SetDestination(address.Get());
@@ -251,13 +269,13 @@ bool CActiveMasternode::Register(std::string strService, std::string strKeyMaste
         try {
             donationPercentage = boost::lexical_cast<int>( strDonationPercentage );
         } catch( boost::bad_lexical_cast const& ) {
-            LogPrintf("Register::Register - Invalid Donation Percentage (Couldn't cast)\n");
+            LogPrintf("ActiveMasternode::Register - Invalid Donation Percentage (Couldn't cast)\n");
             return false;
         }
 
         if(donationPercentage < 0 || donationPercentage > 100)
         {
-            LogPrintf("Register::Register - Donation Percentage Out Of Range\n");
+            LogPrintf("ActiveMasternode::Register - Donation Percentage Out Of Range\n");
             return false;
         }
     }
