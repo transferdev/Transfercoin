@@ -533,9 +533,6 @@ bool AppInit2(boost::thread_group& threadGroup)
             return InitError(_("Unable to sign spork message, wrong key?"));
     }
 
-    //ignore masternodes below protocol version
-    CMasternode::minProtoVersion = GetArg("-masternodeminprotocol", MIN_POOL_PEER_PROTO_VERSION);
-
     if (fDaemon)
         fprintf(stdout, "Transfer server starting\n");
 

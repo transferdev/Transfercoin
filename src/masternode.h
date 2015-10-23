@@ -69,7 +69,6 @@ public:
         MASTERNODE_POS_ERROR = 5
     };
 
-    static int minProtoVersion;
     CTxIn vin;  
     CService addr;
     CPubKey pubkey;
