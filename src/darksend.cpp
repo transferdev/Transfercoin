@@ -509,7 +509,7 @@ bool CDarksendPool::SetCollateralAddress(std::string strAddress){
         LogPrintf("CDarksendPool::SetCollateralAddress - Invalid DarkSend collateral address\n");
         return false;
     }
-    collateralPubKey.SetDestination(address.Get());
+    collateralPubKey = GetScriptForDestination(address.Get());
     return true;
 }
 
@@ -1665,7 +1665,7 @@ bool CDarksendPool::SendRandomPaymentToSelf()
     CScript scriptChange;
     CPubKey vchPubKey;
     assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-    scriptChange.SetDestination(vchPubKey.GetID());
+    scriptChange = GetScriptForDestination(vchPubKey.GetID());
 
     CWalletTx wtx;
     int64_t nFeeRet = 0;
@@ -1699,7 +1699,7 @@ bool CDarksendPool::MakeCollateralAmounts()
     CScript scriptChange;
     CPubKey vchPubKey;
     assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-    scriptChange.SetDestination(vchPubKey.GetID());
+    scriptChange = GetScriptForDestination(vchPubKey.GetID());
 
     CWalletTx wtx;
     int64_t nFeeRet = 0;
@@ -1742,7 +1742,7 @@ bool CDarksendPool::CreateDenominated(int64_t nTotalValue)
     CScript scriptChange;
     CPubKey vchPubKey;
     assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-    scriptChange.SetDestination(vchPubKey.GetID());
+    scriptChange = GetScriptForDestination(vchPubKey.GetID());
 
     CWalletTx wtx;
     int64_t nFeeRet = 0;
@@ -1766,7 +1766,7 @@ bool CDarksendPool::CreateDenominated(int64_t nTotalValue)
             CPubKey vchPubKey;
             //use a unique change address
             assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-            scriptChange.SetDestination(vchPubKey.GetID());
+            scriptChange = GetScriptForDestination(vchPubKey.GetID());
             reservekey.KeepKey();
 
             vecSend.push_back(make_pair(scriptChange, v));
@@ -2014,7 +2014,7 @@ int CDarksendPool::GetDenominationsByAmount(int64_t nAmount, int nDenomTarget){
 
 bool CDarkSendSigner::IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey){
     CScript payee2;
-    payee2.SetDestination(pubkey.GetID());
+    payee2 = GetScriptForDestination(pubkey.GetID());
 
     CTransaction txVin;
     uint256 hash;
