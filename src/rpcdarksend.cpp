@@ -742,7 +742,7 @@ Value masternodelist(const Array& params, bool fHelp)
             } else if (strMode == "donation") {
                 CTxDestination address1;
                 ExtractDestination(mn.donationAddress, address1);
-                CDarkSilkAddress address2(address1);
+                CBitcoinAddress address2(address1);
 
                 if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
                     strAddr.find(strFilter) == string::npos) continue;
@@ -760,7 +760,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 pubkey.SetDestination(mn.pubkey.GetID());
                 CTxDestination address1;
                 ExtractDestination(pubkey, address1);
-                CDarkSilkAddress address2(address1);
+                CBitcoinAddress address2(address1);
 
                 std::ostringstream addrStream;
                 addrStream << setw(21) << strAddr;
