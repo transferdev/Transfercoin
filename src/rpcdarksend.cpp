@@ -655,7 +655,7 @@ Value masternode(const Array& params, bool fHelp)
                 continue;
             }
 
-            if(!sandStormSigner.VerifyMessage(pubKeyMasternode, vchMasterNodeSignature, strMessage, errorMessage)){
+            if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchMasterNodeSignature, strMessage, errorMessage)){
                 printf(" Error upon calling VerifyMessage for %s\n", sne.getAlias().c_str());
                 failed++;
                 continue;
@@ -666,7 +666,7 @@ Value masternode(const Array& params, bool fHelp)
             //send to all peers
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes)
-                pnode->PushMessage("mvote", psn->vin, vchStormNodeSignature, nVote);
+                pnode->PushMessage("mvote", pmn->vin, vchMasterNodeSignature, nVote);
         }
 
         return("Voted successfully " + boost::lexical_cast<std::string>(success) + " time(s) and failed " + boost::lexical_cast<std::string>(failed) + " time(s).");
