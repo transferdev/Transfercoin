@@ -11,6 +11,7 @@
 
 /** Masternode manager */
 CMasternodeMan mnodeman;
+CCriticalSection cs_process_message;
 
 struct CompareValueOnly
 {
@@ -28,6 +29,7 @@ struct CompareValueOnly
 CMasternodeDB::CMasternodeDB()
 {
     pathMN = GetDataDir() / "mncache.dat";
+    strMagicMessage = "MasternodeCache";
 }
 
 bool CMasternodeDB::Write(const CMasternodeMan& mnodemanToSave)
@@ -36,7 +38,8 @@ bool CMasternodeDB::Write(const CMasternodeMan& mnodemanToSave)
 
     // serialize addresses, checksum data up to that point, then append csum
     CDataStream ssMasternodes(SER_DISK, CLIENT_VERSION);
-    ssMasternodes << FLATDATA(Params().MessageStart());
+    ssMasternodes << strMagicMessage; // masternode cache file specific magic message
+    ssMasternodes << FLATDATA(Params().MessageStart()); // network specific magic number
     ssMasternodes << mnodemanToSave;
     uint256 hash = Hash(ssMasternodes.begin(), ssMasternodes.end());
     ssMasternodes << hash;
@@ -107,7 +110,19 @@ CMasternodeDB::ReadResult CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
     }
 
     unsigned char pchMsgTmp[4];
+    std::string strMagicMessageTmp;
     try {
+        // de-serialize file header (masternode cache file specific magic message) and ..
+
+        ssMasternodes >> strMagicMessageTmp;
+
+        // ... verify the message matches predefined one
+        if (strMagicMessage != strMagicMessageTmp)
+        {
+            error("%s : Invalid masternode cache magic message", __func__);
+            return IncorrectMagicMessage;
+        }
+
         // de-serialize file header (network specific magic number) and ..
         ssMasternodes >> FLATDATA(pchMsgTmp);
 
@@ -115,7 +130,7 @@ CMasternodeDB::ReadResult CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
         if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
         {
             error("%s : Invalid network magic number", __func__);
-            return IncorrectMagic;
+            return IncorrectMagicNumber;
         }
 
         // de-serialize address data into one CMnList object
@@ -148,8 +163,14 @@ void DumpMasternodes()
         LogPrintf("Missing masternode list file - mncache.dat, will try to recreate\n");
     else if (readResult != CMasternodeDB::Ok)
     {
-        LogPrintf("Masternode list file mncache.dat has invalid format\n");
-        return;
+        LogPrintf("Error reading mncache.dat: ");
+        if(readResult == CMasternodeDB::IncorrectFormat)
+            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+        else
+        {
+            LogPrintf("file format is unknown or invalid, please fix it manually\n");
+            return;
+        }
     }
     LogPrintf("Writting info to mncache.dat...\n");
     mndb.Write(mnodeman);
@@ -197,7 +218,7 @@ void CMasternodeMan::CheckAndRemove()
     //remove inactive
     vector<CMasternode>::iterator it = vMasternodes.begin();
     while(it != vMasternodes.end()){
-        if((*it).activeState == MASTERNODE_REMOVE || (*it).activeState == MASTERNODE_VIN_SPENT){
+        if((*it).activeState == CMasternode::MASTERNODE_REMOVE || (*it).activeState == CMasternode::MASTERNODE_VIN_SPENT){
             if(fDebug) LogPrintf("CMasternodeMan: Removing inactive masternode %s - %i now\n", (*it).addr.ToString().c_str(), size() - 1);
             it = vMasternodes.erase(it);
         } else {
@@ -375,11 +396,10 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
     // scan for winner
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
 
-        mn.Check();
-
         if(mn.protocolVersion < minProtocol) continue;
-        if(fOnlyActive && !mn.IsEnabled()) {
-            continue;
+        if(fOnlyActive) {
+            mn.Check();
+            if(!mn.IsEnabled()) continue;
         }
 
         uint256 n = mn.CalculateScore(1, nBlockHeight);
@@ -402,17 +422,17 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
     return -1;
 }
 
-std::vector<pair<int, CStormnode> > CStormnodeMan::GetStormnodeRanks(int64_t nBlockHeight, int minProtocol)
+std::vector<pair<int, CMasternode> > CMasternodeMan::GetMasternodeRanks(int64_t nBlockHeight, int minProtocol)
 {
-    std::vector<pair<unsigned int, CStormnode> > vecStormnodeScores;
-    std::vector<pair<int, CStormnode> > vecStormnodeRanks;
+    std::vector<pair<unsigned int, CMasternode> > vecMasternodeScores;
+    std::vector<pair<int, CMasternode> > vecMasternodeRanks;
 
     //make sure we know about this block
     uint256 hash = 0;
-    if(!GetBlockHash(hash, nBlockHeight)) return vecStormnodeRanks;
+    if(!GetBlockHash(hash, nBlockHeight)) return vecMasternodeRanks;
 
     // scan for winner
-    BOOST_FOREACH(CMasternode& sn, vMasternodes) {
+    BOOST_FOREACH(CMasternode& mn, vMasternodes) {
 
         mn.Check();
 
@@ -449,8 +469,9 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight
         mn.Check();
 
         if(mn.protocolVersion < minProtocol) continue;
-        if(fOnlyActive && !mn.IsEnabled()) {
-            continue;
+        if(fOnlyActive) {
+            mn.Check();
+            if(!mn.IsEnabled()) continue;
         }
 
         uint256 n = mn.CalculateScore(1, nBlockHeight);
@@ -475,9 +496,6 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight
 
 void CMasternodeMan::ProcessMasternodeConnections()
 {
-    //we don't care about this for testing
-    if(TestNet()) return;
-
     LOCK(cs_vNodes);
 
     if(!darkSendPool.pSubmittedToMasternode) return;
@@ -513,7 +531,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
     if(fLiteMode) return; //disable all darksend/masternode related functionality
     if(IsInitialBlockDownload()) return;
 
-    LOCK(cs);
+    LOCK(cs_process_message);
 
     if (strCommand == "dsee") { //DarkSend Election Entry
 
@@ -582,9 +600,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        //search existing masternode list, this is where we update existing masternodes with new dsee broadcasts
-        CMasternode* pmn = this->Find(vin);
-        if(pmn != NULL)
+        // if we are a masternode but with undefined vin and this ssee is ours (matches our Masternode privkey) then just skip this part
+        if(pmn != NULL && !(fMasterNode && activeMasternode.vin == CTxIn() && pubkey2 == activeMasternode.pubKeyMasternode))
         {
             // count == -1 when it's a new entry
             //   e.g. We don't want the entry relayed/time updated when we're syncing the list
@@ -660,6 +677,12 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
             // use this as a peer
             addrman.Add(CAddress(addr), pfrom->addr, 2*60*60);
+
+            //doesn't support multisig addresses
+            if(donationAddress.IsPayToScriptHash()){
+                donationAddress = CScript();
+                donationPercentage = 0;
+            }
 
             // add our masternode
             CMasternode mn(addr, vin, pubkey, vchSig, sigTime, pubkey2, protocolVersion, donationAddress, donationPercentage);
@@ -759,35 +782,35 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         int64_t askAgain = GetTime()+ MASTERNODE_MIN_DSEEP_SECONDS;
         mWeAskedForMasternodeListEntry[vin.prevout] = askAgain;
 
-    } else if (strCommand == "svote") { //Stormnode Vote
+    } else if (strCommand == "mvote") { //Masternode Vote
 
         CTxIn vin;
         vector<unsigned char> vchSig;
         int nVote;
         vRecv >> vin >> vchSig >> nVote;
 
-        // see if we have this Stormnode
-        CStormnode* psn = this->Find(vin);
-        if(psn != NULL)
+        // see if we have this Masternode
+        CMasternode* pmn = this->Find(vin);
+        if(pmn != NULL)
         {
-            if((GetAdjustedTime() - psn->lastVote) > (60*60))
+            if((GetAdjustedTime() - pmn->lastVote) > (60*60))
             {
                 std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nVote);
 
                 std::string errorMessage = "";
-                if(!sandStormSigner.VerifyMessage(psn->pubkey2, vchSig, strMessage, errorMessage))
+                if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage))
                 {
-                    LogPrintf("svote - Got bad Stormnode address signature %s \n", vin.ToString().c_str());
+                    LogPrintf("mvote - Got bad Masternode address signature %s \n", vin.ToString().c_str());
                     return;
                 }
 
-                psn->nVote = nVote;
-                psn->lastVote = GetAdjustedTime();
+                pmn->nVote = nVote;
+                pmn->lastVote = GetAdjustedTime();
 
                 //send to all peers
                 LOCK(cs_vNodes);
                 BOOST_FOREACH(CNode* pnode, vNodes)
-                    pnode->PushMessage("svote", vin, vchSig, nVote);
+                    pnode->PushMessage("mvote", vin, vchSig, nVote);
             }
 
             return;

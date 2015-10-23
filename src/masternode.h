@@ -47,14 +47,6 @@ extern CMasternodePayments masternodePayments;
 extern map<uint256, CMasternodePaymentWinner> mapSeenMasternodeVotes;
 extern map<int64_t, uint256> mapCacheBlockHashes;
 
-enum masternodeState {
-    MASTERNODE_ENABLED = 1,
-    MASTERNODE_EXPIRED = 2,
-    MASTERNODE_VIN_SPENT = 3,
-    MASTERNODE_REMOVE = 4,
-    MASTERNODE_POS_ERROR = 5
-};
-
 // manage the masternode connections
 void ProcessMasternodeConnections();
 
@@ -95,13 +87,11 @@ public:
     bool unitTest;
     bool allowFreeTx;
     int protocolVersion;
-    CScript donationAddress;
-    int donationPercentage;
     int64_t nLastDsq; //the dsq count from the last dsq broadcast of this node
-    int nScanningErrorCount;
-    int nLastScanningErrorBlockHeight;
     int nVote;
     int64_t lastVote;
+    int nScanningErrorCount;
+    int nLastScanningErrorBlockHeight;
 
     CMasternode();
     CMasternode(const CMasternode& other);
@@ -125,13 +115,17 @@ public:
         swap(first.lastDseep, second.lastDseep);
         swap(first.lastTimeSeen, second.lastTimeSeen);
         swap(first.cacheInputAge, second.cacheInputAge);
+        swap(first.unitTest, second.unitTest);
         swap(first.cacheInputAgeBlock, second.cacheInputAgeBlock);
         swap(first.allowFreeTx, second.allowFreeTx);
         swap(first.protocolVersion, second.protocolVersion);
-        swap(first.unitTest, second.unitTest);
         swap(first.nLastDsq, second.nLastDsq);
         swap(first.donationAddress, second.donationAddress);
         swap(first.donationPercentage, second.donationPercentage);
+        swap(first.nVote, second.nVote);
+        swap(first.lastVote, second.lastVote);
+        swap(first.nScanningErrorCount, second.nScanningErrorCount);
+        swap(first.nLastScanningErrorBlockHeight, second.nLastScanningErrorBlockHeight);
     }
 
     CMasternode& operator=(CMasternode from)
@@ -176,6 +170,10 @@ public:
                 READWRITE(nLastDsq);
                 READWRITE(donationAddress);
                 READWRITE(donationPercentage);
+                READWRITE(nVote);
+                READWRITE(lastVote);
+                READWRITE(nScanningErrorCount);
+                READWRITE(nLastScanningErrorBlockHeight);
         }
     )
 
@@ -225,18 +223,6 @@ public:
 
         return cacheInputAge+(pindexBest->nHeight-cacheInputAgeBlock);
     }
-
-    std::string Status() {
-        std::string strStatus = "ACTIVE";
-
-        if(activeState == MASTERNODE_ENABLED) strStatus   = "ENABLED";
-        if(activeState == MASTERNODE_EXPIRED) strStatus   = "EXPIRED";
-        if(activeState == MASTERNODE_VIN_SPENT) strStatus = "VIN_SPENT";
-        if(activeState == MASTERNODE_REMOVE) strStatus    = "REMOVE";
-        if(activeState == MASTERNODE_POS_ERROR) strStatus = "POS_ERROR";
-
-        return strStatus;
-    }
     
     void ApplyScanningError(CMasternodeScanningError& mnse)
     {
@@ -253,8 +239,19 @@ public:
             if(nScanningErrorCount > MASTERNODE_SCANNING_ERROR_THESHOLD*2) nScanningErrorCount = MASTERNODE_SCANNING_ERROR_THESHOLD*2;
         }
     }
-};
 
+    std::string Status() {
+        std::string strStatus = "ACTIVE";
+
+        if(activeState == MASTERNODE_ENABLED) strStatus   = "ENABLED";
+        if(activeState == MASTERNODE_EXPIRED) strStatus   = "EXPIRED";
+        if(activeState == MASTERNODE_VIN_SPENT) strStatus = "VIN_SPENT";
+        if(activeState == MASTERNODE_REMOVE) strStatus    = "REMOVE";
+        if(activeState == MASTERNODE_POS_ERROR) strStatus = "POS_ERROR";
+
+        return strStatus;
+    }
+};
 // for storing the winning payments
 class CMasternodePaymentWinner
 {
@@ -306,6 +303,7 @@ private:
     std::string strTestPubKey;
     std::string strMainPubKey;
     bool enabled;
+    int nLastBlockHeight;
 
 public:
 

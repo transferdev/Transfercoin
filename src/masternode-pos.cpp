@@ -97,7 +97,7 @@ void ProcessMessageMasternodePOS(CNode* pfrom, std::string& strCommand, CDataStr
         }
 
         int b = mnodeman.GetMasternodeRank(mnse.vinMasternodeB, mnse.nBlockHeight, MIN_MASTERNODE_POS_PROTO_VERSION, false);
-        if(b == -1 || b < mnodeman.CountStormnodesAboveProtocol(MIN_MASTERNODE_POS_PROTO_VERSION)-GetCountScanningPerBlock())
+        if(b == -1 || b < mnodeman.CountMasternodesAboveProtocol(MIN_MASTERNODE_POS_PROTO_VERSION)-GetCountScanningPerBlock())
         {
             LogPrintf("MasternodePOS::mnse - MasternodeB ranking is too low\n");
             return;
@@ -109,9 +109,9 @@ void ProcessMessageMasternodePOS(CNode* pfrom, std::string& strCommand, CDataStr
         }
 
         CMasternode* pmnB = mnodeman.Find(mnse.vinMasternodeB);
-        if(psnB == NULL) return;
+        if(pmnB == NULL) return;
 
-        if(fDebug) LogPrintf("ProcessMessageMasternodePOS::snse - nHeight %d StormnodeA %s StormnodeB %s\n", mnse.nBlockHeight, pmnA->addr.ToString().c_str(), pmnB->addr.ToString().c_str());
+        if(fDebug) LogPrintf("ProcessMessageMasternodePOS::mnse - nHeight %d MasternodeA %s MasternodeB %s\n", mnse.nBlockHeight, pmnA->addr.ToString().c_str(), pmnB->addr.ToString().c_str());
 
         pmnB->ApplyScanningError(mnse);
         mnse.Relay();
@@ -153,7 +153,7 @@ void CMasternodeScanning::DoMasternodePOSChecks()
 
     int nBlockHeight = pindexBest->nHeight-5;
 
-    int a = mnodeman.GetStormnodeRank(activeMasternode.vin, nBlockHeight, MIN_MASTERNODE_POS_PROTO_VERSION);
+    int a = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight, MIN_MASTERNODE_POS_PROTO_VERSION);
     if(a == -1 || a > GetCountScanningPerBlock()){
         // we don't need to do anything this block
         return;

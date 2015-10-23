@@ -2033,14 +2033,13 @@ bool CWallet::SelectCoins(int64_t nTargetValue, unsigned int nSpendTime, set<pai
             {
                 if(out.tx->vout[out.i].nValue == v                                            //make sure it's the denom we're looking for
                     && nValueRet + out.tx->vout[out.i].nValue < nTargetValue + (0.1*COIN)+100 //round the amount up to .1TX over
-                    && added <= 100){                                                          //don't add more than 100 of one denom type
-                        CTxIn vin = CTxIn(out.tx->GetHash(),out.i);
-                        int rounds = GetInputDarksendRounds(vin);
-                        // make sure it's actually anonymized
-                        if(rounds < nDarksendRounds) continue;
-                        nValueRet += out.tx->vout[out.i].nValue;
-                        setCoinsRet.insert(make_pair(out.tx, out.i));
-                        added++;
+                ){
+                    CTxIn vin = CTxIn(out.tx->GetHash(),out.i);
+                    int rounds = GetInputDarksendRounds(vin);
+                    // make sure it's actually anonymized
+                    if(rounds < nDarksendRounds) continue;
+                    nValueRet += out.tx->vout[out.i].nValue;
+                    setCoinsRet.insert(make_pair(out.tx, out.i));
                 }
             }
         }

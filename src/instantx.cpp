@@ -459,7 +459,7 @@ void CleanTransactionLocksList()
                 bool fFound = false;
                 BOOST_FOREACH(CConsensusVote& v, it->second.vecConsensusVotes)
                 {
-                    if(pmn->vin == v.vinMasternode){ //Stormnode responded
+                    if(pmn->vin == v.vinMasternode){ //Masternode responded
                         fFound = true;
                     }
                 }

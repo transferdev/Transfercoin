@@ -149,6 +149,8 @@ OverviewPage::OverviewPage(QWidget *parent) :
 
     if(fMasterNode || fLiteMode){
         ui->toggleDarksend->setText("(" + tr("Disabled") + ")");
+        ui->darksendAuto->setText("(" + tr("Disabled") + ")");
+        ui->darksendReset->setText("(" + tr("Disabled") + ")");
         ui->toggleDarksend->setEnabled(false);
     }else if(!fEnableDarksend){
         ui->toggleDarksend->setText(tr("Start Darksend"));

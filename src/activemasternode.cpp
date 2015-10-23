@@ -100,24 +100,6 @@ void CActiveMasternode::ManageStatus()
             CScript donationAddress = CScript();
             int donationPercentage = 0;
 
-            if(nDonate == 1){
-                std::string strDonationAddress = "";
-                if(Params().NetworkID() == CChainParams::MAIN){
-                    strDonationAddress = "";
-                } else {
-                    strDonationAddress = "";
-                }
-
-                CBitcoinAddress address;
-                if(!address.SetString(strDonationAddress))
-                {
-                    LogPrintf("CActiveMasternode::Register - Invalid Donation Address\n");
-                    return;
-                }
-                donationAddress.SetDestination(address.Get());
-                donationPercentage = 5; //5%
-            }
-
             if(!Register(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, donationAddress, donationPercentage, errorMessage)) {
                 LogPrintf("CActiveMasternode::ManageStatus() - Error on Register: %s\n", errorMessage.c_str());
             }

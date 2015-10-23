@@ -170,11 +170,29 @@ Fixed ranking issues for PoSe
 
 Fixed masternode donation miscalculations
 
-Explicitly grab each piece of data from memory for hashing in CStormnode::CalculateScore
+Explicitly grab each piece of data from memory for hashing in CMasternode::CalculateScore
 
 Reducing spam
 
 New Command: Stormnode list pose - Shows proof-of-service score for Stormnodes 
+
+Don't limit ds-send inputs number artificially, fees should take care of it instead
+
+Reference node fixes / debugging
+
+Compiling warnings / fixed block comparison 
+
+Create empty darksilk.conf during startup if it doesn't exist
+
+Updated minimum for reference node
+
+Fixes for "masternode list"
+
+Fix MN ssee: MN should not update itself in MN list until it activated
+
+fix possible MN breakage during mixing
+
+remove donations to multisig addresses  
 
 
 -------------------------------------------------------------------------------

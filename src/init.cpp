@@ -251,7 +251,7 @@ std::string HelpMessage()
     strUsage += "  -minimizecoinage       " + _("Minimize weight consumption (experimental) (default: 0)") + "\n";
     strUsage += "  -alertnotify=<cmd>     " + _("Execute command when a relevant alert is received (%s in cmd is replaced by message)") + "\n";
     strUsage += "  -upgradewallet         " + _("Upgrade wallet to latest format") + "\n";
-    strUsage += "  -keypool=<n>           " + _("Set key pool size to <n> (default: 100)") + "\n";
+    strUsage += "  -keypool=<n>           " + _("Set key pool size to <n> (default: 1000)") + "\n";
     strUsage += "  -rescan                " + _("Rescan the block chain for missing wallet transactions") + "\n";
     strUsage += "  -salvagewallet         " + _("Attempt to recover private keys from a corrupt wallet.dat") + "\n";
     strUsage += "  -checkblocks=<n>       " + _("How many blocks to check at startup (default: 500, 0 = all)") + "\n";
@@ -885,13 +885,6 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (!strErrors.str().empty())
         return InitError(strErrors.str());
 
-    std::string strDonate = GetArg("-donate", "");
-    if(strDonate != ""){
-        if(strDonate == "yes" || strDonate == "true") nDonate = 1;
-        else if(strDonate == "no" || strDonate == "false") nDonate = -1;
-        else return InitError("Invalid donate mode, must be yes or no: " + strDonate);
-    }
-
     uiInterface.InitMessage(_("Loading masternode cache..."));
 
     CMasternodeDB mndb;
@@ -899,7 +892,13 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (readResult == CMasternodeDB::FileError)
         LogPrintf("Missing masternode cache file - mncache.dat, will try to recreate\n");
     else if (readResult != CMasternodeDB::Ok)
-        LogPrintf("Masternode cache file mncache.dat has invalid format\n");
+    {
+        LogPrintf("Error reading mncache.dat: ");
+        if(readResult == CMasternodeDB::IncorrectFormat)
+            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+        else
+            LogPrintf("file format is unknown or invalid, please fix it manually\n");
+    }
 
 
     fMasterNode = GetBoolArg("-masternode", false);
