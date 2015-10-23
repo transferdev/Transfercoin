@@ -330,7 +330,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
 
         if(success){
         darkSendPool.Check();
-            RelayStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), STORMNODE_RESET);
+            RelayStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_RESET);
         }
     } else if (strCommand == "dsf") { //DarkSend Final tx
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
@@ -596,7 +596,7 @@ void CDarksendPool::CheckFinalTransaction()
                 // See if the transaction is valid
                 if (!txNew.AcceptToMemoryPool(false))
                 {
-                    LogPrintf("CSandstormPool::Check() - CommitTransaction : Error: Transaction not valid\n");
+                    LogPrintf("CDarksendPool::Check() - CommitTransaction : Error: Transaction not valid\n");
                     SetNull();
                     pwalletMain->Lock();
 
@@ -1094,7 +1094,7 @@ bool CDarksendPool::AddScriptSig(const CTxIn& newVin){
     }
     for(unsigned int i = 0; i < entries.size(); i++){
         if(entries[i].AddSig(newVin)){
-            if(fDebug) LogPrintf("CSandStormPool::AddScriptSig -- adding  %s\n", newVin.scriptSig.ToString().substr(0,24).c_str());
+            if(fDebug) LogPrintf("CDarksendPool::AddScriptSig -- adding  %s\n", newVin.scriptSig.ToString().substr(0,24).c_str());
             return true;
         }
     }
@@ -1312,7 +1312,7 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
         if(fDebug) LogPrintf("CDarksendPool::Sign - txNew:\n%s", finalTransaction.ToString().c_str());
     }
 
-   // push all of our signatures to the Stormnode
+   // push all of our signatures to the Masternode
    if(sigs.size() > 0 && node != NULL)
        node->PushMessage("dss", sigs);
     return true;
