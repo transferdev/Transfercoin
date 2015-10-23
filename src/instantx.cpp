@@ -466,7 +466,7 @@ void CleanTransactionLocksList()
 
                 if(!fFound){
                     //increment a scanning error
-                    CMasternodeScanningError snse(pmn->vin, SCANNING_ERROR_IX_NO_RESPONSE, it->second.nBlockHeight);
+                    CMasternodeScanningError mnse(pmn->vin, SCANNING_ERROR_IX_NO_RESPONSE, it->second.nBlockHeight);
                     pmn->ApplyScanningError(mnse);
                 }
             }
