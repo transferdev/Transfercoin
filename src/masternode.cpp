@@ -448,7 +448,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
             newWinner.payee.SetDestination(pmn->donationAddress.GetID());
         }
 
-        payeeSource.SetDestination(psn->pubkey.GetID());
+        payeeSource.SetDestination(pmn->pubkey.GetID());
     }
 
     //if we can't find new MN to get paid, pick first active MN counting back from the end of vecLastPayments list
@@ -475,7 +475,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
                     newWinner.payee.SetDestination(pmn->donationAddress.GetID());
                 }
 
-                payeeSource.SetDestination(psn->pubkey.GetID());
+                payeeSource.SetDestination(pmn->pubkey.GetID());
 
                 break; // we found active MN
             }
