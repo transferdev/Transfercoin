@@ -2071,13 +2071,10 @@ bool CDarkSendSigner::VerifyMessage(CPubKey pubkey, vector<unsigned char>& vchSi
         return false;
     }
 
-    pubkey = GetScriptForDestination(pubkey.GetID());
-    pubkey2 = GetScriptForDestination(pubkey.GetID());
+    if (fDebug && pubkey2.GetID() != pubkey.GetID())
+        LogPrintf("CDarkSendSigner::VerifyMessage -- keys don't match: %s '%s'\n", pubkey2.GetID().ToString(), pubkey.GetID().ToString());
 
-    if (fDebug && pubkey2 != pubkey)
-        LogPrintf("CDarkSendSigner::VerifyMessage -- keys don't match: %s '%s'\n", pubkey2, pubkey);
-
-    return (pubkey2 == pubkey);
+    return (pubkey2.GetID() == pubkey.GetID());
 }
 
 bool CDarksendQueue::Sign()
