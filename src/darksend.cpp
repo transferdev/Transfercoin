@@ -551,7 +551,7 @@ void CDarksendPool::Check()
                 BOOST_FOREACH(const CTxOut& v, entries[i].vout)
                     txNew.vout.push_back(v);
 
-                BOOST_FOREACH(const CTxSSIn& s, entries[i].sev)
+                BOOST_FOREACH(const CTxDSIn& s, entries[i].sev)
                     txNew.vin.push_back(s);
             }
 
