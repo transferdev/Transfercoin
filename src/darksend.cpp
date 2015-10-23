@@ -266,9 +266,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
                 return;
             }
 
-            bool* pfMissingInputs = new bool;
-            *pfMissingInputs = false;
-            if(!AcceptableInputs(mempool, txCollateral, false, pfMissingInputs)){
+            if(!AcceptableInputs(mempool, txCollateral)){
                 LogPrintf("dsi -- transaction not valid! \n");
                 error = _("Transaction not valid.");
                 pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, error);
@@ -999,9 +997,7 @@ bool CDarksendPool::IsCollateralValid(const CTransaction& txCollateral){
     if(fDebug) LogPrintf("CDarksendPool::IsCollateralValid %s\n", txCollateral.ToString().c_str());
 
     CValidationState state;
-        bool* pfMissingInputs = new bool;
-        *pfMissingInputs = false;
-        if(!AcceptableInputs(mempool, txCollateral, false, pfMissingInputs)){
+    if(!AcceptableInputs(mempool, txCollateral)){
         if(fDebug) LogPrintf ("CDarksendPool::IsCollateralValid - didn't pass IsAcceptable\n");
         return false;
     }
@@ -1175,9 +1171,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
 
         LogPrintf("Submitting tx %s\n", tx.ToString().c_str());
 
-        bool* pfMissingInputs = new bool;
-        *pfMissingInputs = false;
-        if(!AcceptableInputs(mempool, txCollateral, false, pfMissingInputs)){
+        if(!AcceptableInputs(mempool, txCollateral)){
             LogPrintf("dsi -- transaction not valid! %s \n", tx.ToString().c_str());
             return;
         }
