@@ -11,7 +11,6 @@
 
 int CMasternode::minProtoVersion = MIN_POOL_PEER_PROTO_VERSION;
 
-CCriticalSection cs_masternodes;
 CCriticalSection cs_masternodepayments;
 
 /** Object for who's going to get paid on which blocks */
@@ -205,6 +204,10 @@ CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std:
     nLastDsq = 0;
     donationAddress = newDonationAddress;
     donationPercentage = newDonationPercentage;
+    nVote = 0;   
+    lastVote = 0;           
+    nScanningErrorCount = 0;            
+    nLastScanningErrorBlockHeight = 0;
 }
 
 //
@@ -420,7 +423,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     uint256 hash;
     if(!GetBlockHash(hash, nBlockHeight-10)) return false;
     unsigned int nHash;
-    memcpy(&hash, &nHash, 2);
+    memcpy(&nHash, &hash, 2);
 
     LogPrintf(" ProcessBlock Start nHeight %d. \n", nBlockHeight);
 
@@ -443,9 +446,9 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         newWinner.vin = pmn->vin;
 
         if(pmn->donationPercentage > 0 && (nHash % 100) <= (unsigned int)pmn->donationPercentage) {
-            newWinner.payee.SetDestination(pmn->pubkey.GetID());
+            newWinner.payee = pmn->donationAddress;
         } else {
-            newWinner.payee.SetDestination(pmn->donationAddress.GetID());
+            newWinner.payee.SetDestination(pmn->pubkey.GetID());
         }
 
         payeeSource.SetDestination(pmn->pubkey.GetID());
@@ -467,12 +470,11 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
                 newWinner.score = 0;
                 newWinner.nBlockHeight = nBlockHeight;
                 newWinner.vin = pmn->vin;
-                newWinner.payee.SetDestination(pmn->pubkey.GetID());
 
                 if(pmn->donationPercentage > 0 && (nHash % 100) <= (unsigned int)pmn->donationPercentage) {
                     newWinner.payee = pmn->donationAddress;
                 } else {
-                    newWinner.payee.SetDestination(pmn->donationAddress.GetID());
+                    newWinner.payee.SetDestination(pmn->pubkey.GetID());
                 }
 
                 payeeSource.SetDestination(pmn->pubkey.GetID());
