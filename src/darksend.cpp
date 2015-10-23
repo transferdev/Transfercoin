@@ -1277,9 +1277,6 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
                 int64_t nValue1 = 0;
                 int64_t nValue2 = 0;
 
-                CScript scriptOld = finalTransaction.vin[mine].scriptSig;
-                if(!fSubmitAnonymousFailed && sigs.size() > 7) break; //send 7 each signing
-
                 for(unsigned int i = 0; i < finalTransaction.vout.size(); i++){
                     BOOST_FOREACH(const CTxOut& o, e.vout) {
                         if(finalTransaction.vout[i] == o){
