@@ -794,12 +794,12 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
     if (tx.IsCoinStake())
         return tx.DoS(100, error("AcceptableInputs : coinstake as individual tx"));
 
-    // Rather not work on nonstandard transactions (unless -testnet)
+    /*// Rather not work on nonstandard transactions (unless -testnet)
     string reason;
     if (!TestNet() && !IsStandardTx(tx, reason))
         return error("AcceptableInputs : nonstandard transaction: %s",
                      reason);
-
+    */
 
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();
