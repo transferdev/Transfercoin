@@ -448,7 +448,7 @@ std::vector<pair<int, CMasternode> > CMasternodeMan::GetMasternodeRanks(int64_t 
         vecMasternodeScores.push_back(make_pair(n2, mn));
     }
 
-    sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareValueOnlySN());
+    sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareValueOnlyMN());
 
     int rank = 0;
     BOOST_FOREACH (PAIRTYPE(unsigned int, CMasternode)& s, vecMasternodeScores){
@@ -600,7 +600,9 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        // if we are a masternode but with undefined vin and this ssee is ours (matches our Masternode privkey) then just skip this part
+        //search existing stormnode list, this is where we update existing stormnodes with new ssee broadcasts
+        CMasternode* pmn = this->Find(vin);
+        // if we are a masternode but with undefined vin and this dsee is ours (matches our Masternode privkey) then just skip this part
         if(pmn != NULL && !(fMasterNode && activeMasternode.vin == CTxIn() && pubkey2 == activeMasternode.pubKeyMasternode))
         {
             // count == -1 when it's a new entry
