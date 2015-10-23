@@ -42,6 +42,7 @@ class CMasternode;
 class CMasternodePayments;
 class CMasternodePaymentWinner;
 
+extern CCriticalSection cs_masternodes;
 extern CMasternodePayments masternodePayments;
 extern map<uint256, CMasternodePaymentWinner> mapSeenMasternodeVotes;
 extern map<int64_t, uint256> mapCacheBlockHashes;
