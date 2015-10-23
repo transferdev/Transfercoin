@@ -30,7 +30,7 @@ bool CMasternodeConfig::read(boost::filesystem::path path) {
             iss.str(line);
             iss.clear();
             if (!(iss >> alias >> ip >> privKey >> txHash >> outputIndex)) {
-                strErr = "Could not parse masternode.conf line: " + line;
+                LogPrintf("Could not parse masternode.conf line: %s\n", line.c_str());
                 streamConfig.close();
                 return false;
             }
@@ -45,7 +45,7 @@ bool CMasternodeConfig::read(boost::filesystem::path path) {
             }
             CBitcoinAddress address(donationAddress);
             if (!address.IsValid()) {
-                strErr = "Invalid Dash address in masternode.conf line: " + line;
+                LogPrintf("Invalid Transfer address in masternode.conf line: %s\n", line.c_str());
                 streamConfig.close();
                 return false;
             }
