@@ -369,7 +369,7 @@ CMasternode *CMasternodeMan::FindRandom()
     return &vMasternodes[GetRandInt(vMasternodes.size())];
 }
 
-CMasternode *CStormnodeMan::Find(const CPubKey &pubKeyMasternode)
+CMasternode *CMasternodeMan::Find(const CPubKey &pubKeyMasternode)
 {
     LOCK(cs);
 
@@ -607,7 +607,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        //search existing stormnode list, this is where we update existing stormnodes with new dsee broadcasts
+        //search existing masternode list, this is where we update existing masternodes with new dsee broadcasts
         CMasternode* pmn = this->Find(vin);
         // if we are a masternode but with undefined vin and this dsee is ours (matches our Masternode privkey) then just skip this part
         if(pmn != NULL && !(fMasterNode && activeMasternode.vin == CTxIn() && pubkey2 == activeMasternode.pubKeyMasternode))
@@ -876,21 +876,21 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
 }
 
-void CStormnodeMan::RelayStormnodeEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion, CScript donationAddress, int donationPercentage)
+void CMasternodeMan::RelayMasternodeEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion, CScript donationAddress, int donationPercentage)
 {
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
         pnode->PushMessage("dsee", vin, addr, vchSig, nNow, pubkey, pubkey2, count, current, lastUpdated, protocolVersion, donationAddress, donationPercentage);
 }
 
-void CStormnodeMan::RelayStormnodeEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop)
+void CMasternodeMan::RelayMasternodeEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop)
 {
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
         pnode->PushMessage("dseep", vin, vchSig, nNow, stop);
 }
 
-void CStormnodeMan::Remove(CTxIn vin)
+void CMasternodeMan::Remove(CTxIn vin)
 {
     LOCK(cs);
 
