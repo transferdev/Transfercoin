@@ -9,6 +9,8 @@
 #include <boost/lexical_cast.hpp>
 
 
+CCriticalSection cs_masternodes;
+
 CCriticalSection cs_masternodepayments;
 
 /** Object for who's going to get paid on which blocks */
