@@ -774,12 +774,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree,
     return true;
 }
 
-bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree,
-                        bool* pfMissingInputs)
+bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree)
 {
     AssertLockHeld(cs_main);
-    if (pfMissingInputs)
-        *pfMissingInputs = false;
 
     CTransaction tx(txo);
 
@@ -834,8 +831,6 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
         {
             if (fInvalid)
                 return error("AcceptableInputs : FetchInputs found invalid tx %s", hash.ToString());
-            if (pfMissingInputs)
-                *pfMissingInputs = true;
             return false;
         }
 

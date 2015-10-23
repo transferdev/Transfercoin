@@ -164,8 +164,7 @@ void ThreadStakeMiner(CWallet *pwallet);
 bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs);
 
-bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree,
-                        bool* pfMissingInputs);
+bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree);
 
 
 bool FindTransactionsByDestination(const CTxDestination &dest, std::vector<uint256> &vtxhash);
