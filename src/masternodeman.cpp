@@ -21,6 +21,15 @@ struct CompareValueOnly
         return t1.first < t2.first;
     }
 };
+struct CompareValueOnlyMN
+{
+    bool operator()(const pair<int64_t, CMasternode>& t1,
+                    const pair<int64_t, CMasternode>& t2) const
+    {
+        return t1.first < t2.first;
+    }
+};
+
 
 //
 // CMasternodeDB
