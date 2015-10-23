@@ -1849,7 +1849,6 @@ bool CDarksendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txColla
             dsq.vin = activeMasternode.vin;
             dsq.time = GetTime();
             dsq.Sign();
-            strMasternodeSharedKey = dsq.strSharedKey;
             dsq.Relay();
         }
 
