@@ -89,6 +89,7 @@ public:
     int64_t lastVote;
     int nScanningErrorCount;
     int nLastScanningErrorBlockHeight;
+    int minProtoVersion = MIN_POOL_PEER_PROTO_VERSION;
 
     CMasternode();
     CMasternode(const CMasternode& other);

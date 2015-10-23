@@ -9,8 +9,6 @@
 #include <boost/lexical_cast.hpp>
 
 
-int CMasternode::minProtoVersion = MIN_POOL_PEER_PROTO_VERSION;
-
 CCriticalSection cs_masternodepayments;
 
 /** Object for who's going to get paid on which blocks */
