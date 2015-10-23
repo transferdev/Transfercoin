@@ -369,6 +369,18 @@ CMasternode *CMasternodeMan::FindRandom()
     return &vMasternodes[GetRandInt(vMasternodes.size())];
 }
 
+CMasternode *CStormnodeMan::Find(const CPubKey &pubKeyMasternode)
+{
+    LOCK(cs);
+
+    BOOST_FOREACH(CMasternode& mn, vMasternodes)
+    {
+        if(mn.pubkey2 == pubKeyMasternode)
+            return &mn;
+    }
+    return NULL;
+}
+
 CMasternode* CMasternodeMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight, int minProtocol)
 {
     unsigned int score = 0;
@@ -520,20 +532,6 @@ void CMasternodeMan::ProcessMasternodeConnections()
     }
 }
 
-void CMasternodeMan::RelayMasternodeEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion, CScript donationAddress, int donationPercentage)
-{
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushMessage("dsee", vin, addr, vchSig, nNow, pubkey, pubkey2, count, current, lastUpdated, protocolVersion, donationAddress, donationPercentage);
-}
-
-void CMasternodeMan::RelayMasternodeEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop)
-{
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushMessage("dseep", vin, vchSig, nNow, stop);
-}
-
 void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
 
@@ -576,7 +574,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion)  + donationAddress.ToString() + boost::lexical_cast<std::string>(donationPercentage);
 
         if(donationPercentage < 0 || donationPercentage > 100){
-            LogPrintf("ssee - donation percentage out of range %d\n", donationPercentage);
+            LogPrintf("dsee - donation percentage out of range %d\n", donationPercentage);
             return;     
         }
         if(protocolVersion < MIN_PEER_PROTO_VERSION) {
@@ -609,7 +607,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        //search existing stormnode list, this is where we update existing stormnodes with new ssee broadcasts
+        //search existing stormnode list, this is where we update existing stormnodes with new dsee broadcasts
         CMasternode* pmn = this->Find(vin);
         // if we are a masternode but with undefined vin and this dsee is ours (matches our Masternode privkey) then just skip this part
         if(pmn != NULL && !(fMasterNode && activeMasternode.vin == CTxIn() && pubkey2 == activeMasternode.pubKeyMasternode))
@@ -876,6 +874,34 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         LogPrintf("dseg - Sent %d masternode entries to %s\n", i, pfrom->addr.ToString().c_str());
     }
 
+}
+
+void CStormnodeMan::RelayStormnodeEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion, CScript donationAddress, int donationPercentage)
+{
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodes)
+        pnode->PushMessage("dsee", vin, addr, vchSig, nNow, pubkey, pubkey2, count, current, lastUpdated, protocolVersion, donationAddress, donationPercentage);
+}
+
+void CStormnodeMan::RelayStormnodeEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop)
+{
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodes)
+        pnode->PushMessage("dseep", vin, vchSig, nNow, stop);
+}
+
+void CStormnodeMan::Remove(CTxIn vin)
+{
+    LOCK(cs);
+
+    vector<CMasternode>::iterator it = vMasternodes.begin();
+    while(it != vMasternodes.end()){
+        if((*it).vin == vin){
+            if(fDebug) LogPrintf("CMasternodeMan: Removing Masternode %s - %i now\n", (*it).addr.ToString().c_str(), size() - 1);
+            vMasternodes.erase(it);
+            break;
+        }
+    }
 }
 
 std::string CMasternodeMan::ToString() const

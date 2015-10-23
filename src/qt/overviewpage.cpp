@@ -321,6 +321,7 @@ void OverviewPage::updateDarksendProgress()
     {
         denomPart = (float)pwalletMain->GetNormalizedAnonymizedBalance() / denominatedBalance;
         denomPart = denomPart > 1 ? 1 : denomPart;
+        if(denomPart == 1 && nMaxToAnonymize > denominatedBalance) nMaxToAnonymize = denominatedBalance;
     }
 
     // % of fully anonymized balance
@@ -334,7 +335,7 @@ void OverviewPage::updateDarksendProgress()
 
     // apply some weights to them (sum should be <=100) and calculate the whole progress
     int progress = 80 * denomPart + 20 * anonPart;
-    if(progress > 100) progress = 100;
+    if(progress >= 100) progress = 100;
 
     ui->darksendProgress->setValue(progress);
 
@@ -422,9 +423,9 @@ void OverviewPage::darkSendStatus()
         }
     } else if(state == POOL_STATUS_SIGNING) {
         if(showingDarkSendMessage % 70 <= 10) convert << tr("Found enough users, signing ...").toStdString();
-        else if(showingDarkSendMessage % 70 <= 20) convert << tr("Found enough users, signing ( waiting. )").toStdString();
-        else if(showingDarkSendMessage % 70 <= 30) convert << tr("Found enough users, signing ( waiting.. )").toStdString();
-        else if(showingDarkSendMessage % 70 <= 40) convert << tr("Found enough users, signing ( waiting... )").toStdString();
+        else if(showingDarkSendMessage % 70 <= 20) convert << tr("Found enough users, signing ( waiting)").toStdString() << ". )";
+        else if(showingDarkSendMessage % 70 <= 30) convert << tr("Found enough users, signing ( waiting.. )").toStdString() << ".. )";
+        else if(showingDarkSendMessage % 70 <= 40) convert << tr("Found enough users, signing ( waiting... )").toStdString() << "... )";
     } else if(state == POOL_STATUS_TRANSMISSION) {
         convert << tr("Transmitting final transaction.").toStdString();
     } else if (state == POOL_STATUS_IDLE) {
@@ -436,9 +437,9 @@ void OverviewPage::darkSendStatus()
     } else if(state == POOL_STATUS_SUCCESS) {
         convert << tr("Darksend request complete:").toStdString() << " " << darkSendPool.lastMessage;
     } else if(state == POOL_STATUS_QUEUE) {
-        if(showingDarkSendMessage % 70 <= 50) convert << tr("Submitted to masternode, waiting in queue .").toStdString();
-        else if(showingDarkSendMessage % 70 <= 60) convert << tr("Submitted to masternode, waiting in queue ..").toStdString();
-        else if(showingDarkSendMessage % 70 <= 70) convert << tr("Submitted to masternode, waiting in queue ...").toStdString();
+        if(showingDarkSendMessage % 70 <= 50) convert << tr("Submitted to masternode, waiting in queue").toStdString() << ". )";
+        else if(showingDarkSendMessage % 70 <= 60) convert << tr("Submitted to masternode, waiting in queue").toStdString() << ".. )";
+        else if(showingDarkSendMessage % 70 <= 70) convert << tr("Submitted to masternode, waiting in queue").toStdString() << "... )";
     } else {
         convert << tr("Unknown state:").toStdString() << " id = " << state;
     }

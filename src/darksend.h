@@ -39,9 +39,8 @@ class CActiveMasternode;
 #define MASTERNODE_REJECTED                    0
 #define MASTERNODE_RESET                       -1
 
-#define DARKSEND_QUEUE_TIMEOUT                 180
-#define DARKSEND_SIGNING_TIMEOUT               30
-#define DARKSEND_DOWNGRADE_TIMEOUT             60
+#define DARKSEND_QUEUE_TIMEOUT                 30
+#define DARKSEND_SIGNING_TIMEOUT               15
 
 // used for anonymous relaying of inputs/outputs/sigs
 #define DARKSEND_RELAY_IN                 1
@@ -76,6 +75,7 @@ public:
         prevPubKey = in.prevPubKey;
         nSequence = in.nSequence;
         nSentTimes = 0;
+        fHasSig = false;
     }
 };
 
@@ -95,7 +95,6 @@ public:
     }
 };
 // A clients transaction in the darksend pool
-// -- holds the input/output mapping for each user in the pool
 class CDarkSendEntry
 {
 public:
@@ -132,6 +131,22 @@ public:
         return true;
     }
 
+    bool AddSig(const CTxIn& vin)
+    {
+        BOOST_FOREACH(CTxDSIn& s, sev) {
+            if(s.prevout == vin.prevout && s.nSequence == vin.nSequence){
+                if(s.fHasSig){return false;}
+                s.scriptSig = vin.scriptSig;
+                s.prevPubKey = vin.prevPubKey;
+                s.fHasSig = true;
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     bool IsExpired()
     {
         return (GetTime() - addedTime) > DARKSEND_QUEUE_TIMEOUT;// 120 seconds
@@ -150,20 +165,12 @@ public:
     bool ready; //ready for submit
     std::vector<unsigned char> vchSig;
 
-    //information used for the anonymous relay system
-    int nBlockHeight;
-    std::vector<unsigned char> vchRelaySig;
-    std::string strSharedKey;
-
     CDarksendQueue()
     {
         nDenom = 0;
         vin = CTxIn();
         time = 0;
         vchSig.clear();
-        vchRelaySig.clear();
-        nBlockHeight = 0;
-        strSharedKey = "";
         ready = false;
     }
 
@@ -178,12 +185,6 @@ public:
         READWRITE(time);
         READWRITE(ready);
         READWRITE(vchSig);
-
-        if(ready){
-            READWRITE(vchRelaySig);
-            READWRITE(nBlockHeight);
-            READWRITE(strSharedKey);
-        }
     }
 
     bool GetAddress(CService &addr)
@@ -208,7 +209,6 @@ public:
         return false;
     }
 
-    void SetSharedKey(std::string strSharedKey);
     bool Sign();
     bool Relay();
 
@@ -243,22 +243,6 @@ public:
     bool VerifyMessage(CPubKey pubkey, std::vector<unsigned char>& vchSig, std::string strMessage, std::string& errorMessage);
 };
 
-//
-// Build a transaction anonymously
-//
-class CDSAnonTx
-{
-public:
-    std::vector<CTxDSIn> vin;
-    std::vector<CTxOut> vout;
- 
-    bool IsTransactionValid();
-    bool AddOutput(const CTxOut out);
-    bool AddInput(const CTxIn in);
-    bool ClearSigs();
-    bool AddSig(const CTxIn in);
-    int CountEntries() {return (int)vin.size() + (int)vout.size();}
-};
 
 void ConnectToDarkSendMasterNodeWinner();
 
@@ -275,10 +259,6 @@ public:
     std::vector<CDarkSendEntry> entries;
     // the finalized transaction ready for signing
     CTransaction finalTransaction;
-    // anonymous inputs/outputs
-    CDSAnonTx anonTx;
-    bool fSubmitAnonymousFailed;
-    int nCountAttempts;
 
     int64_t lastTimeChanged;
     int64_t lastAutoDenomination;
@@ -317,12 +297,6 @@ public:
     //debugging data
     std::string strAutoDenomResult;
 
-    // used for securing the anonymous relay system
-    vector<unsigned char> vchMasternodeRelaySig;
-    int nMasternodeBlockHeight;
-    std::string strMasternodeSharedKey;
-    int nTrickleInputsOutputs;
-
     CDarksendPool()
     {
         /* DarkSend uses collateral addresses to trust parties entering the pool
@@ -334,8 +308,6 @@ public:
         txCollateral = CTransaction();
         minBlockSpacing = 1;
         lastNewBlock = 0;
-        strMasternodeSharedKey = "";
-        nTrickleInputsOutputs = 0;
 
         SetNull();
     }
@@ -355,8 +327,6 @@ public:
 
     bool SetCollateralAddress(std::string strAddress);
     void Reset();
-    bool Downgrade();
-    bool TrickleInputsOutputs();
 
     void SetNull(bool clearEverything=false);
 
@@ -452,17 +422,6 @@ public:
     bool IsCollateralValid(const CTransaction& txCollateral);
     // add a clients entry to the pool
     bool AddEntry(const std::vector<CTxIn>& newInput, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxOut>& newOutput, std::string& error);
-
-    // add an anonymous output/inputs/sig
-    bool AddAnonymousOutput(const CTxOut& out) {return anonTx.AddOutput(out);}
-    bool AddAnonymousInput(const CTxIn& in) {return anonTx.AddInput(in);}
-    bool AddAnonymousSig(const CTxIn& in) {return anonTx.AddSig(in);}
-    bool AddRelaySignature(vector<unsigned char> vchMasternodeRelaySigIn, int nMasternodeBlockHeightIn, std::string strSharedKey) {
-        vchMasternodeRelaySig = vchMasternodeRelaySigIn;
-        nMasternodeBlockHeight = nMasternodeBlockHeightIn;
-        strMasternodeSharedKey = strSharedKey;
-        return true;
-    }
 
     // add signature to a vin
     bool AddScriptSig(const CTxIn& newVin);
