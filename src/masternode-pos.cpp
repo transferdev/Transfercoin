@@ -139,28 +139,28 @@ void CMasternodeScanning::DoMasternodePOSChecks()
     if(!IsSporkActive(SPORK_7_MASTERNODE_SCANNING)) return;
     if(IsInitialBlockDownload()) return;
 
-    int a = mnodeman.GetMasternodeRank(activeMasternode.vin, chainActive.Tip()->nHeight, MIN_MASTERNODE_POS_PROTO_VERSION);
+    int a = mnodeman.GetMasternodeRank(activeMasternode.vin, pindexBest->nHeight, MIN_MASTERNODE_POS_PROTO_VERSION);
     if(a > GetCountScanningPerBlock()){
         // we don't need to do anything this block
         return;
     }
 
     // The lowest ranking nodes (Masternode A) check the highest ranking nodes (Masternode B)
-    CMasternode* pmn = mnodeman.GetMasternodeByRank(mnodeman.CountMasternodesAboveProtocol(MIN_MASTERNODE_POS_PROTO_VERSION)-a, chainActive.Tip()->nHeight, MIN_MASTERNODE_POS_PROTO_VERSION, false);
+    CMasternode* pmn = mnodeman.GetMasternodeByRank(mnodeman.CountMasternodesAboveProtocol(MIN_MASTERNODE_POS_PROTO_VERSION)-a, pindexBest->nHeight, MIN_MASTERNODE_POS_PROTO_VERSION, false);
     if(pmn == NULL) return;
 
     // -- first check : Port is open
 
     if(!ConnectNode((CAddress)pmn->addr, NULL, true)){
         // we couldn't connect to the node, let's send a scanning error
-        CMasternodeScanningError mnse(activeMasternode.vin, pmn->vin, SCANNING_ERROR_NO_RESPONSE, chainActive.Tip()->nHeight);
+        CMasternodeScanningError mnse(activeMasternode.vin, pmn->vin, SCANNING_ERROR_NO_RESPONSE, pindexBest->nHeight);
         mnse.Sign();
         mapMasternodeScanningErrors.insert(make_pair(mnse.GetHash(), mnse));
         mnse.Relay();
     }
 
     // success
-    CMasternodeScanningError mnse(activeMasternode.vin, pmn->vin, SCANNING_SUCCESS, chainActive.Tip()->nHeight);
+    CMasternodeScanningError mnse(activeMasternode.vin, pmn->vin, SCANNING_SUCCESS, pindexBest->nHeight);
     mnse.Sign();
     mapMasternodeScanningErrors.insert(make_pair(mnse.GetHash(), mnse));
     mnse.Relay();
