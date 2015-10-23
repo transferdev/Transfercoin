@@ -88,6 +88,8 @@ public:
     bool allowFreeTx;
     int protocolVersion;
     int64_t nLastDsq; //the dsq count from the last dsq broadcast of this node
+    CScript donationAddress;
+    int donationPercentage;
     int nVote;
     int64_t lastVote;
     int nScanningErrorCount;
