@@ -218,6 +218,8 @@ Should set nMaxToAnonymize equal to denominatedBalance only if it's greater then
 
 Ref-node : Always fill vecLastPayments 
 
+Removal of centrally broadcasted synchronized checkpoints 
+
 
 
 -------------------------------------------------------------------------------
