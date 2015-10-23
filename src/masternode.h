@@ -30,7 +30,7 @@ class uint256;
 #define MASTERNODE_REMOTELY_ENABLED            9
 
 #define MASTERNODE_MIN_CONFIRMATIONS           7
-#define MASTERNODE_MIN_DSEEP_SECONDS           (15*60)
+#define MASTERNODE_MIN_DSEEP_SECONDS           (30*60)
 #define MASTERNODE_MIN_DSEE_SECONDS            (5*60)
 #define MASTERNODE_PING_SECONDS                (1*60) //(1*60)
 #define MASTERNODE_EXPIRATION_SECONDS          (65*60)
@@ -42,13 +42,9 @@ class CMasternode;
 class CMasternodePayments;
 class CMasternodePaymentWinner;
 
-extern CCriticalSection cs_masternodes;
 extern CMasternodePayments masternodePayments;
 extern map<uint256, CMasternodePaymentWinner> mapSeenMasternodeVotes;
 extern map<int64_t, uint256> mapCacheBlockHashes;
-
-// manage the masternode connections
-void ProcessMasternodeConnections();
 
 void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 bool GetBlockHash(uint256& hash, int nBlockHeight);
@@ -72,7 +68,6 @@ public:
         MASTERNODE_POS_ERROR = 5
     };
 
-	static int minProtoVersion;
     CTxIn vin;  
     CService addr;
     CPubKey pubkey;
@@ -117,8 +112,8 @@ public:
         swap(first.lastDseep, second.lastDseep);
         swap(first.lastTimeSeen, second.lastTimeSeen);
         swap(first.cacheInputAge, second.cacheInputAge);
-        swap(first.unitTest, second.unitTest);
         swap(first.cacheInputAgeBlock, second.cacheInputAgeBlock);
+        swap(first.unitTest, second.unitTest);
         swap(first.allowFreeTx, second.allowFreeTx);
         swap(first.protocolVersion, second.protocolVersion);
         swap(first.nLastDsq, second.nLastDsq);
@@ -245,11 +240,11 @@ public:
     std::string Status() {
         std::string strStatus = "ACTIVE";
 
-        if(activeState == MASTERNODE_ENABLED) strStatus   = "ENABLED";
-        if(activeState == MASTERNODE_EXPIRED) strStatus   = "EXPIRED";
-        if(activeState == MASTERNODE_VIN_SPENT) strStatus = "VIN_SPENT";
-        if(activeState == MASTERNODE_REMOVE) strStatus    = "REMOVE";
-        if(activeState == MASTERNODE_POS_ERROR) strStatus = "POS_ERROR";
+        if(activeState == CMasternode::MASTERNODE_ENABLED) strStatus   = "ENABLED";
+        if(activeState == CMasternode::MASTERNODE_EXPIRED) strStatus   = "EXPIRED";
+        if(activeState == CMasternode::MASTERNODE_VIN_SPENT) strStatus = "VIN_SPENT";
+        if(activeState == CMasternode::MASTERNODE_REMOVE) strStatus    = "REMOVE";
+        if(activeState == CMasternode::MASTERNODE_POS_ERROR) strStatus = "POS_ERROR";
 
         return strStatus;
     }
@@ -278,17 +273,13 @@ public:
         return n3;
     }
 
-    ADD_SERIALIZE_METHODS;
+    IMPLEMENT_SERIALIZE;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion){
-	unsigned int nSerSize = 0;
         READWRITE(nBlockHeight);
         READWRITE(payee);
         READWRITE(vin);
         READWRITE(score);
         READWRITE(vchSig);
-     }
 };
 
 //
