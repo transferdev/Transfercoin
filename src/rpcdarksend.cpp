@@ -650,13 +650,13 @@ Value masternode(const Array& params, bool fHelp)
             std::string strMessage = pmn->vin.ToString() + boost::lexical_cast<std::string>(nVote);
 
             if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchMasterNodeSignature, keyMasternode)){
-                printf(" Error upon calling SignMessage for %s\n", sne.getAlias().c_str());
+                printf(" Error upon calling SignMessage for %s\n", mne.getAlias().c_str());
                 failed++;
                 continue;
             }
 
             if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchMasterNodeSignature, strMessage, errorMessage)){
-                printf(" Error upon calling VerifyMessage for %s\n", sne.getAlias().c_str());
+                printf(" Error upon calling VerifyMessage for %s\n", mne.getAlias().c_str());
                 failed++;
                 continue;
             }
