@@ -89,7 +89,7 @@ public:
     int64_t lastVote;
     int nScanningErrorCount;
     int nLastScanningErrorBlockHeight;
-    int minProtoVersion = 0;
+    int minProtoVersion;
 
     CMasternode();
     CMasternode(const CMasternode& other);
