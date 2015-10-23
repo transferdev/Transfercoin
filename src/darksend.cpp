@@ -2065,14 +2065,14 @@ bool CDarkSendSigner::VerifyMessage(CPubKey pubkey, vector<unsigned char>& vchSi
     ss << strMessageMagic;
     ss << strMessage;
 
-    pubkey = GetScriptForDestination(pubkey.GetID());
-    pubkey2 = GetScriptForDestination(pubkey.GetID());
-
     CPubKey pubkey2;
     if (!pubkey2.RecoverCompact(ss.GetHash(), vchSig)) {
         errorMessage = _("Error recovering public key.");
         return false;
     }
+
+    pubkey = GetScriptForDestination(pubkey.GetID());
+    pubkey2 = GetScriptForDestination(pubkey.GetID());
 
     if (fDebug && pubkey2 != pubkey)
         LogPrintf("CDarkSendSigner::VerifyMessage -- keys don't match: %s '%s'\n", pubkey2.ToString(), pubkey.ToString());
