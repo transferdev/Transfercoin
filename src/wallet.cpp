@@ -2255,7 +2255,6 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
     {
         // stormnode-like input should not be selected by AvailableCoins now anyway
         //if(out.tx->vout[out.i].nValue == 1000*COIN) continue;
-        if(fMasterNode && out.tx->vout[out.i].nValue == GetMNCollateral(pindexBest->nHeight)*COIN) continue; //masternode input
         if(nValueRet + out.tx->vout[out.i].nValue <= nValueMax){
             bool fAccepted = false;
 
