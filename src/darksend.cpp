@@ -265,7 +265,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
                 return;
             }
 
-            if(!AcceptableInputs(mempool, txCollateral, false)){
+            if(!AcceptableInputs(mempool, tx, false)){
                 LogPrintf("dsi -- transaction not valid! \n");
                 error = _("Transaction not valid.");
                 pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, error);
@@ -780,7 +780,7 @@ void CDarksendPool::ChargeRandomFees(){
         int i = 0;
 
         BOOST_FOREACH(const CTransaction& txCollateral, vecSessionCollateral) {
-            int r = rand()%1000;
+            int r = rand()%100;
 
             /*
                 Collateral Fee Charges:
@@ -1170,7 +1170,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
 
         LogPrintf("Submitting tx %s\n", tx.ToString().c_str());
 
-        if(!AcceptableInputs(mempool, txCollateral, false)){
+        if(!AcceptableInputs(mempool, tx, false)){
             LogPrintf("dsi -- transaction not valid! %s \n", tx.ToString().c_str());
             return;
         }
@@ -1466,8 +1466,8 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         //randomize the amounts we mix
         if(sessionTotalValue > nBalanceNeedsAnonymized) sessionTotalValue = nBalanceNeedsAnonymized;
 
-        double fTransferSubmitted = (sessionTotalValue / COIN);
-        LogPrintf("Submitting Darksend for %f TX COIN - sessionTotalValue %d\n", fTransferSubmitted, sessionTotalValue);
+        double fTransferSubmitted = (sessionTotalValue / CENT);
+        LogPrintf("Submitting Darksend for %f TX CENT - sessionTotalValue %d\n", fTransferSubmitted, sessionTotalValue);
 
         if(pwalletMain->GetDenominatedBalance(true, true) > 0){ //get denominated unconfirmed inputs
             LogPrintf("DoAutomaticDenominating -- Found unconfirmed denominated outputs, will wait till they confirm to continue.\n");
