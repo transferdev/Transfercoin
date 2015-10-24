@@ -627,8 +627,7 @@ int64_t GetMinFee(const CTransaction& tx, unsigned int nBlockSize, enum GetMinFe
 }
 
 
-bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree,
-                        bool* pfMissingInputs)
+bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, bool* pfMissingInputs)
 {
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
@@ -4214,19 +4213,21 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         static int64_t nLastRebroadcast;
         if (!IsInitialBlockDownload() && (GetTime() - nLastRebroadcast > 24 * 60 * 60))
         {
-            LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* pnode, vNodes)
             {
-                // Periodically clear setAddrKnown to allow refresh broadcasts
-                if (nLastRebroadcast)
-                    pnode->setAddrKnown.clear();
-
-                // Rebroadcast our address
-                if (!fNoListen)
+                LOCK(cs_vNodes);
+                BOOST_FOREACH(CNode* pnode, vNodes)
                 {
-                    CAddress addr = GetLocalAddress(&pnode->addr);
-                    if (addr.IsRoutable())
-                        pnode->PushAddress(addr);
+                    // Periodically clear setAddrKnown to allow refresh broadcasts
+                    if (nLastRebroadcast)
+                        pnode->setAddrKnown.clear();
+
+                    // Rebroadcast our address
+                    if (!fNoListen)
+                    {
+                        CAddress addr = GetLocalAddress(&pnode->addr);
+                        if (addr.IsRoutable())
+                            pnode->PushAddress(addr);
+                    }
                 }
             }
             nLastRebroadcast = GetTime();
