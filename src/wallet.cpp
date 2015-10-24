@@ -623,25 +623,6 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
             if (!wtx.WriteToDisk())
                 return false;
 
-        if (!fHaveGUI) {
-            // If default receiving address gets used, replace it with a new one
-            if (vchDefaultKey.IsValid()) {
-                CScript scriptDefaultKey;
-                scriptDefaultKey.SetDestination(vchDefaultKey.GetID());
-                BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-                {
-                    if (txout.scriptPubKey == scriptDefaultKey)
-                    {
-                        CPubKey newDefaultKey;
-                        if (GetKeyFromPool(newDefaultKey))
-                        {
-                            SetDefaultKey(newDefaultKey);
-                            SetAddressBookName(vchDefaultKey.GetID(), "");
-                        }
-                    }
-                }
-            }
-        }
         // since AddToWallet is called directly for self-originating transactions, check for consumption of own coins
         WalletUpdateSpent(wtx, (wtxIn.hashBlock != 0));
 

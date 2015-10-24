@@ -102,7 +102,6 @@ extern bool fImporting;
 extern bool fReindex;
 struct COrphanBlock;
 extern std::map<uint256, COrphanBlock*> mapOrphanBlocks;
-extern bool fHaveGUI;
 
 // Settings
 extern bool fUseFastIndex;

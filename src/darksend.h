@@ -394,7 +394,7 @@ public:
     void UpdateState(unsigned int newState)
     {
         if (fMasterNode && (newState == POOL_STATUS_ERROR || newState == POOL_STATUS_SUCCESS)){
-            LogPrintf("CDarksendPool::UpdateState() - Can't set state to ERROR or SUCCESS as a Masternode. \n");
+            LogPrintf("CDarksendPool::UpdateState() - Can't set state to ERROR or SUCCESS when running as a Masternode. \n");
             return;
         }
 

@@ -124,7 +124,6 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
-    fHaveGUI = true;
 
     // Command-line options take precedence:
     ParseParameters(argc, argv);
@@ -258,7 +257,7 @@ int main(int argc, char *argv[])
         QObject::connect(pollShutdownTimer, SIGNAL(timeout()), guiref, SLOT(detectShutdown()));
         pollShutdownTimer->start(200);
 
-        if(AppInit2(threadGroup))
+        if(AppInit2(threadGroup, false))
         {
             {
                 // Put this in a block, so that the Model objects are cleaned up before

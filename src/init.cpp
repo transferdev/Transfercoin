@@ -211,11 +211,9 @@ std::string HelpMessage()
 #endif
     strUsage += "  -paytxfee=<amt>        " + _("Fee per KB to add to transactions you send") + "\n";
     strUsage += "  -mininput=<amt>        " + _("When creating transactions, ignore inputs with value less than this (default: 0.01)") + "\n";
-    if (fHaveGUI)
-        strUsage += "  -server                " + _("Accept command line and JSON-RPC commands") + "\n";
+    strUsage += "  -server                " + _("Accept command line and JSON-RPC commands") + "\n";
 #if !defined(WIN32)
-    if (fHaveGUI)
-        strUsage += "  -daemon                " + _("Run in the background as a daemon and accept commands") + "\n";
+    strUsage += "  -daemon                " + _("Run in the background as a daemon and accept commands") + "\n";
 #endif
     strUsage += "  -testnet               " + _("Use the test network") + "\n";
     strUsage += "  -debug=<category>      " + _("Output debugging information (default: 0, supplying <category> is optional)") + "\n";
@@ -223,14 +221,8 @@ std::string HelpMessage()
     strUsage +=                               _("<category> can be:");
     strUsage +=                                 " addrman, alert, db, lock, rand, rpc, selectcoins, mempool, net,"; // Don't translate these and qt below
     strUsage +=                                 " coinage, coinstake, creation, stakemodifier";
-    if (fHaveGUI)
-    {
-        strUsage += ", qt.\n";
-    }
-    else
-    {
-        strUsage += ".\n";
-    }
+    strUsage += ", qt.\n";
+    strUsage += ".\n";
     strUsage += "  -logtimestamps         " + _("Prepend debug output with timestamp") + "\n";
     strUsage += "  -shrinkdebugfile       " + _("Shrink debug.log file on client startup (default: 1 when no -debug)") + "\n";
     strUsage += "  -printtoconsole        " + _("Send trace/debug info to console instead of debug.log file") + "\n";
@@ -240,11 +232,8 @@ std::string HelpMessage()
     strUsage += "  -rpcpassword=<pw>      " + _("Password for JSON-RPC connections") + "\n";
     strUsage += "  -rpcport=<port>        " + _("Listen for JSON-RPC connections on <port> (default: 15715 or testnet: 25715)") + "\n";
     strUsage += "  -rpcallowip=<ip>       " + _("Allow JSON-RPC connections from specified IP address") + "\n";
-    if (!fHaveGUI)
-    {
-        strUsage += "  -rpcconnect=<ip>       " + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n";
-        strUsage += "  -rpcwait               " + _("Wait for RPC server to start") + "\n";
-    }
+    strUsage += "  -rpcconnect=<ip>       " + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n";
+    strUsage += "  -rpcwait               " + _("Wait for RPC server to start") + "\n";
     strUsage += "  -rpcthreads=<n>        " + _("Set the number of threads to service RPC calls (default: 4)") + "\n";
     strUsage += "  -blocknotify=<cmd>     " + _("Execute command when the best block changes (%s in cmd is replaced by block hash)") + "\n";
     strUsage += "  -walletnotify=<cmd>    " + _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)") + "\n";
@@ -317,7 +306,7 @@ bool InitSanityCheck(void)
 /** Initialize bitcoin.
  *  @pre Parameters should be parsed and config file should be read.
  */
-bool AppInit2(boost::thread_group& threadGroup)
+bool AppInit2(boost::thread_group& threadGroup, bool fForceServer)
 {
     // ********************************************************* Step 1: setup
 #ifdef _MSC_VER
@@ -450,16 +439,13 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (mapArgs.count("-socks"))
         return InitError(_("Error: Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported."));
 
-    if (fDaemon)
+    if (fDaemon || fForceServer)
         fServer = true;
     else
         fServer = GetBoolArg("-server", false);
 
-    /* force fServer when running without GUI */
-    if (!fHaveGUI)
-        fServer = true;
     fPrintToConsole = GetBoolArg("-printtoconsole", false);
-    fLogTimestamps = GetBoolArg("-logtimestamps", false);
+    fLogTimestamps = GetBoolArg("-logtimestamps", true);
 #ifdef ENABLE_WALLET
     bool fDisableWallet = GetBoolArg("-disablewallet", false);
 #endif

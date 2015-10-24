@@ -101,7 +101,7 @@ bool AppInit(int argc, char* argv[])
         }
 #endif
 
-        fRet = AppInit2(threadGroup);
+		fRet = AppInit2(threadGroup, true);
     }
     catch (std::exception& e) {
         PrintException(&e, "AppInit()");
@@ -127,7 +127,6 @@ extern void noui_connect();
 int main(int argc, char* argv[])
 {
     bool fRet = false;
-    fHaveGUI = false;
 
     // Connect bitcoind signal handlers
     noui_connect();
