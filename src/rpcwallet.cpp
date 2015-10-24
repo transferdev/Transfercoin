@@ -776,7 +776,7 @@ Value sendfrom(const Array& params, bool fHelp)
             "\"transactionid\"        (string) The transaction id.\n"
             "\nExamples:\n"
             "\nSend 0.01 TX from the default account to the address, must have at least 1 confirmation\n"
-            + HelpExampleCli("sendfrom", "\"\" \"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\" 0.01") +
+            + HelpExampleCli("sendfrom", "\"\" \"TfFxcTN7BJQp88cPJYRvFpUAAKefTib9uh\" 0.01") +
             "\nSend 0.01 from the tabby account to the given address, funds must have at least 10 confirmations\n"
             + HelpExampleCli("sendfrom", "\"tabby\" \"TfFxcTN7BJQp88cPJYRvFpUAAKefTib9uh\" 0.01 10 \"donation\" \"seans outpost\"") +
             "\nAs a json rpc call\n"
