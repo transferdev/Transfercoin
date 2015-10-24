@@ -963,7 +963,7 @@ int CMerkleTx::GetBlocksToMaturity() const
 
 bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree)
 {
-    return ::AcceptToMemoryPool(mempool, *this, fLimitFree, &fMissingInputs);
+    return ::AcceptToMemoryPool(mempool, *this, fLimitFree, NULL);
 }
 
 
@@ -2030,7 +2030,7 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
 
     // Resurrect memory transactions that were in the disconnected branch
     BOOST_FOREACH(CTransaction& tx, vResurrect)
-        AcceptToMemoryPool(mempool, tx, false, &fMissingInputs);
+        AcceptToMemoryPool(mempool, tx, false, NULL);
 
     // Delete redundant memory transactions that are in the connected branch
     BOOST_FOREACH(CTransaction& tx, vDelete) {
@@ -3759,7 +3759,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         mapAlreadyAskedFor.erase(inv);
 
-        if (AcceptToMemoryPool(mempool, tx, true, NULL))
+        if (AcceptToMemoryPool(mempool, tx, true, &fMissingInputs2))
         {
             RelayTransaction(tx, inv.hash);
             vWorkQueue.push_back(inv.hash);
@@ -3779,7 +3779,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     CTransaction& orphanTx = mapOrphanTransactions[orphanTxHash];
                     bool fMissingInputs2 = false;
 
-                    if (AcceptToMemoryPool(mempool, orphanTx, true, NULL))
+                    if (AcceptToMemoryPool(mempool, orphanTx, true, &fMissingInputs2))
                     {
                         LogPrint("mempool", "   accepted orphan tx %s\n", orphanTxHash.ToString());
                         RelayTransaction(orphanTx, orphanTxHash);
