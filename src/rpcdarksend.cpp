@@ -97,7 +97,16 @@ Value darksend(const Array& params, bool fHelp)
 
     // Wallet comments
     CWalletTx wtx;
-    SendMoney(address.Get(), nAmount, wtx, ONLY_DENOMINATED);
+    std::string sNarr;
+    if (params.size() > 6 && params[6].type() != null_type && !params[6].get_str().empty())
+        sNarr = params[6].get_str();
+    
+    if (sNarr.length() > 24)
+        throw runtime_error("Narration must be 24 characters or less.");
+    
+    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, sNarr, wtx, ONLY_DENOMINATED);
+    if (strError != "")
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
    
     return wtx.GetHash().GetHex();
 }

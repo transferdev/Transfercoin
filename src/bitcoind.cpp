@@ -8,6 +8,8 @@
 #include "init.h"
 #include <boost/algorithm/string/predicate.hpp>
 
+static bool fDaemon;
+
 void WaitForShutdown(boost::thread_group* threadGroup)
 {
     bool fShutdown = ShutdownRequested();
@@ -77,7 +79,7 @@ bool AppInit(int argc, char* argv[])
             int ret = CommandLineRPC(argc, argv);
             exit(ret);
         }
-#if !defined(WIN32)
+#if !WIN32
         fDaemon = GetBoolArg("-daemon", false);
         if (fDaemon)
         {

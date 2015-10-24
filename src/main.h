@@ -76,6 +76,9 @@ static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20
 static const int64_t DRIFT = 600;
 inline int64_t FutureDrift(int64_t nTime) { return nTime + DRIFT; }
 
+/** "reject" message codes **/
+static const unsigned char REJECT_INVALID = 0x10;
+
 inline int64_t GetMNCollateral(int nHeight) { return nHeight>=57000 ? 10000 : 100000; }
 
 extern CScript COINBASE_FLAGS;
@@ -160,8 +163,7 @@ void ThreadStakeMiner(CWallet *pwallet);
 
 
 /** (try to) add transaction to memory pool **/
-bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree,
-                        bool* pfMissingInputs);
+bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, bool* pfMissingInputs);
 
 bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree);
 
