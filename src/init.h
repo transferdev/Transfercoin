@@ -15,7 +15,7 @@ extern CWallet* pwalletMain;
 void StartShutdown();
 bool ShutdownRequested();
 void Shutdown();
-bool AppInit2(boost::thread_group& threadGroup, bool fForceServer);
+bool AppInit2(boost::thread_group& threadGroup);
 std::string HelpMessage();
 extern bool fOnlyTor;
 
