@@ -306,7 +306,7 @@ bool InitSanityCheck(void)
 /** Initialize bitcoin.
  *  @pre Parameters should be parsed and config file should be read.
  */
-bool AppInit2(boost::thread_group& threadGroup, bool fForceServer)
+bool AppInit2(boost::thread_group& threadGroup)
 {
     // ********************************************************* Step 1: setup
 #ifdef _MSC_VER
@@ -439,11 +439,7 @@ bool AppInit2(boost::thread_group& threadGroup, bool fForceServer)
     if (mapArgs.count("-socks"))
         return InitError(_("Error: Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported."));
 
-    if (fDaemon || fForceServer)
-        fServer = true;
-    else
-        fServer = GetBoolArg("-server", false);
-
+    fServer = GetBoolArg("-server", false);
     fPrintToConsole = GetBoolArg("-printtoconsole", false);
     fLogTimestamps = GetBoolArg("-logtimestamps", true);
 #ifdef ENABLE_WALLET
@@ -518,9 +514,6 @@ bool AppInit2(boost::thread_group& threadGroup, bool fForceServer)
         if (!sporkManager.SetPrivKey(GetArg("-masternodepaymentskey", "")))
             return InitError(_("Unable to sign spork message, wrong key?"));
     }
-
-    if (fDaemon)
-        fprintf(stdout, "Transfer server starting\n");
 
     int64_t nStart;
 

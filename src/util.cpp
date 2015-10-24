@@ -10,7 +10,8 @@
 #include "ui_interface.h"
 #include "uint256.h"
 #include "version.h"
-#include "masternodeconfig.h"
+#include "netbase.h"
+#include "allocators.h"
 
 #include <algorithm>
 

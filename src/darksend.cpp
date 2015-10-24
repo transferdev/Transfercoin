@@ -10,17 +10,16 @@
 #include "masternodeman.h"
 #include "instantx.h"
 #include "ui_interface.h"
-//#include "random.h"
+
+#include <algorithm>
 
 #include <openssl/rand.h>
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/assign/list_of.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/lexical_cast.hpp>
-
-#include <algorithm>
-#include <boost/assign/list_of.hpp>
 
 using namespace std;
 using namespace boost;
