@@ -910,6 +910,9 @@ Value sendmany(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
+// Defined in rpcmisc.cpp
+extern CScript _createmultisig_redeemScript(const Array& params);
+
 Value addmultisigaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
