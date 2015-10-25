@@ -292,7 +292,7 @@ bool CActiveMasternode::Register(CTxIn vin, CService service, CKey keyCollateral
 		return false;
 	}
 
-    CMasternode* mn = mnodeman.Find(vin);
+    CMasternode* pmn = mnodeman.Find(vin);
     if(pmn == NULL)
     {
         LogPrintf("CActiveMasternode::Register() - Adding to masternode list service: %s - vin: %s\n", service.ToString().c_str(), vin.ToString().c_str());
