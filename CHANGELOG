@@ -130,7 +130,7 @@ https://github.com/dashpay/dash/commit/b5414e1c3c86e9f99d5a331f41a73191173045aa
 Added input/output/sig trickle
 https://github.com/dashpay/dash/commit/c169e49fce95ff587ccdf221e536ccc9737dbd05
 
-Change DS_COLLATERAL to 0.01 remove DS fee
+Change DS_COLLATERAL to 0.01 remove DS_FEE
 
 Masternode Proof of Service Added
 
@@ -144,7 +144,7 @@ Fixed blinding submission process
 
 increasing ss timeouts
 
-fixed ssee sync
+fixed dsee sync
 
 fixed Masternode payments FindOldestNotInVec
 
