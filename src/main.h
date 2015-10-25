@@ -281,6 +281,10 @@ public:
         SetNull();
     }
 
+    CTransaction(int nVersion, unsigned int nTime, const std::vector<CTxIn>& vin, const std::vector<CTxOut>& vout, unsigned int nLockTime)
+        : nVersion(nVersion), nTime(nTime), vin(vin), vout(vout), nLockTime(nLockTime), nDoS(0)
+    {
+    }
 
     IMPLEMENT_SERIALIZE
     (
