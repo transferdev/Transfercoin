@@ -944,7 +944,7 @@ int CMerkleTx::GetDepthInMainChainINTERNAL(CBlockIndex* &pindexRet) const
 
 int CMerkleTx::GetTransactionLockSignatures() const
 {
-    if(!IsSporkActive(SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT)) return -3;
+    if(!IsSporkActive(SPORK_2_INSTANTX)) return -3;
     if(nInstantXDepth == 0) return -1;
 
     //compile consessus vote
