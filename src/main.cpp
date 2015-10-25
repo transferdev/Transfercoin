@@ -3259,7 +3259,7 @@ void static ProcessGetData(CNode* pfrom)
             boost::this_thread::interruption_point();
             it++;
 
-            if (inv.type == MSG_BLOCK)
+            if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK)
             {
                 // Send block from disk
                 map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(inv.hash);
@@ -3370,7 +3370,7 @@ void static ProcessGetData(CNode* pfrom)
             // Track requests for our stuff.
             g_signals.Inventory(inv.hash);
 
-            if (inv.type == MSG_BLOCK /* || inv.type == MSG_FILTERED_BLOCK */)
+            if (inv.type == MSG_BLOCK  || inv.type == MSG_FILTERED_BLOCK)
                 break;
         }
     }
