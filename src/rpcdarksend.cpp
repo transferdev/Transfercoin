@@ -618,7 +618,7 @@ Value masternode(const Array& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         if (params.size() != 2)
-            throw runtime_error("You can only vote 'yea' or 'nay'");
+            throw runtime_error("You can only vote 'yay' or 'nay'");
 
         std::string vote = params[1].get_str().c_str();
         if(vote != "yay" && vote != "nay") return "You can only vote 'yay' or 'nay'";
@@ -687,7 +687,7 @@ Value masternode(const Array& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         if (params.size() != 2)
-            throw runtime_error("You can only vote 'yea' or 'nay'");
+            throw runtime_error("You can only vote 'yay' or 'nay'");
 
         std::string vote = params[1].get_str().c_str();
         if(vote != "yay" && vote != "nay") return "You can only vote 'yay' or 'nay'";
@@ -847,7 +847,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 if((GetAdjustedTime() - mn.lastVote) < (60*60*8))
                 {
                     if(mn.nVote == -1) strStatus = "NAY";
-                    if(mn.nVote == 1) strStatus = "YEA";
+                    if(mn.nVote == 1) strStatus = "YAY";
                 }
 
                 if(strFilter !="" && (strAddr.find(strFilter) == string::npos && strStatus.find(strFilter) == string::npos)) continue;

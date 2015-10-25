@@ -16,7 +16,13 @@ Fix issue on open orders tab of the trading page
 Decentralized checkpoints from PosV3
 PosV3 Modifier
 Fork at block 90 000
+
+-------------------------------------------------------------------------------
+			^		CLIENT BUILD 1.2-61401		^
+-------------------------------------------------------------------------------
+
 DNSSeed Thread Fix
+
 Scale up addrman
 
 Sync fixes, CPU use, Darksend fixes
@@ -61,12 +67,8 @@ https://github.com/dashpay/dash/commit/d2e3d67a1d632912e83684e2a8b8e5780eae4216
 better naming/readability (Find)
 https://github.com/dashpay/dash/commit/0d51e1c90df98f649ea3062efa448c1c5bb9827b
 
--------------------------------------------------------------------------------
-
-Added dstx support for free transactions ( NEEDS FIXED - AcceptToMemoryPool)
+Added dstx support for free transactions
 https://github.com/dashpay/dash/commit/13246598b8b84af2ade8b3d0368655fc64f5cca0
-
--------------------------------------------------------------------------------
 
 Change the way changes are handled:
 https://github.com/dashpay/dash/commit/2e05bf212eaf5e0fe98161f673483dc62e5c0a95
@@ -220,6 +222,8 @@ Ref-node : Always fill vecLastPayments
 
 Removal of centrally broadcasted synchronized checkpoints 
 
+SPORK Additions/Changes | SANDSTORM fee removal
+https://github.com/SCDeveloper/DarkSilk-Release-Candidate/commit/e6ebc2ec9a955f1447a9c29e49232c61df97d768
 
 
 -------------------------------------------------------------------------------
@@ -253,5 +257,5 @@ https://github.com/SCDeveloper/DarkSilk-Release-Candidate/commit/a108b8b0179f179
 check the templates in util.h/util.cpp --phark
 (int64_t)long long has limits on the size of integers
 
-SPORK Additions/Changes | SANDSTORM fee removal
-https://github.com/SCDeveloper/DarkSilk-Release-Candidate/commit/e6ebc2ec9a955f1447a9c29e49232c61df97d768
+Upnp updates - phark
+https://github.com/neoscoin/neos-core/commit/9fce916fa64f90f2a41b71adb18674b968b689d3
