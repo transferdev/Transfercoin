@@ -2227,13 +2227,9 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
     vector<COutput> vCoins;
     AvailableCoins(vCoins, true, NULL, ONLY_DENOMINATED);
 
-    //order the array so fees are first, then denominated money, then the rest.
     std::random_shuffle(vCoins.rbegin(), vCoins.rend());
 
     //keep track of each denomination that we have
-    bool fFound100000 = false;
-    bool fFound10000 = false;
-    bool fFound1000 = false;
     bool fFound100 = false;
     bool fFound10 = false;
     bool fFound1 = false;
@@ -2241,19 +2237,14 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
 
     //Check to see if any of the denomination are off, in that case mark them as fulfilled
 
-
-
-    if(!(nDenom & (1 << 0))) fFound100000 = true;
-    if(!(nDenom & (1 << 1))) fFound10000 = true;
-    if(!(nDenom & (1 << 2))) fFound1000 = true;
-    if(!(nDenom & (1 << 3))) fFound100 = true;
-    if(!(nDenom & (1 << 4))) fFound10 = true;
-    if(!(nDenom & (1 << 5))) fFound1 = true;
-    if(!(nDenom & (1 << 6))) fFoundDot1 = true;
+    if(!(nDenom & (1 << 0))) fFound100 = true;
+    if(!(nDenom & (1 << 1))) fFound10 = true;
+    if(!(nDenom & (1 << 2))) fFound1 = true;
+    if(!(nDenom & (1 << 3))) fFoundDot1 = true;
 
     BOOST_FOREACH(const COutput& out, vCoins)
     {
-        // stormnode-like input should not be selected by AvailableCoins now anyway
+        // masternode-like input should not be selected by AvailableCoins now anyway
         //if(out.tx->vout[out.i].nValue == 1000*COIN) continue;
         if(nValueRet + out.tx->vout[out.i].nValue <= nValueMax){
             bool fAccepted = false;
@@ -2271,7 +2262,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
             if(rounds >= nDarksendRoundsMax) continue;
             if(rounds < nDarksendRoundsMin) continue;
 
-            if(fFound100000 && fFound10000 && fFound1000 && fFound100 && fFound10 && fFound1 && fFoundDot1){ //if fulfilled
+            if(fFound100 && fFound10 && fFound1 && fFoundDot1){ //if fulfilled
                 //we can return this for submission
                 if(nValueRet >= nValueMin){
                     //random reduce the max amount we'll submit for anonymity
@@ -2281,19 +2272,13 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
                     if((int)vCoinsRet.size() > r) return true;
                 }
                 //Denomination criterion has been met, we can take any matching denominations
-                if((nDenom & (1 << 0)) && out.tx->vout[out.i].nValue ==      ((100000*COIN)    +100000000)) {fAccepted = true;}
-                else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((10000*COIN)     +10000000)) {fAccepted = true;}
-                else if((nDenom & (1 << 2)) && out.tx->vout[out.i].nValue == ((1000*COIN)      +1000000)) {fAccepted = true;}
-                else if((nDenom & (1 << 3)) && out.tx->vout[out.i].nValue == ((100*COIN)       +100000)) {fAccepted = true;}
-                else if((nDenom & (1 << 4)) && out.tx->vout[out.i].nValue == ((10*COIN)        +10000)) {fAccepted = true;}
-                else if((nDenom & (1 << 5)) && out.tx->vout[out.i].nValue == ((1*COIN)         +1000)) {fAccepted = true;}
-                else if((nDenom & (1 << 6)) && out.tx->vout[out.i].nValue == ((.1*COIN)        +100)) {fAccepted = true;}
+                if((nDenom & (1 << 0)) && out.tx->vout[out.i].nValue == ((100*COIN)       +100000)) {fAccepted = true;}
+                else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((10*COIN)        +10000)) {fAccepted = true;}
+                else if((nDenom & (1 << 2)) && out.tx->vout[out.i].nValue == ((1*COIN)         +1000)) {fAccepted = true;}
+                else if((nDenom & (1 << 3)) && out.tx->vout[out.i].nValue == ((.1*COIN)        +100)) {fAccepted = true;}
             } else {
                 //Criterion has not been satisfied, we will only take 1 of each until it is.
-                if((nDenom & (1 << 0)) && out.tx->vout[out.i].nValue ==      ((100000*COIN)    +100000000)) {fAccepted = true; fFound100000 = true;}
-                else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((10000*COIN)     +10000000)) {fAccepted = true; fFound10000 = true;}
-                else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((1000*COIN)      +1000000)) {fAccepted = true; fFound1000 = true;}
-                else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((100*COIN)       +100000)) {fAccepted = true; fFound100 = true;}
+                if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((100*COIN)       +100000)) {fAccepted = true; fFound100 = true;}
                 else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((10*COIN)        +10000)) {fAccepted = true; fFound10 = true;}
                 else if((nDenom & (1 << 2)) && out.tx->vout[out.i].nValue == ((1*COIN)         +1000)) {fAccepted = true; fFound1 = true;}
                 else if((nDenom & (1 << 3)) && out.tx->vout[out.i].nValue == ((.1*COIN)        +100)) {fAccepted = true; fFoundDot1 = true;}
@@ -2307,7 +2292,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
         }
     }
 
-    return (nValueRet >= nValueMin && fFound100000 && fFound10000 && fFound1000 && fFound100 && fFound10 && fFound1 && fFoundDot1);
+    return (nValueRet >= nValueMin && fFound100 && fFound10 && fFound1 && fFoundDot1);
 }
 
 bool CWallet::SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax) const
@@ -2329,7 +2314,7 @@ bool CWallet::SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<
     BOOST_FOREACH(const COutput& out, vCoins)
     {
         //there's no reason to allow inputs less than 1 COIN into DS (other than denominations smaller than that amount)
-        if(out.tx->vout[out.i].nValue < 1*COIN && out.tx->vout[out.i].nValue != (.1*COIN)+100) continue;
+        if(out.tx->vout[out.i].nValue < 1*COIN && !IsDenominatedAmount(out.tx->vout[out.i].nValue)) continue;
         if(fMasterNode && out.tx->vout[out.i].nValue == GetMNCollateral(pindexBest->nHeight)*COIN) continue; //masternode input
 
         if(nValueRet + out.tx->vout[out.i].nValue <= nValueMax){
