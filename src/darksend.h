@@ -22,8 +22,8 @@ class CDarksendBroadcastTx;
 class CActiveMasternode;
 
 // pool states for mixing
-#define POOL_MAX_TRANSACTIONS                  3 // wait for X transactions to merge and publish
-#define POOL_MAX_TRANSACTIONS_TESTNET          2 // wait for X transactions to merge and publish
+#define POOL_MAX_TRANSACTIONS                  1 // wait for X transactions to merge and publish
+#define POOL_MAX_TRANSACTIONS_TESTNET          1 // wait for X transactions to merge and publish
 #define POOL_STATUS_UNKNOWN                    0 // waiting for update
 #define POOL_STATUS_IDLE                       1 // waiting for update
 #define POOL_STATUS_QUEUE                      2 // waiting in a queue
@@ -40,7 +40,7 @@ class CActiveMasternode;
 #define MASTERNODE_RESET                       -1
 
 #define DARKSEND_QUEUE_TIMEOUT                 120
-#define DARKSEND_SIGNING_TIMEOUT               30
+#define DARKSEND_SIGNING_TIMEOUT               60
 
 // used for anonymous relaying of inputs/outputs/sigs
 #define DARKSEND_RELAY_IN                 1
@@ -411,9 +411,9 @@ public:
     /// Get the maximum number of transactions for the pool
     int GetMaxPoolTransactions()
     {
-        //if we're on testnet, just use two transactions per merge
+        /*//if we're on testnet, just use two transactions per merge
         if(Params().NetworkID() == CChainParams::TESTNET || Params().NetworkID() == CChainParams::REGTEST) return POOL_MAX_TRANSACTIONS_TESTNET;
-
+        */
         //use the production amount
         return POOL_MAX_TRANSACTIONS;
     }
