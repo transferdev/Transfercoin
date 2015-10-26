@@ -265,7 +265,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
                 return;
             }
 
-            if(!AcceptableInputs(mempool, tx, false)){
+            if(!AcceptableInputs(mempool, tx, false, false)){
                 LogPrintf("dsi -- transaction not valid! \n");
                 error = _("Transaction not valid.");
                 pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, error);
@@ -629,6 +629,8 @@ void CDarksendPool::CheckFinalTransaction()
                 return;
             }
 
+            string txHash = txNew.GetHash().ToString().c_str();
+            if(fDebug) LogPrintf("CDarksendPool::Check() -- txHash %d \n", txHash);
             if(!mapDarksendBroadcastTxes.count(txNew.GetHash())){
                 CDarksendBroadcastTx dstx;
                 dstx.tx = txNew;
@@ -996,7 +998,7 @@ bool CDarksendPool::IsCollateralValid(const CTransaction& txCollateral){
     if(fDebug) LogPrintf("CDarksendPool::IsCollateralValid %s\n", txCollateral.ToString().c_str());
 
     CValidationState state;
-    if(!AcceptableInputs(mempool, txCollateral, false)){
+    if(!AcceptableInputs(mempool, txCollateral, false, false)){
         if(fDebug) LogPrintf ("CDarksendPool::IsCollateralValid - didn't pass IsAcceptable\n");
         return false;
     }
@@ -1170,7 +1172,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
 
         LogPrintf("Submitting tx %s\n", tx.ToString().c_str());
 
-        if(!AcceptableInputs(mempool, tx, false)){
+        if(!AcceptableInputs(mempool, txCollateral, false, false)){
             LogPrintf("dsi -- transaction not valid! %s \n", tx.ToString().c_str());
             return;
         }
@@ -1269,7 +1271,10 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
 
                 for(unsigned int i = 0; i < finalTransaction.vout.size(); i++){
                     BOOST_FOREACH(const CTxOut& o, e.vout) {
-                        if(finalTransaction.vout[i] == o){
+                    	string Ftx = finalTransaction.vout[i].scriptPubKey.ToString().c_str();
+                    	string Otx = o.scriptPubKey.ToString().c_str();
+                        if(Ftx == Otx){
+                            if(fDebug) LogPrintf("CDarksendPool::SignFinalTransaction - foundOutputs = %d \n", foundOutputs);
                             foundOutputs++;
                             nValue1 += finalTransaction.vout[i].nValue;
                         }
@@ -1977,10 +1982,13 @@ int CDarksendPool::GetDenominationsByAmount(int64_t nAmount, int nDenomTarget){
     BOOST_REVERSE_FOREACH(int64_t v, darkSendDenominations){
         if(nDenomTarget != 0){
             bool fAccepted = false;
-            if((nDenomTarget & (1 << 0)) &&      v == ((100*COIN)   +100000)) {fAccepted = true;}
-            else if((nDenomTarget & (1 << 1)) && v == ((10*COIN)    +10000)) {fAccepted = true;}
-            else if((nDenomTarget & (1 << 2)) && v == ((1*COIN)     +1000)) {fAccepted = true;}
-            else if((nDenomTarget & (1 << 3)) && v == ((.1*COIN)    +100)) {fAccepted = true;}
+            if((nDenomTarget & (1 << 0)) &&      v == ((100000*COIN)   +100000000)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 1)) && v == ((10000*COIN)    +10000000)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 2)) && v == ((1000*COIN)    +1000000)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 3)) && v == ((100*COIN)    +100000)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 4)) && v == ((10*COIN)    +10000)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 5)) && v == ((1*COIN)     +1000)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 6)) && v == ((.1*COIN)    +100)) {fAccepted = true;}
             if(!fAccepted) continue;
         }
 

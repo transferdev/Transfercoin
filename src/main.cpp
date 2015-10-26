@@ -548,11 +548,24 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
     return pindexBest->nHeight - pindex->nHeight + 1;
 }
 
-
-
-
-
-
+double CTransaction::ComputePriority(double dPriorityInputs, unsigned int nTxSize) const
+{
+    // In order to avoid disincentivizing cleaning up the UTXO set we don't count
+    // the constant overhead for each txin and up to 110 bytes of scriptSig (which
+    // is enough to cover a compressed pubkey p2sh redemption) for priority.
+    // Providing any more cleanup incentive than making additional inputs free would
+    // risk encouraging people to create junk outputs to redeem later.
+    if (nTxSize == 0)
+        nTxSize = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
+    BOOST_FOREACH(const CTxIn& txin, vin)
+    {
+        unsigned int offset = 41U + std::min(110U, (unsigned int)txin.scriptSig.size());
+        if (nTxSize > offset)
+            nTxSize -= offset;
+    }
+    if (nTxSize == 0) return 0.0;
+    return dPriorityInputs / nTxSize;
+}
 
 bool CTransaction::CheckTransaction() const
 {
@@ -627,7 +640,7 @@ int64_t GetMinFee(const CTransaction& tx, unsigned int nBlockSize, enum GetMinFe
 }
 
 
-bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, bool* pfMissingInputs)
+bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, bool* pfMissingInputs, bool ignoreFees)
 {
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
@@ -726,34 +739,36 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, boo
         unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 
         // Don't accept it if it can't get into a block
-        int64_t txMinFee = GetMinFee(tx, 1000, GMF_RELAY, nSize);
-        if ((fLimitFree && nFees < txMinFee) || (!fLimitFree && nFees < MIN_TX_FEE))
-            return error("AcceptToMemoryPool : not enough fees %s, %d < %d",
-                         hash.ToString(),
-                         nFees, txMinFee);
+        if(!ignoreFees){
+        	int64_t txMinFee = GetMinFee(tx, 1000, GMF_RELAY, nSize);
+        	if (fLimitFree && nFees < txMinFee)
+            	return error("AcceptToMemoryPool : not enough fees %s, %d < %d",
+                         	hash.ToString(),
+                         	nFees, txMinFee);
 
-        // Continuously rate-limit free transactions
-        // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
-        // be annoying or make others' transactions take longer to confirm.
-        if (fLimitFree && nFees < MIN_RELAY_TX_FEE)
-        {
-            static CCriticalSection csFreeLimiter;
-            static double dFreeCount;
-            static int64_t nLastTime;
-            int64_t nNow = GetTime();
+        	// Continuously rate-limit free transactions
+        	// This mitigates 'penny-flooding' -- sending thousands of free transactions just to
+        	// be annoying or make others' transactions take longer to confirm.
+        	if (fLimitFree && nFees < MIN_RELAY_TX_FEE)
+        	{
+            	static CCriticalSection csFreeLimiter;
+            	static double dFreeCount;
+            	static int64_t nLastTime;
+            	int64_t nNow = GetTime();
 
-            LOCK(csFreeLimiter);
+            	LOCK(csFreeLimiter);
 
-            // Use an exponentially decaying ~10-minute window:
-            dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
-            nLastTime = nNow;
-            // -limitfreerelay unit is thousand-bytes-per-minute
-            // At default rate it would take over a month to fill 1GB
-            if (dFreeCount > GetArg("-limitfreerelay", 15)*10*1000)
-                return error("AcceptToMemoryPool : free transaction rejected by rate limiter");
-            LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
-            dFreeCount += nSize;
-        }
+            	// Use an exponentially decaying ~10-minute window:
+            	dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
+            	nLastTime = nNow;
+            	// -limitfreerelay unit is thousand-bytes-per-minute
+            	// At default rate it would take over a month to fill 1GB
+            	if (dFreeCount > GetArg("-limitfreerelay", 15)*10*1000)
+                	return error("AcceptableInputs : free transaction rejected by rate limiter");
+            	LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
+            	dFreeCount += nSize;
+        	}
+       	}
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
@@ -790,7 +805,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, boo
     return true;
 }
 
-bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree)
+bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree, bool ignoreFees)
 {
     AssertLockHeld(cs_main);
 
@@ -870,34 +885,36 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
         unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 
         // Don't accept it if it can't get into a block
-        int64_t txMinFee = GetMinFee(tx, 1000, GMF_RELAY, nSize);
-        if ((fLimitFree && nFees < txMinFee) || (!fLimitFree && nFees < MIN_TX_FEE))
-            return error("AcceptableInputs : not enough fees %s, %d < %d",
-                         hash.ToString(),
-                         nFees, txMinFee);
+        if(!ignoreFees){
+        	int64_t txMinFee = GetMinFee(tx, 1000, GMF_RELAY, nSize);
+        	if (fLimitFree && nFees < txMinFee)
+            	return error("AcceptableInputs : not enough fees %s, %d < %d",
+                         	hash.ToString(),
+                         	nFees, txMinFee);
 
-        // Continuously rate-limit free transactions
-        // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
-        // be annoying or make others' transactions take longer to confirm.
-        if (fLimitFree && nFees < MIN_RELAY_TX_FEE)
-        {
-            static CCriticalSection csFreeLimiter;
-            static double dFreeCount;
-            static int64_t nLastTime;
-            int64_t nNow = GetTime();
+        	// Continuously rate-limit free transactions
+        	// This mitigates 'penny-flooding' -- sending thousands of free transactions just to
+        	// be annoying or make others' transactions take longer to confirm.
+        	if (fLimitFree && nFees < MIN_RELAY_TX_FEE)
+        	{
+            	static CCriticalSection csFreeLimiter;
+            	static double dFreeCount;
+            	static int64_t nLastTime;
+            	int64_t nNow = GetTime();
 
-            LOCK(csFreeLimiter);
+            	LOCK(csFreeLimiter);
 
-            // Use an exponentially decaying ~10-minute window:
-            dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
-            nLastTime = nNow;
-            // -limitfreerelay unit is thousand-bytes-per-minute
-            // At default rate it would take over a month to fill 1GB
-            if (dFreeCount > GetArg("-limitfreerelay", 15)*10*1000)
-                return error("AcceptableInputs : free transaction rejected by rate limiter");
-            LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
-            dFreeCount += nSize;
-        }
+            	// Use an exponentially decaying ~10-minute window:
+            	dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
+            	nLastTime = nNow;
+            	// -limitfreerelay unit is thousand-bytes-per-minute
+            	// At default rate it would take over a month to fill 1GB
+            	if (dFreeCount > GetArg("-limitfreerelay", 15)*10*1000)
+                	return error("AcceptableInputs : free transaction rejected by rate limiter");
+            	LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
+            	dFreeCount += nSize;
+        	}
+       	}
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
@@ -1632,11 +1649,11 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
             if (nTxFee < 0)
                 return DoS(100, error("ConnectInputs() : %s nTxFee < 0", GetHash().ToString()));
 
-            // enforce transaction fees for every block
+            /* enforce transaction fees for every block
             int64_t nRequiredFee = GetMinFee(*this);
             if (nTxFee < nRequiredFee)
                 return fBlock? DoS(100, error("ConnectInputs() : %s not paying required fee=%s, paid=%s", GetHash().ToString(), FormatMoney(nRequiredFee), FormatMoney(nTxFee))) : false;
-
+            */
             nFees += nTxFee;
             if (!MoneyRange(nFees))
                 return DoS(100, error("ConnectInputs() : nFees out of range"));
@@ -3284,17 +3301,21 @@ void static ProcessGetData(CNode* pfrom)
             }
             else if (inv.IsKnownType())
             {
+            	if(fDebug) LogPrintf("ProcessGetData -- Starting \n");
                 // Send stream from relay memory
                 bool pushed = false;
-                {
+                /*{
                     LOCK(cs_mapRelay);
                     map<CInv, CDataStream>::iterator mi = mapRelay.find(inv);
                     if (mi != mapRelay.end()) {
                         pfrom->PushMessage(inv.GetCommand(), (*mi).second);
+                        if(fDebug) LogPrintf("ProcessGetData -- pushed = true Rest will fail\n");
                         pushed = true;
                     }
-                }
+                }*/
                 if (!pushed && inv.type == MSG_TX) {
+                	string txHash = inv.hash.ToString().c_str();
+                	if(fDebug) LogPrintf("ProcessGetData -- txHash %d \n", txHash);
                     if(mapDarksendBroadcastTxes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
@@ -3735,7 +3756,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CTransaction tx;
 
         //masternode signed transaction
-        //bool allowFree = false;
+        bool allowFree = false;
         CTxIn vin;
         vector<unsigned char> vchSig;
         int64_t sigTime;
@@ -3766,7 +3787,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
                 LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString().c_str());
 
-                //allowFree = true;
+                allowFree = true;
                 pmn->allowFreeTx = false;
 
                 if(!mapDarksendBroadcastTxes.count(tx.GetHash())){
@@ -3790,7 +3811,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         mapAlreadyAskedFor.erase(inv);
 
-        if (AcceptToMemoryPool(mempool, tx, true, &fMissingInputs))
+        if (AcceptToMemoryPool(mempool, tx, true, &fMissingInputs, allowFree))
         {
             RelayTransaction(tx, inv.hash);
             vWorkQueue.push_back(inv.hash);
