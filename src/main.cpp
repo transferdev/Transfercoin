@@ -646,6 +646,11 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, boo
     if (pfMissingInputs)
         *pfMissingInputs = false;
 
+    // Hard fork to ignore fees
+    if (pindexBest->nHeight < HARD_FORK_BLOCK2) {
+        ignoreFees = false;
+   	}
+
     if (!tx.CheckTransaction())
         return error("AcceptToMemoryPool : CheckTransaction failed");
 
@@ -810,6 +815,11 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
     AssertLockHeld(cs_main);
 
     CTransaction tx(txo);
+
+    // Hard fork to ignore fees
+    if (pindexBest->nHeight < HARD_FORK_BLOCK2) {
+        ignoreFees = false;
+   	}
 
     if (!tx.CheckTransaction())
         return error("AcceptableInputs : CheckTransaction failed");
@@ -1649,11 +1659,12 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
             if (nTxFee < 0)
                 return DoS(100, error("ConnectInputs() : %s nTxFee < 0", GetHash().ToString()));
 
-            /* enforce transaction fees for every block
-            int64_t nRequiredFee = GetMinFee(*this);
-            if (nTxFee < nRequiredFee)
-                return fBlock? DoS(100, error("ConnectInputs() : %s not paying required fee=%s, paid=%s", GetHash().ToString(), FormatMoney(nRequiredFee), FormatMoney(nTxFee))) : false;
-            */
+            if (pindexBest->nHeight < HARD_FORK_BLOCK2) {
+            	// enforce transaction fees for every block
+            	int64_t nRequiredFee = GetMinFee(*this);
+            	if (nTxFee < nRequiredFee)
+                	return fBlock? DoS(100, error("ConnectInputs() : %s not paying required fee=%s, paid=%s", GetHash().ToString(), FormatMoney(nRequiredFee), FormatMoney(nTxFee))) : false;
+            }
             nFees += nTxFee;
             if (!MoneyRange(nFees))
                 return DoS(100, error("ConnectInputs() : nFees out of range"));

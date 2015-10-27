@@ -2535,8 +2535,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
         // txdb must be opened before the mapWallet lock
         CTxDB txdb("r");
         {
-            nFeeRet = 0.01*COIN;
-            int64_t nFee = 0.01*COIN;
+            nFeeRet = nTransactionFee;
             if(useIX) nFeeRet = max(CENT, nFeeRet);
             while (true)
             {
@@ -2598,10 +2597,10 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                 // The following if statement should be removed once enough miners
                 // have upgraded to the 0.9 GetMinFee() rules. Until then, this avoids
                 // creating free transactions that have change outputs less than
-                // CENT dashs.
-                if (nFeeRet < nFee && nChange > 0 && nChange < CENT)
+                // CENT TX.
+                if (nFeeRet < nTransactionFee && nChange > 0 && nChange < CENT)
                 {
-                    int64_t nMoveToFee = min(nChange, nFee - nFeeRet);
+                    int64_t nMoveToFee = min(nChange, nTransactionFee - nFeeRet);
                     nChange -= nMoveToFee;
                     nFeeRet += nMoveToFee;
                 }
@@ -2688,7 +2687,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                 }
                 dPriority = wtxNew.ComputePriority(dPriority, nBytes);
 
-                /* Check that enough fee is included
+                // Check that enough fee is included
                 int64_t nPayFee = nTransactionFee * (1 + (int64_t)nBytes / 1000);
                 int64_t nMinFee = GetMinFee(wtxNew, 1, GMF_SEND, nBytes);
 
@@ -2697,7 +2696,6 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                     nFeeRet = max(nPayFee, nMinFee);
                     continue;
                 }
-                */
                 // Fill vtxPrev by copying from previous transactions vtxPrev
                 wtxNew.AddSupportingTransactions(txdb);
                 wtxNew.fTimeReceivedIsTxTime = true;
