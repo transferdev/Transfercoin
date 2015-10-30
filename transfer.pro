@@ -1,19 +1,32 @@
 TEMPLATE = app
 TARGET = transfer-qt
 VERSION = 1.1.0.0
-INCLUDEPATH += src src/json src/qt src/qt/plugins/mrichtexteditor
-QT += network printsupport
-DEFINES += ENABLE_WALLET
-DEFINES += BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
-CONFIG += no_include_pwd
-CONFIG += thread
-CONFIG += static
-CONFIG += openssl-linked
-CONFIG += openssl
+
+greaterThan(QT_MAJOR_VERSION, 5) {
+    INCLUDEPATH += src src/json src/qt src/qt/plugins/mrichtexteditor
+    QT += network printsupport
+    DEFINES += ENABLE_WALLET
+    DEFINES += BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
+    CONFIG += static
+    CONFIG += no_include_pwd
+    CONFIG += thread
+    CONFIG += openssl-linked
+    CONFIG += openssl
+    QMAKE_CXXFLAGS = -fpermissive
+}
 
 greaterThan(QT_MAJOR_VERSION, 4) {
-    QT += widgets
+    INCLUDEPATH += src src/json src/qt src/qt/plugins/mrichtexteditor
+    QT += network printsupport
+    DEFINES += ENABLE_WALLET
+    DEFINES += BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
     DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
+    CONFIG += static
+    CONFIG += no_include_pwd
+    CONFIG += thread
+    CONFIG += openssl-linked
+    CONFIG += openssl
+    QMAKE_CXXFLAGS = -fpermissive
 }
 
 linux {
