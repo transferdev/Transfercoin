@@ -204,9 +204,9 @@ CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std:
     nLastDsq = 0;
     donationAddress = newDonationAddress;
     donationPercentage = newDonationPercentage;
-    nVote = 0;   
-    lastVote = 0;           
-    nScanningErrorCount = 0;            
+    nVote = 0;
+    lastVote = 0;
+    nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
 }
 
@@ -453,7 +453,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 
     //if we can't find new MN to get paid, pick first active MN counting back from the end of vecLastPayments list
     if(newWinner.nBlockHeight == 0 && nMinimumAge > 0)
-    {   
+    {
         LogPrintf(" Find by reverse \n");
 
         BOOST_REVERSE_FOREACH(CTxIn& vinLP, vecLastPayments)
@@ -490,9 +490,8 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     CTxDestination address3;
     ExtractDestination(payeeSource, address3);
     CBitcoinAddress address4(address3);
- 
-    LogPrintf("Winner payee %s nHeight %d vin source %s. \n", address2.ToString().c_str(), newWinner.nBlockHeight, address4.ToString().c_str());
 
+    LogPrintf("Winner payee %s nHeight %d vin source %s. \n", address2.ToString().c_str(), newWinner.nBlockHeight, address4.ToString().c_str());
 
     if(Sign(newWinner))
     {

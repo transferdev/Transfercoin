@@ -35,9 +35,9 @@ int nCompleteTXLocks;
 void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if(fLiteMode) return; //disable all darksend/masternode related functionality
-    if(!IsSporkActive(SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT)) return;
+    if(!IsSporkActive(SPORK_2_INSTANTX)) return;
     if(IsInitialBlockDownload()) return;
-    
+
     if (strCommand == "txlreq")
     {
         //LogPrintf("ProcessMessageInstantX::txlreq\n");
@@ -69,7 +69,6 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
         CValidationState state;
 
 
-        //if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
         if (AcceptToMemoryPool(mempool, tx, true, &fMissingInputs))
         {
             vector<CInv> vInv;
@@ -186,8 +185,7 @@ bool IsIXTXValid(const CTransaction& txCollateral){
     BOOST_FOREACH(const CTxIn i, txCollateral.vin){
         CTransaction tx2;
         uint256 hash;
-        //if(GetTransaction(i.prevout.hash, tx2, hash, true)){
-	if(GetTransaction(i.prevout.hash, tx2, hash)){
+        if(GetTransaction(i.prevout.hash, tx2, hash)){
             if(tx2.vout.size() > i.prevout.n) {
                 nValueIn += tx2.vout[i.prevout.n].nValue;
             }
@@ -372,9 +370,9 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
 
 #ifdef ENABLE_WALLET
                 if(pwalletMain){
-                    pwalletMain->UpdatedTransaction((*i).second.txHash);
+                    if(pwalletMain->UpdatedTransaction((*i).second.txHash)){
                         nCompleteTXLocks++;
-                    
+                    }
                 }
 #endif
 
@@ -453,7 +451,7 @@ void CleanTransactionLocksList()
             // loop through masternodes that responded
             for(int nRank = 0; nRank <= INSTANTX_SIGNATURES_TOTAL; nRank++)
             {
-                CMasternode* pmn = mnodeman.GetMasternodeByRank(nRank, it->second.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);                
+                CMasternode* pmn = mnodeman.GetMasternodeByRank(nRank, it->second.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
                 if(!pmn) continue;
 
                 bool fFound = false;
