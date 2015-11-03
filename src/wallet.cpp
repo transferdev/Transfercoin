@@ -772,7 +772,21 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pbl
     return false;
 }
 
-void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock, bool fConnect) {
+void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock, bool fConnect)
+{   
+    LOCK2(cs_main, cs_wallet);
+    if (!AddToWalletIfInvolvingMe(tx, pblock, true))
+        return; // Not one of ours
+
+    // If a transaction changes 'conflicted' state, that changes the balance
+    // available of the outputs it spends. So force those to be
+    // recomputed, also:
+    BOOST_FOREACH(const CTxIn& txin, tx.vin)
+    {
+        if (mapWallet.count(txin.prevout.hash))
+            mapWallet[txin.prevout.hash].MarkDirty();
+    }
+
     if (!fConnect)
     {
         // wallets need to refund inputs when disconnecting coinstake

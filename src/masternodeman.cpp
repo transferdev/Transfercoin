@@ -325,7 +325,7 @@ CMasternode *CMasternodeMan::Find(const CTxIn &vin)
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes)
     {
-        if(mn.vin == vin)
+        if(mn.vin.prevout == vin.prevout)
             return &mn;
     }
     return NULL;
