@@ -625,6 +625,9 @@ int64_t GetMinFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree, 
 
     int64_t nMinFee = (1 + (int64_t)nBytes / 1000) * nBaseFee;
 
+    if (pindexBest->nHeight < HARD_FORK_BLOCK2) {
+        fAllowFree = false;
+    }
     if (fAllowFree)
     {
         // There is a free transaction area in blocks created by most miners,
