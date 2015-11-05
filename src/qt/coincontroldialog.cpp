@@ -456,6 +456,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     double dPriority            = 0;
     double dPriorityInputs      = 0;
     unsigned int nQuantity      = 0;
+    int nQuantityUncompressed   = 0;
     
     vector<COutPoint> vCoinControl;
     vector<COutput>   vOutputs;
@@ -479,8 +480,11 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         {
             CPubKey pubkey;
             CKeyID *keyid = boost::get< CKeyID >(&address);
-            if (keyid && model->getPubKey(*keyid, pubkey))
+            if (keyid && model->getPubKey(*keyid, pubkey)){
                 nBytesInputs += (pubkey.IsCompressed() ? 148 : 180);
+                if (!pubkey.IsCompressed())
+                    nQuantityUncompressed++;
+            }
             else
                 nBytesInputs += 148; // in all error cases, simply assume 148 here
         }
@@ -494,7 +498,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         nBytes = nBytesInputs + ((CoinControlDialog::payAmounts.size() > 0 ? CoinControlDialog::payAmounts.size() + 1 : 2) * 34) + 10; // always assume +1 output for change here
         
         // Priority
-        dPriority = dPriorityInputs / nBytes;
+        dPriority = dPriorityInputs / (nBytes - nBytesInputs + (nQuantityUncompressed * 29)); // 29 = 180 - 151 (uncompressed public keys are over the limit. max 151 bytes of the input are ignored for priority)
         sPriorityLabel = CoinControlDialog::getPriorityLabel(dPriority);
         
         // Fee
