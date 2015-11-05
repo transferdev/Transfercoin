@@ -1,5 +1,7 @@
 #include "tradingdialog.h"
 #include "ui_tradingdialog.h"
+#include "clientmodel.h"
+#include "walletmodel.h"
 #include <qmessagebox.h>
 #include <qtimer.h>
 #include <rpcserver.h>
@@ -24,7 +26,8 @@ using namespace std;
 
 tradingDialog::tradingDialog(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::tradingDialog)
+    ui(new Ui::tradingDialog),
+    model(0)
 {
     ui->setupUi(this);
     timerid = 0;
@@ -1066,11 +1069,21 @@ void tradingDialog::on_CSUnitsBtn_clicked()
             Msg += Rstr.number(Rate,'i',8);
             Msg += " satoshis ?";
 
-    EnsureWalletIsUnlocked();
     QMessageBox::StandardButton reply;
     reply = QMessageBox::question(this,"Cross-Send",Msg,QMessageBox::Yes|QMessageBox::No);
 
-    if (reply == QMessageBox::Yes) {
+    if(reply != QMessageBox::Yes)
+    {
+        return;
+    }
+
+    WalletModel::UnlockContext ctx(model->requestUnlock());
+    if(!ctx.isValid())
+    {
+        // Unlock wallet was cancelled
+        return;
+    }
+
         QString Order = "selllimit";
         QJsonArray  BuyArray  = BuyObject.value("buy").toArray();                //get buy/sell object from result object
 
@@ -1128,9 +1141,6 @@ void tradingDialog::on_CSUnitsBtn_clicked()
                 break;
             }
         }
-    }else{
-        //do nothing
-    }
 }
 
 void tradingDialog::on_WithdrawUnitsBtn_clicked()
@@ -1144,11 +1154,21 @@ void tradingDialog::on_WithdrawUnitsBtn_clicked()
             Msg += ui->WithdrawAddress->text();
             Msg += " ?";
 
-    EnsureWalletIsUnlocked();
     QMessageBox::StandardButton reply;
     reply = QMessageBox::question(this,"Withdraw",Msg,QMessageBox::Yes|QMessageBox::No);
 
-    if (reply == QMessageBox::Yes) {
+    if(reply != QMessageBox::Yes)
+    {
+        return;
+    }
+
+    WalletModel::UnlockContext ctx(model->requestUnlock());
+    if(!ctx.isValid())
+    {
+        // Unlock wallet was cancelled
+        return;
+    }
+
         QString Response =  Withdraw(Quantity, ui->WithdrawAddress->text(), Coin);
         QJsonDocument jsonResponse = QJsonDocument::fromJson(Response.toUtf8());          //get json from str.
         QJsonObject  ResponseObject = jsonResponse.object();                              //get json obj
@@ -1159,9 +1179,6 @@ void tradingDialog::on_WithdrawUnitsBtn_clicked()
         }else if (ResponseObject["success"].toBool() == true){
             QMessageBox::information(this,"Success","Withdrawal Successful !");
         }
-    }else{
-        //do nothing
-    }
 }
 
 void tradingDialog::on_AdvancedView_stateChanged(int arg1)
@@ -1206,6 +1223,11 @@ void tradingDialog::on_SellBidPriceEdit_textChanged(const QString &arg1)
 void tradingDialog::on_CSUnitsInput_textChanged(const QString &arg1)
 {
     CalculateCSReceiveLabel(); //update cost
+}
+
+void tradingDialog::setModel(WalletModel *model)
+{
+    this->model = model;
 }
 
 tradingDialog::~tradingDialog()

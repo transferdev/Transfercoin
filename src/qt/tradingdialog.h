@@ -6,6 +6,8 @@
 #include <QObject>
 #include <stdint.h>
 #include "ui_tradingdialog.h"
+#include "clientmodel.h"
+#include "walletmodel.h"
 
 #include <QJsonObject>
 #include <QJsonArray>
@@ -13,6 +15,7 @@
 namespace Ui {
 class tradingDialog;
 }
+class WalletModel;
 
 class tradingDialog : public QDialog
 {
@@ -21,6 +24,9 @@ class tradingDialog : public QDialog
 public:
     explicit tradingDialog(QWidget *parent = 0);
     ~tradingDialog();
+
+    void setModel(WalletModel *model);
+
 private slots:
 
     void InitTrading();
@@ -90,6 +96,7 @@ private:
     QTimer *timer;
     QString ApiKey;
     QString SecretKey;
+    WalletModel *model;
 
 
 };
