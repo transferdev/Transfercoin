@@ -225,6 +225,15 @@ Removal of centrally broadcasted synchronized checkpoints
 SPORK Additions/Changes | SANDSTORM fee removal
 https://github.com/SCDeveloper/DarkSilk-Release-Candidate/commit/e6ebc2ec9a955f1447a9c29e49232c61df97d768
 
+Improve Trading Dialog page to include cross sending and withdrawing from bittrex.
+(wallet needs to be unlocked and SHOULD be encrypted)
+
+-------------------------------------------------------------------------------
+            ^       CLIENT BUILD 1.2.1-61402      ^
+-------------------------------------------------------------------------------
+
+
+
 
 -------------------------------------------------------------------------------
 
