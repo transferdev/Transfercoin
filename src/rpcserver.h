@@ -185,6 +185,8 @@ extern json_spirit::Value getnewstealthaddress(const json_spirit::Array& params,
 extern json_spirit::Value liststealthaddresses(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value importstealthaddress(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendtostealthaddress(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value scanforalltxns(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value scanforstealthtxns(const json_spirit::Array& params, bool fHelp);
 
 extern json_spirit::Value darksend(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value spork(const json_spirit::Array& params, bool fHelp);

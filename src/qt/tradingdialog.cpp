@@ -19,6 +19,7 @@
 #include <QJsonObject>
 #include <QVariantMap>
 #include <QJsonArray>
+#include <QTime>
 
 #include <openssl/hmac.h>
 

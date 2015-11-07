@@ -26,6 +26,7 @@
 #include <boost/foreach.hpp>
 #include <boost/iostreams/concepts.hpp>
 #include <boost/iostreams/stream.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/shared_ptr.hpp>
 #include <list>
 
@@ -245,7 +246,7 @@ static const CRPCCommand vRPCCommands[] =
     { "validateaddress",        &validateaddress,        true,      false,     false },
     { "validatepubkey",         &validatepubkey,         true,      false,     false },
     { "verifymessage",          &verifymessage,          false,     false,     false },
-    { "searchrawtransactions",  &searchrawtransactions,  false,     false, false },
+    { "searchrawtransactions",  &searchrawtransactions,  false,     false,     false },
 
 /* Dark features */
     { "spork",                  &spork,                  true,      false,      false },
@@ -303,10 +304,12 @@ static const CRPCCommand vRPCCommands[] =
     { "resendtx",               &resendtx,               false,     true,      true },
     { "makekeypair",            &makekeypair,            false,     true,      false },
     { "checkkernel",            &checkkernel,            true,      false,     true },
-    { "getnewstealthaddress",   &getnewstealthaddress,   false,  false, true},
-    { "liststealthaddresses",   &liststealthaddresses,   false,  false, true},
-    { "importstealthaddress",   &importstealthaddress,   false,  false, true},
-    { "sendtostealthaddress",   &sendtostealthaddress,   false,  false, true},
+    { "getnewstealthaddress",   &getnewstealthaddress,   false,     false,     true },
+    { "liststealthaddresses",   &liststealthaddresses,   false,     false,     true },
+    { "scanforalltxns",         &scanforalltxns,         false,     false,     false },
+    { "scanforstealthtxns",     &scanforstealthtxns,     false,     false,     false },
+    { "importstealthaddress",   &importstealthaddress,   false,     false,     true },
+    { "sendtostealthaddress",   &sendtostealthaddress,   false,     false,     true },
     { "smsgenable",             &smsgenable,             false,     false,     false },
     { "smsgdisable",            &smsgdisable,            false,     false,     false },
     { "smsglocalkeys",          &smsglocalkeys,          false,     false,     false },

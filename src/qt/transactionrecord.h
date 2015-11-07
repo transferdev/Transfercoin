@@ -78,20 +78,20 @@ public:
     static const int RecommendedNumConfirmations = 10;
 
     TransactionRecord():
-            hash(), time(0), type(Other), address(""), debit(0), credit(0), idx(0)
+            hash(), time(0), type(Other), address(""), narration(""), debit(0), credit(0), idx(0)
     {
     }
 
     TransactionRecord(uint256 hash, int64_t time):
-            hash(hash), time(time), type(Other), address(""), debit(0),
+            hash(hash), time(time), type(Other), address(""), narration(""), debit(0),
             credit(0), idx(0)
     {
     }
 
     TransactionRecord(uint256 hash, int64_t time,
-                Type type, const std::string &address,
+                Type type, const std::string &address, const std::string &narration,
                 int64_t debit, int64_t credit):
-            hash(hash), time(time), type(type), address(address), debit(debit), credit(credit),
+            hash(hash), time(time), type(type), address(address), narration(""), debit(debit), credit(credit),
             idx(0)
     {
     }
@@ -107,6 +107,7 @@ public:
     qint64 time;
     Type type;
     std::string address;
+    std::string narration;
     qint64 debit;
     qint64 credit;
     /**@}*/

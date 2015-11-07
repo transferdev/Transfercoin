@@ -8,8 +8,21 @@ DEFINES += BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 CONFIG += no_include_pwd
 CONFIG += thread
 CONFIG += static
-CONFIG += openssl-linked
+#CONFIG += openssl-linked
 CONFIG += openssl
+
+BOOST_LIB_SUFFIX=-mgw49-mt-s-1_57
+BOOST_INCLUDE_PATH=C:/dev/coindeps32/boost_1_57_0/include
+BOOST_LIB_PATH=C:/dev/coindeps32/boost_1_57_0/lib
+BDB_INCLUDE_PATH=C:/dev/coindeps32/bdb-4.8/include
+BDB_LIB_PATH=C:/dev/coindeps32/bdb-4.8/lib
+OPENSSL_INCLUDE_PATH=C:/dev/coindeps32/openssl-1.0.1p/include
+OPENSSL_LIB_PATH=C:/dev/coindeps32/openssl-1.0.1p/lib
+MINIUPNPC_LIB_SUFFIX=-miniupnpc
+MINIUPNPC_INCLUDE_PATH=C:/dev/coindeps32/miniupnpc-1.9
+MINIUPNPC_LIB_PATH=C:/dev/coindeps32/miniupnpc-1.9
+#SECP256K1_LIB_PATH=C:\deps\secp256k1
+#SECP256K1_INCLUDE_PATH=C:\deps\secp256k1
 
 greaterThan(QT_MAJOR_VERSION, 4) {
     QT += widgets
@@ -60,8 +73,13 @@ QMAKE_LFLAGS *= -fstack-protector-all --param ssp-buffer-size=1
 # We need to exclude this for Windows cross compile with MinGW 4.2.x, as it will result in a non-working executable!
 # This can be enabled for Windows, when we switch to MinGW >= 4.4.x.
 }
+# for extra security (see: https://wiki.debian.org/Hardening): this flag is GCC compiler-specific
+QMAKE_CXXFLAGS *= -D_FORTIFY_SOURCE=2
 # for extra security on Windows: enable ASLR and DEP via GCC linker flags
-win32:QMAKE_LFLAGS *= -Wl,--dynamicbase -Wl,--nxcompat -static
+win32:QMAKE_LFLAGS *= -Wl,--dynamicbase -Wl,--nxcompat
+# on Windows: enable GCC large address aware linker flag
+win32:QMAKE_LFLAGS *= -Wl,--large-address-aware -static
+# i686-w64-mingw32
 win32:QMAKE_LFLAGS *= -static-libgcc -static-libstdc++
 
 # use: qmake "USE_QRCODE=1"
@@ -105,7 +123,7 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
 }
 
 # LIBSEC256K1 SUPPORT
-QMAKE_CXXFLAGS *= -DUSE_SECP256K1
+#QMAKE_CXXFLAGS *= -DUSE_SECP256K1
 
 INCLUDEPATH += src/leveldb/include src/leveldb/helpers
 LIBS += $$PWD/src/leveldb/libleveldb.a $$PWD/src/leveldb/libmemenv.a
@@ -153,7 +171,7 @@ contains(USE_O3, 1) {
     QMAKE_CFLAGS += -msse2
 }
 
-QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter -Wstack-protector -Wunused-function -Wunused-variable -fpermissive -Wconversion-null -Wmaybe-uninitialized
+QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter -Wstack-protector -Wunused-function -Wunused-variable -fpermissive -Wconversion-null -Wmaybe-uninitialized -Wunused-local-typedefs
 
 # Input
 DEPENDPATH += src src/json src/qt
@@ -553,7 +571,7 @@ LIBS += $$join(SECP256K1_LIB_PATH,,-L,) $$join(BOOST_LIB_PATH,,-L,) $$join(BDB_L
 LIBS += -lssl -lcrypto -ldb_cxx$$BDB_LIB_SUFFIX
 # -lgdi32 has to happen after -lcrypto (see  #681)
 windows:LIBS += -lws2_32 -lshlwapi -lmswsock -lole32 -loleaut32 -luuid -lgdi32
-LIBS += -lsecp256k1
+#LIBS += -lsecp256k1
 LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_THREAD_LIB_SUFFIX
 windows:LIBS += -lboost_chrono$$BOOST_LIB_SUFFIX
 

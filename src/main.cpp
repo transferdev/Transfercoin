@@ -88,6 +88,7 @@ std::set<uint256> setValidatedTx;
 // These functions dispatch to one or all registered wallets
 
 namespace {
+
 struct CMainSignals {
     // Notifies listeners of updated transaction data (passing hash, transaction, and optionally the block it is found in.
     boost::signals2::signal<void (const CTransaction &, const CBlock *, bool)> SyncTransaction;
@@ -176,7 +177,6 @@ int GetHeight()
     }
 }
 
-
 //////////////////////////////////////////////////////////////////////////////
 //
 // mapOrphanTransactions
@@ -245,12 +245,6 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
     }
     return nEvicted;
 }
-
-
-
-
-
-
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -360,15 +354,19 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
     }
 
     unsigned int nDataOut = 0;
+    unsigned int nTxnOut = 0;
+
     txnouttype whichType;
     BOOST_FOREACH(const CTxOut& txout, tx.vout) {
-        if (!::IsStandard(txout.scriptPubKey, whichType)) {
+        if (!::IsStandard(txout.scriptPubKey, whichType))
+        {
             reason = "scriptpubkey";
             return false;
         }
         if (whichType == TX_NULL_DATA)
+        {
             nDataOut++;
-        if (txout.nValue == 0) {
+        } else if (txout.nValue == 0) {
             reason = "dust";
             return false;
         }
@@ -454,8 +452,12 @@ bool AreInputsStandard(const CTransaction& tx, const MapPrevTx& mapInputs)
             if (Solver(subscript, whichType2, vSolutions2))
             {
                 int tmpExpected = ScriptSigArgsExpected(whichType2, vSolutions2);
+
+                if (whichType2 == TX_SCRIPTHASH)
+                    return false;
                 if (tmpExpected < 0)
                     return false;
+
                 nArgsExpected += tmpExpected;
             }
             else
@@ -761,35 +763,35 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, boo
 
         // Don't accept it if it can't get into a block
         if(!ignoreFees){
-        	int64_t txMinFee = GetMinFee(tx, nSize, true, GMF_RELAY);
-        	if (fLimitFree && nFees < txMinFee)
-            	return error("AcceptToMemoryPool : not enough fees %s, %d < %d",
-                         	hash.ToString(),
-                         	nFees, txMinFee);
+            int64_t txMinFee = GetMinFee(tx, nSize, true, GMF_RELAY);
+            if (fLimitFree && nFees < txMinFee)
+                return error("AcceptToMemoryPool : not enough fees %s, %d < %d",
+                            hash.ToString(),
+                            nFees, txMinFee);
 
-        	// Continuously rate-limit free transactions
-        	// This mitigates 'penny-flooding' -- sending thousands of free transactions just to
-        	// be annoying or make others' transactions take longer to confirm.
-        	if (fLimitFree && nFees < MIN_RELAY_TX_FEE)
-        	{
-            	static CCriticalSection csFreeLimiter;
-            	static double dFreeCount;
-            	static int64_t nLastTime;
-            	int64_t nNow = GetTime();
+            // Continuously rate-limit free transactions
+            // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
+            // be annoying or make others' transactions take longer to confirm.
+            if (fLimitFree && nFees < MIN_RELAY_TX_FEE)
+            {
+                static CCriticalSection csFreeLimiter;
+                static double dFreeCount;
+                static int64_t nLastTime;
+                int64_t nNow = GetTime();
 
-            	LOCK(csFreeLimiter);
+                LOCK(csFreeLimiter);
 
-            	// Use an exponentially decaying ~10-minute window:
-            	dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
-            	nLastTime = nNow;
-            	// -limitfreerelay unit is thousand-bytes-per-minute
-            	// At default rate it would take over a month to fill 1GB
-            	if (dFreeCount > GetArg("-limitfreerelay", 15)*10*1000)
-                	return error("AcceptableInputs : free transaction rejected by rate limiter");
-            	LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
-            	dFreeCount += nSize;
-        	}
-       	}
+                // Use an exponentially decaying ~10-minute window:
+                dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
+                nLastTime = nNow;
+                // -limitfreerelay unit is thousand-bytes-per-minute
+                // At default rate it would take over a month to fill 1GB
+                if (dFreeCount > GetArg("-limitfreerelay", 15)*10*1000)
+                    return error("AcceptableInputs : free transaction rejected by rate limiter");
+                LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
+                dFreeCount += nSize;
+            }
+        }
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
@@ -849,10 +851,10 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
         return tx.DoS(100, error("AcceptableInputs : coinstake as individual tx"));
 
     // Rather not work on nonstandard transactions (unless -testnet)
-    string reason;
-    if (!TestNet() && !IsStandardTx(tx, reason))
-        return error("AcceptableInputs : nonstandard transaction: %s",
-                     reason);
+    //string reason;
+    //if (!TestNet() && !IsStandardTx(tx, reason))
+    //    return error("AcceptableInputs : nonstandard transaction: %s",
+    //                 reason);
     
 
     // is it already in the memory pool?
@@ -912,35 +914,35 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
 
         // Don't accept it if it can't get into a block
         if(!ignoreFees){
-        	int64_t txMinFee = GetMinFee(tx, nSize, true, GMF_RELAY);
-        	if (fLimitFree && nFees < txMinFee)
-            	return error("AcceptableInputs : not enough fees %s, %d < %d",
-                         	hash.ToString(),
-                         	nFees, txMinFee);
+            int64_t txMinFee = GetMinFee(tx, nSize, true, GMF_RELAY);
+            if (fLimitFree && nFees < txMinFee)
+                return error("AcceptableInputs : not enough fees %s, %d < %d",
+                            hash.ToString(),
+                            nFees, txMinFee);
 
-        	// Continuously rate-limit free transactions
-        	// This mitigates 'penny-flooding' -- sending thousands of free transactions just to
-        	// be annoying or make others' transactions take longer to confirm.
-        	if (fLimitFree && nFees < MIN_RELAY_TX_FEE)
-        	{
-            	static CCriticalSection csFreeLimiter;
-            	static double dFreeCount;
-            	static int64_t nLastTime;
-            	int64_t nNow = GetTime();
+            // Continuously rate-limit free transactions
+            // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
+            // be annoying or make others' transactions take longer to confirm.
+            if (fLimitFree && nFees < MIN_RELAY_TX_FEE)
+            {
+                static CCriticalSection csFreeLimiter;
+                static double dFreeCount;
+                static int64_t nLastTime;
+                int64_t nNow = GetTime();
 
-            	LOCK(csFreeLimiter);
+                LOCK(csFreeLimiter);
 
-            	// Use an exponentially decaying ~10-minute window:
-            	dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
-            	nLastTime = nNow;
-            	// -limitfreerelay unit is thousand-bytes-per-minute
-            	// At default rate it would take over a month to fill 1GB
-            	if (dFreeCount > GetArg("-limitfreerelay", 15)*10*1000)
-                	return error("AcceptableInputs : free transaction rejected by rate limiter");
-            	LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
-            	dFreeCount += nSize;
-        	}
-       	}
+                // Use an exponentially decaying ~10-minute window:
+                dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
+                nLastTime = nNow;
+                // -limitfreerelay unit is thousand-bytes-per-minute
+                // At default rate it would take over a month to fill 1GB
+                if (dFreeCount > GetArg("-limitfreerelay", 15)*10*1000)
+                    return error("AcceptableInputs : free transaction rejected by rate limiter");
+                LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
+                dFreeCount += nSize;
+            }
+        }
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
@@ -954,7 +956,7 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
     /*LogPrint("mempool", "AcceptableInputs : accepted %s (poolsz %u)\n",
            hash.ToString(),
            pool.mapTx.size());
-	*/
+    */
     return true;
 }
 
@@ -1079,15 +1081,15 @@ int GetInputAge(CTxIn& vin)
     bool fFound = GetTransaction(prevHash, tx, hashBlock);
     if(fFound)
     {
-	if(mapBlockIndex.find(hashBlock) != mapBlockIndex.end())
-	{
-	    return pindexBest->nHeight - mapBlockIndex[hashBlock]->nHeight;
-	}
-	else
-	    return 0;
+    if(mapBlockIndex.find(hashBlock) != mapBlockIndex.end())
+    {
+        return pindexBest->nHeight - mapBlockIndex[hashBlock]->nHeight;
     }
     else
-	return 0; 
+        return 0;
+    }
+    else
+        return 0;
 }
 
 int CTxIndex::GetDepthInMainChain() const
@@ -1762,8 +1764,8 @@ bool FindTransactionsByDestination(const CTxDestination &dest, std::vector<uint2
     CTxDB txdb("r");
     if(!txdb.ReadAddrIndex(addrid, vtxhash))
     {
-	LogPrintf("FindTransactionsByDestination(): txdb.ReadAddrIndex failed\n");
-	return false;
+        LogPrintf("FindTransactionsByDestination(): txdb.ReadAddrIndex failed\n");
+        return false;
     }
     return true;
 }
@@ -1773,45 +1775,44 @@ void CBlock::RebuildAddressIndex(CTxDB& txdb)
     BOOST_FOREACH(CTransaction& tx, vtx)
     {
         uint256 hashTx = tx.GetHash();
-	// inputs
-	if(!tx.IsCoinBase()) 
-	{
+        // inputs
+        if(!tx.IsCoinBase()) 
+        {
             MapPrevTx mapInputs;
-	    map<uint256, CTxIndex> mapQueuedChangesT;
-	    bool fInvalid;
+            map<uint256, CTxIndex> mapQueuedChangesT;
+            bool fInvalid;
             if (!tx.FetchInputs(txdb, mapQueuedChangesT, true, false, mapInputs, fInvalid))
                 return;
 
-	    MapPrevTx::const_iterator mi;
-	    for(MapPrevTx::const_iterator mi = mapInputs.begin(); mi != mapInputs.end(); ++mi)
-	    {
-		    BOOST_FOREACH(const CTxOut &atxout, (*mi).second.second.vout)
-		    {
-			std::vector<uint160> addrIds;
-			if(BuildAddrIndex(atxout.scriptPubKey, addrIds))
-			{
-                            BOOST_FOREACH(uint160 addrId, addrIds)
-		            {
-			        if(!txdb.WriteAddrIndex(addrId, hashTx))
-				    LogPrintf("RebuildAddressIndex(): txins WriteAddrIndex failed addrId: %s txhash: %s\n", addrId.ToString().c_str(), hashTx.ToString().c_str());
-                            }
-			}
-		    }
-	    }
- 	    
-        }
-	// outputs
-	BOOST_FOREACH(const CTxOut &atxout, tx.vout) {
-	    std::vector<uint160> addrIds;
-            if(BuildAddrIndex(atxout.scriptPubKey, addrIds))
-	    {
-		BOOST_FOREACH(uint160 addrId, addrIds)
-		{
-		    if(!txdb.WriteAddrIndex(addrId, hashTx))
-		        LogPrintf("RebuildAddressIndex(): txouts WriteAddrIndex failed addrId: %s txhash: %s\n", addrId.ToString().c_str(), hashTx.ToString().c_str());
+            MapPrevTx::const_iterator mi;
+            for(MapPrevTx::const_iterator mi = mapInputs.begin(); mi != mapInputs.end(); ++mi)
+            {
+                BOOST_FOREACH(const CTxOut &atxout, (*mi).second.second.vout)
+                {
+                    std::vector<uint160> addrIds;
+                    if(BuildAddrIndex(atxout.scriptPubKey, addrIds))
+                    {
+                        BOOST_FOREACH(uint160 addrId, addrIds)
+                        {
+                            if(!txdb.WriteAddrIndex(addrId, hashTx))
+                                LogPrintf("RebuildAddressIndex(): txins WriteAddrIndex failed addrId: %s txhash: %s\n", addrId.ToString().c_str(), hashTx.ToString().c_str());
+                        }
+                    }
                 }
-	    }
-	}
+            }
+        }
+        // outputs
+        BOOST_FOREACH(const CTxOut &atxout, tx.vout) {
+            std::vector<uint160> addrIds;
+            if(BuildAddrIndex(atxout.scriptPubKey, addrIds))
+            {
+                BOOST_FOREACH(uint160 addrId, addrIds)
+                {
+                    if(!txdb.WriteAddrIndex(addrId, hashTx))
+                        LogPrintf("RebuildAddressIndex(): txouts WriteAddrIndex failed addrId: %s txhash: %s\n", addrId.ToString().c_str(), hashTx.ToString().c_str());
+                }
+            }
+        }
     }
 }
 
@@ -3900,15 +3901,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (ProcessBlock(pfrom, &block))
             mapAlreadyAskedFor.erase(inv);
         if (block.nDoS) pfrom->Misbehaving(block.nDoS);
-
         if (fSecMsgEnabled)
             SecureMsgScanBlock(block);
     }
 
     // This asymmetric behavior for inbound and outbound connections was introduced
     // to prevent a fingerprinting attack: an attacker can send specific fake addresses
-    // to users' AddrMan and later request them by sending getaddr messages. 
-    // Making users (which are behind NAT and can only make outgoing connections) ignore 
+    // to users' AddrMan and later request them by sending getaddr messages.
+    // Making users (which are behind NAT and can only make outgoing connections) ignore
     // getaddr message mitigates the attack.
     else if ((strCommand == "getaddr") && (pfrom->fInbound))
     {
@@ -4248,7 +4248,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // transactions become unconfirmed and spams other nodes.
         if (!fReindex && !fImporting && !IsInitialBlockDownload())
         {
-        	ResendWalletTransactions();
+            ResendWalletTransactions();
         }
 
         // Address refresh broadcast
