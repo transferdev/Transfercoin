@@ -47,6 +47,12 @@ public:
     {
         return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10), n);
     }
+
+    std::string ToStringShort() const
+    {
+        return strprintf("%s-%u", hash.ToString().substr(0,64), n);
+    }
+
 };
 
 /** An inpoint - a combination of a transaction and an index n into its vin */

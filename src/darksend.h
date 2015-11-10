@@ -10,6 +10,7 @@
 #include "sync.h"
 #include "activemasternode.h"
 #include "masternodeman.h"
+#include "masternode-payments.h"
 #include "darksend-relay.h"
 
 class CTxIn;
@@ -288,7 +289,6 @@ public:
     int sessionDenom; //Users must submit an denom matching this
     int sessionUsers; //N Users have said they'll join
     bool sessionFoundMasternode; //If we've found a compatible Masternode
-    int64_t sessionTotalValue; //used for autoDenom
     std::vector<CTransaction> vecSessionCollateral;
 
     int cachedLastSuccess;
@@ -474,14 +474,14 @@ public:
     bool CreateDenominated(int64_t nTotalValue);
 
     /// Get the denominations for a list of outputs (returns a bitshifted integer)
-    int GetDenominations(const std::vector<CTxOut>& vout);
+    int GetDenominations(const std::vector<CTxOut>& vout, bool fRandDenom = false);
     int GetDenominations(const std::vector<CTxDSOut>& vout);
 
     void GetDenominationsToString(int nDenom, std::string& strDenom);
 
     /// Get the denominations for a specific amount of dash.
     int GetDenominationsByAmount(int64_t nAmount, int nDenomTarget=0);
-    int GetDenominationsByAmounts(std::vector<int64_t>& vecAmount);
+    int GetDenominationsByAmounts(std::vector<int64_t>& vecAmount, bool fRandDenom = false);
 
 
     //

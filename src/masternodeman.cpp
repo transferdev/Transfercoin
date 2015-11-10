@@ -331,7 +331,7 @@ CMasternode *CMasternodeMan::Find(const CTxIn &vin)
     return NULL;
 }
 
-CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins, int nMinimumAge, int nMinimumActiveSeconds)
+CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins, int nMinimumAge)
 {
     LOCK(cs);
 
@@ -342,16 +342,18 @@ CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins,
         mn.Check();
         if(!mn.IsEnabled()) continue;
 
+        if(mn.GetMasternodeInputAge() < nMinimumAge) continue;
+
         bool found = false;
         BOOST_FOREACH(const CTxIn& vin, vVins)
-            if(mn.vin == vin)
+            if(mn.vin.prevout == vin.prevout)
             {   
                 found = true;
                 break;
             }
         if(found) continue;
 
-        if(pOldestMasternode == NULL || pOldestMasternode->GetMasternodeInputAge() < mn.GetMasternodeInputAge()) 
+        if(pOldestMasternode == NULL || pOldestMasternode->SecondsSincePayment() < mn.SecondsSincePayment())
         {
             pOldestMasternode = &mn;
         }
@@ -595,6 +597,11 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         if(pubkeyScript2.size() != 25) {
             LogPrintf("dsee - pubkey2 the wrong size\n");
             Misbehaving(pfrom->GetId(), 100);
+            return;
+        }
+
+        if(!vin.scriptSig.empty()) {
+            LogPrintf("dsee - Ignore Not Empty ScriptSig %s\n",vin.ToString().c_str());
             return;
         }
 

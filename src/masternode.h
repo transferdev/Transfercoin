@@ -14,6 +14,7 @@
 #include "main.h"
 #include "timedata.h"
 #include "script.h"
+#include "masternode.h"
 #include "masternode-pos.h"
 
 class uint256;
@@ -38,15 +39,10 @@ class uint256;
 using namespace std;
 
 class CMasternode;
-class CMasternodePayments;
-class CMasternodePaymentWinner;
 
 extern CCriticalSection cs_masternodes;
-extern CMasternodePayments masternodePayments;
-extern map<uint256, CMasternodePaymentWinner> mapSeenMasternodeVotes;
 extern map<int64_t, uint256> mapCacheBlockHashes;
 
-void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 bool GetBlockHash(uint256& hash, int nBlockHeight);
 
 //
@@ -89,6 +85,7 @@ public:
     int64_t lastVote;
     int nScanningErrorCount;
     int nLastScanningErrorBlockHeight;
+    int64_t nLastPaid;
 
 
     CMasternode();
@@ -124,6 +121,7 @@ public:
         swap(first.lastVote, second.lastVote);
         swap(first.nScanningErrorCount, second.nScanningErrorCount);
         swap(first.nLastScanningErrorBlockHeight, second.nLastScanningErrorBlockHeight);
+        swap(first.nLastPaid, second.nLastPaid);
     }
 
     CMasternode& operator=(CMasternode from)
@@ -172,8 +170,14 @@ public:
                 READWRITE(lastVote);
                 READWRITE(nScanningErrorCount);
                 READWRITE(nLastScanningErrorBlockHeight);
+                READWRITE(nLastPaid);
         }
     )
+
+    int64_t SecondsSincePayment()
+    {
+        return (GetAdjustedTime() - nLastPaid);
+    }
 
     void UpdateLastSeen(int64_t override=0)
     {
@@ -250,86 +254,5 @@ public:
         return strStatus;
     }
 };
-// for storing the winning payments
-class CMasternodePaymentWinner
-{
-public:
-    int nBlockHeight;
-    CTxIn vin;
-    CScript payee;
-    std::vector<unsigned char> vchSig;
-    uint64_t score;
-
-    CMasternodePaymentWinner() {
-        nBlockHeight = 0;
-        score = 0;
-        vin = CTxIn();
-        payee = CScript();
-    }
-
-    uint256 GetHash(){
-        uint256 n2 = Hash(BEGIN(nBlockHeight), END(nBlockHeight));
-        uint256 n3 = vin.prevout.hash > n2 ? (vin.prevout.hash - n2) : (n2 - vin.prevout.hash);
-
-        return n3;
-    }
-
-    IMPLEMENT_SERIALIZE(
-
-        READWRITE(nBlockHeight);
-        READWRITE(payee);
-        READWRITE(vin);
-        READWRITE(score);
-        READWRITE(vchSig);
-    )
-};
-
-//
-// Masternode Payments Class
-// Keeps track of who should get paid for which blocks
-//
-
-class CMasternodePayments
-{
-private:
-    std::vector<CMasternodePaymentWinner> vWinning;
-    int nSyncedFromPeer;
-    std::string strMasterPrivKey;
-    std::string strTestPubKey;
-    std::string strMainPubKey;
-    bool enabled;
-    int nLastBlockHeight;
-
-public:
-
-    CMasternodePayments() {
-        strMainPubKey = "02626bfeb86bc74a803055081e494e450b41d7555ad44cf448b5f9dd66e1c3e5d9";
-        strTestPubKey = "02626bfeb86bc74a803055081e494e450b41d7555ad44cf448b5f9dd66e1c3e5d9";
-        enabled = false;
-    }
-
-    bool SetPrivKey(std::string strPrivKey);
-    bool CheckSignature(CMasternodePaymentWinner& winner);
-    bool Sign(CMasternodePaymentWinner& winner);
-
-    // Deterministically calculate a given "score" for a masternode depending on how close it's hash is
-    // to the blockHeight. The further away they are the better, the furthest will win the election
-    // and get paid this block
-    //
-
-    uint64_t CalculateScore(uint256 blockHash, CTxIn& vin);
-    bool GetWinningMasternode(int nBlockHeight, CTxIn& vinOut);
-    bool AddWinningMasternode(CMasternodePaymentWinner& winner);
-    bool ProcessBlock(int nBlockHeight);
-    void Relay(CMasternodePaymentWinner& winner);
-    void Sync(CNode* node);
-    void CleanPaymentList();
-    int LastPayment(CMasternode& mn);
-
-    //slow
-    bool GetBlockPayee(int nBlockHeight, CScript& payee);
-};
-
-
 
 #endif

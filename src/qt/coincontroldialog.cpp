@@ -447,7 +447,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     }
 
     QString sPriorityLabel      = "";
-    int64_t nAmount             = 0;
+    CAmount nAmount             = 0;
     int64_t nPayFee             = 0;
     int64_t nAfterFee           = 0;
     int64_t nChange             = 0;

@@ -14,6 +14,7 @@
 #include "checkpoints.h"
 #include "darksend-relay.h"
 #include "activemasternode.h"
+#include "masternode-payments.h"
 #include "masternode.h"
 #include "masternodeman.h"
 #include "masternodeconfig.h"

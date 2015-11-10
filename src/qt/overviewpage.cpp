@@ -294,6 +294,13 @@ void OverviewPage::updateDarksendProgress()
         ui->darksendProgress->setValue(0);
         QString s(tr("No inputs detected"));
         ui->darksendProgress->setToolTip(s);
+        // when balance is zero just show info from settings
+        QString strSettings = BitcoinUnits::formatWithUnit(
+                    walletModel->getOptionsModel()->getDisplayUnit(),
+                    nAnonymizeTransferAmount * COIN
+                ) + " / " + tr("%n Rounds", "", nDarksendRounds);
+
+        ui->labelAmountRounds->setText(strSettings);
         return;
     }
 
@@ -306,10 +313,10 @@ void OverviewPage::updateDarksendProgress()
     }
 
     //Get the anon threshold
-    int64_t nMaxToAnonymize = nAnonymizeTransferAmount*COIN;
+    int64_t nMaxToAnonymize = pwalletMain->GetAnonymizableBalance(true);
 
-    // If it's more than the wallet amount, limit to that.
-    if(nMaxToAnonymize > nBalance) nMaxToAnonymize = nBalance;
+    // If it's more than the anon threshold, limit to that.
+    if(nMaxToAnonymize > nAnonymizeTransferAmount*COIN) nMaxToAnonymize = nAnonymizeTransferAmount*COIN;
 
     if(nMaxToAnonymize == 0) return;
 
@@ -321,7 +328,6 @@ void OverviewPage::updateDarksendProgress()
     {
         denomPart = (float)pwalletMain->GetNormalizedAnonymizedBalance() / denominatedBalance;
         denomPart = denomPart > 1 ? 1 : denomPart;
-        if(denomPart == 1 && nMaxToAnonymize > denominatedBalance) nMaxToAnonymize = denominatedBalance;
     }
 
     // % of fully anonymized balance
@@ -339,10 +345,38 @@ void OverviewPage::updateDarksendProgress()
 
     ui->darksendProgress->setValue(progress);
 
-    std::ostringstream convert;
-    convert << "Progress: " << progress << "%, inputs have an average of " << pwalletMain->GetAverageAnonymizedRounds() << " of " << nDarksendRounds << " rounds";
-    QString s(convert.str().c_str());
-    ui->darksendProgress->setToolTip(s);
+    QString strToolPip = tr("Progress: %1% (inputs have an average of %2 of %n rounds)", "", nDarksendRounds).arg(progress).arg(pwalletMain->GetAverageAnonymizedRounds());
+    ui->darksendProgress->setToolTip(strToolPip);
+
+    QString strSettings;
+    if(nMaxToAnonymize >= nAnonymizeTransferAmount * COIN) {
+        ui->labelAmountRounds->setToolTip(tr("Found enough compatible inputs to anonymize %1")
+                                          .arg(BitcoinUnits::formatWithUnit(
+                                                   walletModel->getOptionsModel()->getDisplayUnit(),
+                                                   nAnonymizeTransferAmount * COIN
+                                               )));
+        strSettings = BitcoinUnits::formatWithUnit(
+                    walletModel->getOptionsModel()->getDisplayUnit(),
+                    nAnonymizeTransferAmount * COIN
+                ) + " / " + tr("%n Rounds", "", nDarksendRounds);
+    } else {
+        ui->labelAmountRounds->setToolTip(tr("Not enough compatible inputs to anonymize <span style='color:red;'>%1</span>,<br/>"
+                                             "will anonymize <span style='color:red;'>%2</span> instead")
+                                          .arg(BitcoinUnits::formatWithUnit(
+                                                   walletModel->getOptionsModel()->getDisplayUnit(),
+                                                   nAnonymizeTransferAmount * COIN
+                                               ))
+                                          .arg(BitcoinUnits::formatWithUnit(
+                                                   walletModel->getOptionsModel()->getDisplayUnit(),
+                                                   nMaxToAnonymize
+                                               )));
+        strSettings = "<span style='color:red;'>" + BitcoinUnits::formatWithUnit(
+                    walletModel->getOptionsModel()->getDisplayUnit(),
+                    nMaxToAnonymize
+                ) + " / " + tr("%n Rounds", "", nDarksendRounds) + "</span>";
+    }
+
+    ui->labelAmountRounds->setText(strSettings);
 }
 
 
@@ -357,15 +391,6 @@ void OverviewPage::darkSendStatus()
         lastNewBlock = GetTime();
 
         updateDarksendProgress();
-
-        QString strSettings(" " + tr("Rounds"));
-        strSettings.prepend(QString::number(nDarksendRounds)).prepend(" / ");
-        strSettings.prepend(BitcoinUnits::formatWithUnit(
-            walletModel->getOptionsModel()->getDisplayUnit(),
-            nAnonymizeTransferAmount * COIN)
-        );
-
-        ui->labelAmountRounds->setText(strSettings);
     }
 
     if(!fEnableDarksend) {

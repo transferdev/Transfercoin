@@ -19,6 +19,7 @@
 #include "darksend.h"
 #include "instantx.h"
 #include "masternodeman.h"
+#include "masternode-payments.h"
 #include "chainparams.h"
 #include "smessage.h"
 
@@ -1295,7 +1296,7 @@ void CWallet::ResendWalletTransactions(bool fForce)
 //
 
 
-int64_t CWallet::GetBalance() const
+CAmount CWallet::GetBalance() const
 {
     int64_t nTotal = 0;
     {
@@ -1311,7 +1312,41 @@ int64_t CWallet::GetBalance() const
     return nTotal;
 }
 
-int64_t CWallet::GetAnonymizedBalance() const
+CAmount CWallet::GetAnonymizableBalance(bool includeAlreadyAnonymized) const
+{
+    if(fLiteMode) return 0;
+
+    int64_t nTotal = 0;
+    {
+        LOCK2(cs_main, cs_wallet);
+        for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTx* pcoin = &(*it).second;
+
+            if (pcoin->IsTrusted())
+            {
+                uint256 hash = (*it).first;
+                for (unsigned int i = 0; i < pcoin->vout.size(); i++)
+                {
+                    CTxIn vin = CTxIn(hash, i);
+
+                    if(IsSpent(hash, i) || !IsMine(pcoin->vout[i])) continue;
+                    if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0) continue; // do not count immature
+                    if(pcoin->vout[i].nValue == 42000*COIN) continue; // do not count SN-like outputs
+
+                    int rounds = GetInputDarksendRounds(vin);
+                    if(rounds >=-2 && (rounds < nDarksendRounds || (includeAlreadyAnonymized && rounds >= nDarksendRounds))) {
+                        nTotal += pcoin->vout[i].nValue;
+                    }
+                }
+            }
+        }
+    }
+
+    return nTotal;
+}
+
+CAmount CWallet::GetAnonymizedBalance() const
 {
     if(fLiteMode) return 0;
 
@@ -1377,7 +1412,7 @@ double CWallet::GetAverageAnonymizedRounds() const
     return fTotal/fCount;
 }
 
-int64_t CWallet::GetNormalizedAnonymizedBalance() const
+CAmount CWallet::GetNormalizedAnonymizedBalance() const
 {
     int64_t nTotal = 0;
 
@@ -1407,7 +1442,7 @@ int64_t CWallet::GetNormalizedAnonymizedBalance() const
     return nTotal;
 }
 
-int64_t CWallet::GetDenominatedBalance(bool onlyDenom, bool onlyUnconfirmed) const
+CAmount CWallet::GetDenominatedBalance(bool onlyDenom, bool onlyUnconfirmed, bool includeAlreadyAnonymized) const
 {
     int64_t nTotal = 0;
     {
@@ -1431,6 +1466,10 @@ int64_t CWallet::GetDenominatedBalance(bool onlyDenom, bool onlyUnconfirmed) con
                 if(!IsMine(pcoin->vout[i])) continue;
                 if(onlyDenom != IsDenominatedAmount(pcoin->vout[i].nValue)) continue;
 
+                CTxIn vin = CTxIn(hash, i);
+                int rounds = GetInputDarksendRounds(vin);
+                if(!includeAlreadyAnonymized && rounds >= nDarksendRounds) continue;
+
                 nTotal += pcoin->vout[i].nValue;
             }
         }
@@ -1441,7 +1480,7 @@ int64_t CWallet::GetDenominatedBalance(bool onlyDenom, bool onlyUnconfirmed) con
     return nTotal;
 }
 
-int64_t CWallet::GetUnconfirmedBalance() const
+CAmount CWallet::GetUnconfirmedBalance() const
 {
     int64_t nTotal = 0;
     {
@@ -1456,7 +1495,7 @@ int64_t CWallet::GetUnconfirmedBalance() const
     return nTotal;
 }
 
-int64_t CWallet::GetImmatureBalance() const
+CAmount CWallet::GetImmatureBalance() const
 {
     int64_t nTotal = 0;
     {
@@ -2277,7 +2316,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
     return (nValueRet >= nValueMin && fFound100000 && fFound10000 && fFound1000 && fFound100 && fFound10 && fFound1 && fFoundDot1);
 }
 
-bool CWallet::SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax) const
+bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& setCoinsRet, CAmount& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax) const
 {
     CCoinControl *coinControl=NULL;
 
@@ -2295,8 +2334,10 @@ bool CWallet::SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<
     //the first thing we get is a fee input, then we'll use as many denominated as possible. then the rest
     BOOST_FOREACH(const COutput& out, vCoins)
     {
-        //there's no reason to allow inputs less than 1 COIN into DS (other than denominations smaller than that amount)
-        if(out.tx->vout[out.i].nValue < 1*COIN && !IsDenominatedAmount(out.tx->vout[out.i].nValue)) continue;
+        //do not allow inputs less than 1 CENT
+        if(out.tx->vout[out.i].nValue < CENT) continue;
+        //do not allow collaterals to be selected
+        if(IsCollateralAmount(out.tx->vout[out.i].nValue)) continue;
         if(fMasterNode && out.tx->vout[out.i].nValue == GetMNCollateral(pindexBest->nHeight)*COIN) continue; //masternode input
 
         if(nValueRet + out.tx->vout[out.i].nValue <= nValueMax){
@@ -3663,10 +3704,11 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     }
 
     CScript payee;
+    CTxIn vin;
     bool hasPayment = true;
     if(bMasterNodePayment) {
         //spork
-        if(!masternodePayments.GetBlockPayee(pindexPrev->nHeight+1, payee)){
+        if(!masternodePayments.GetBlockPayee(pindexPrev->nHeight+1, payee, vin)){
             CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
             if(winningNode){
                 payee = GetScriptForDestination(winningNode->pubkey.GetID());

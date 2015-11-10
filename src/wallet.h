@@ -268,16 +268,17 @@ public:
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
     void ResendWalletTransactions(bool fForce = false);
-    int64_t GetBalance() const;
-    int64_t GetUnconfirmedBalance() const;
-    int64_t GetImmatureBalance() const;
     int64_t GetStake() const;
     int64_t GetNewMint() const;
 
-    int64_t GetAnonymizedBalance() const;
+    CAmount GetBalance() const;
+    CAmount GetUnconfirmedBalance() const;
+    CAmount GetImmatureBalance() const;
+    CAmount GetAnonymizableBalance(bool includeAlreadyAnonymized=false) const; 
+    CAmount GetAnonymizedBalance() const;
     double GetAverageAnonymizedRounds() const;
-    int64_t GetNormalizedAnonymizedBalance() const;
-    int64_t GetDenominatedBalance(bool onlyDenom=true, bool onlyUnconfirmed=false) const;
+    CAmount GetNormalizedAnonymizedBalance() const;
+    CAmount GetDenominatedBalance(bool onlyDenom=true, bool onlyUnconfirmed=false, bool includeAlreadyAnonymized = true) const;
 
     bool CreateTransaction(const std::vector<std::pair<CScript, int64_t> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64_t& nFeeRet, int32_t& nChangePos, std::string& strFailReason, const CCoinControl *coinControl=NULL, AvailableCoinsType coin_type=ALL_COINS, bool useIX=false);
     bool CreateTransaction(CScript scriptPubKey, int64_t nValue, std::string& sNarr, CWalletTx& wtxNew, CReserveKey& reservekey, int64_t& nFeeRet, const CCoinControl *coinControl=NULL);

@@ -10,11 +10,12 @@
 #include <QString>
 #include <QTreeWidgetItem>
 
+class WalletModel;
+class CCoinControl;
+
 namespace Ui {
     class CoinControlDialog;
 }
-class WalletModel;
-class CCoinControl;
 
 class CoinControlDialog : public QDialog
 {

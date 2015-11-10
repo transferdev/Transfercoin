@@ -346,7 +346,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Transfer address");
 
     // Amount
-    int64_t nAmount = AmountFromValue(params[1]);
+    CAmount nAmount = AmountFromValue(params[1]);
 
     CWalletTx wtx;
     std::string sNarr;
@@ -504,7 +504,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
         nMinDepth = params[1].get_int();
 
     // Tally
-    int64_t nAmount = 0;
+    CAmount nAmount = 0;
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
@@ -567,7 +567,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
     GetAccountAddresses(strAccount, setAddress);
 
     // Tally
-    int64_t nAmount = 0;
+    CAmount nAmount = 0;
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
@@ -661,7 +661,7 @@ Value getbalance(const Array& params, bool fHelp)
         for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
         {
             const CWalletTx& wtx = (*it).second;
-            if (!wtx.IsTrusted())
+            if (!IsFinalTx(wtx) || wtx.GetBlocksToMaturity() > 0 || wtx.GetDepthInMainChain() < 0)
                 continue;
 
             int64_t allFee;
@@ -717,7 +717,7 @@ Value movecmd(const Array& params, bool fHelp)
 
     string strFrom = AccountFromValue(params[0]);
     string strTo = AccountFromValue(params[1]);
-    int64_t nAmount = AmountFromValue(params[2]);
+    CAmount nAmount = AmountFromValue(params[2]);
 
     if (params.size() > 3)
         // unused parameter, used to be nMinDepth, keep type-checking it though
@@ -792,7 +792,7 @@ Value sendfrom(const Array& params, bool fHelp)
     CBitcoinAddress address(params[1].get_str());
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Transfer address");
-    int64_t nAmount = AmountFromValue(params[2]);
+    CAmount nAmount = AmountFromValue(params[2]);
 
     int nMinDepth = 1;
     if (params.size() > 3)
@@ -883,7 +883,7 @@ Value sendmany(const Array& params, bool fHelp)
 
         CScript scriptPubKey;
         scriptPubKey.SetDestination(address.Get());
-        int64_t nAmount = AmountFromValue(s.value_);
+        CAmount nAmount = AmountFromValue(s.value_);
 
         totalAmount += nAmount;
 
@@ -1036,7 +1036,7 @@ Value addredeemscript(const Array& params, bool fHelp)
 
 struct tallyitem
 {
-    int64_t nAmount;
+    CAmount nAmount;
     int nConf;
     vector<uint256> txids;
     tallyitem()
@@ -1094,7 +1094,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
         if (it == mapTally.end() && !fIncludeEmpty)
             continue;
 
-        int64_t nAmount = 0;
+        CAmount nAmount = 0;
         int nConf = std::numeric_limits<int>::max();
         if (it != mapTally.end())
         {
@@ -1133,7 +1133,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
     {
         for (map<string, tallyitem>::iterator it = mapAccountTally.begin(); it != mapAccountTally.end(); ++it)
         {
-            int64_t nAmount = (*it).second.nAmount;
+            CAmount nAmount = (*it).second.nAmount;
             int nConf = (*it).second.nConf;
             Object obj;
             obj.push_back(Pair("account",       (*it).first));
@@ -1938,7 +1938,7 @@ Value reservebalance(const Array& params, bool fHelp)
         {
             if (params.size() == 1)
                 throw runtime_error("must provide amount to reserve balance.\n");
-            int64_t nAmount = AmountFromValue(params[1]);
+            CAmount nAmount = AmountFromValue(params[1]);
             nAmount = (nAmount / CENT) * CENT;  // round to cent
             if (nAmount < 0)
                 throw runtime_error("amount cannot be negative.\n");
@@ -2260,7 +2260,7 @@ Value sendtostealthaddress(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
     
     std::string sEncoded = params[0].get_str();
-    int64_t nAmount = AmountFromValue(params[1]);
+    CAmount nAmount = AmountFromValue(params[1]);
     
     std::string sNarr;
     if (params.size() == 3 || params.size() == 5)

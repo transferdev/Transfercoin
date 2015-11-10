@@ -8,7 +8,7 @@
 #include "miner.h"
 #include "kernel.h"
 #include "masternodeman.h"
-
+#include "masternode-payments.h"
 
 using namespace std;
 

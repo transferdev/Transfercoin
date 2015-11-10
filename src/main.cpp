@@ -21,6 +21,7 @@
 #include "instantx.h"
 #include "darksend.h"
 #include "masternodeman.h"
+#include "masternode-payments.h"
 #include "spork.h"
 #include "smessage.h"
 
@@ -354,7 +355,6 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
     }
 
     unsigned int nDataOut = 0;
-    unsigned int nTxnOut = 0;
 
     txnouttype whichType;
     BOOST_FOREACH(const CTxOut& txout, tx.vout) {
@@ -1625,8 +1625,8 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
             if (!txindex.vSpent[prevout.n].IsNull())
                 return fMiner ? false : error("ConnectInputs() : %s prev tx already used at %s", GetHash().ToString(), txindex.vSpent[prevout.n].ToString());
 
-	   if(fValidateSig)
-	   {
+       if(fValidateSig)
+       {
             // Skip ECDSA signature verification when connecting blocks (fBlock=true)
             // before the last blockchain checkpoint. This is safe because block merkle hashes are
             // still computed and checked, and any change will be caught at the next checkpoint.
@@ -1655,7 +1655,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
                     return DoS(100,error("ConnectInputs() : %s VerifySignature failed", GetHash().ToString()));
                 }
             }
-	   }
+       }
 
             // Mark outpoints as spent
             txindex.vSpent[prevout.n] = posThisTx;
@@ -1732,15 +1732,15 @@ bool static BuildAddrIndex(const CScript &script, std::vector<uint160>& addrIds)
     }
     if (!fHaveData) {
         uint160 addrid = Hash160(script);
-	addrIds.push_back(addrid);
+    addrIds.push_back(addrid);
         return true;
     }
     else
     {
-	if(addrIds.size() > 0)
-	    return true;
-	else
-  	    return false;
+    if(addrIds.size() > 0)
+        return true;
+    else
+        return false;
     }
 }
 
@@ -1838,13 +1838,13 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     int64_t nValueIn = 0;
     int64_t nValueOut = 0;
     int64_t nStakeReward = 0;
-    unsigned int nSigOps = 0;    
+    unsigned int nSigOps = 0;
     int nInputs = 0;
-    
+
     BOOST_FOREACH(CTransaction& tx, vtx)
     {
         uint256 hashTx = tx.GetHash();
-	nInputs += tx.vin.size();
+        nInputs += tx.vin.size();
 
         // Do not allow blocks that contain transactions which 'overwrite' older transactions,
         // unless those are already completely spent.
@@ -1898,14 +1898,14 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
             if (tx.IsCoinStake())
                 nStakeReward = nTxValueOut - nTxValueIn;
 
-	    
+
             if (!tx.ConnectInputs(txdb, mapInputs, mapQueuedChanges, posThisTx, pindex, true, false, flags))
                 return false;
         }
 
         mapQueuedChanges[hashTx] = CTxIndex(posThisTx, tx.vout.size());
     }
-    
+
     if (IsProofOfWork())
     {
         int64_t nReward = GetProofOfWorkReward(pindex->nHeight, nFees);
@@ -2375,9 +2375,6 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos, const u
     return true;
 }
 
-
-
-
 bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) const
 {
     // These are checks that are independent of context
@@ -2438,9 +2435,9 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
             }
         }
     } else{
-    	if(fDebug) { LogPrintf("CheckBlock() : skipping transaction locking checks\n"); }
+        if(fDebug) { LogPrintf("CheckBlock() : skipping transaction locking checks\n"); }
     }
-    
+
 
 
     // ----------- masternode payments -----------
@@ -2467,7 +2464,8 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                     bool foundPaymentAndPayee = false;
 
                     CScript payee;
-                    if(!masternodePayments.GetBlockPayee(pindexBest->nHeight+1, payee) || payee == CScript()){
+                    CTxIn vin;
+                    if(!masternodePayments.GetBlockPayee(pindexBest->nHeight+1, payee, vin) || payee == CScript()){
                         foundPayee = true; //doesn't require a specific payee
                         foundPaymentAmount = true;
                         foundPaymentAndPayee = true;
@@ -2809,6 +2807,17 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 
     if(!fLiteMode){
         if (!fImporting && !fReindex && pindexBest->nHeight > Checkpoints::GetTotalBlocksEstimate()){
+
+            CScript payee;
+            CTxIn vin;
+            if(masternodePayments.GetBlockPayee(pindexBest->nHeight, payee, vin)){
+                //UPDATE MASTERNODE LAST PAID TIME
+                CMasternode* pmn = mnodeman.Find(vin);
+                if(pmn != NULL) pmn->nLastPaid = GetAdjustedTime(); 
+
+                LogPrintf("ProcessBlock() : Update Masternode Last Paid Time - %d\n", pindexBest->nHeight);
+            }
+
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
             mnscan.DoMasternodePOSChecks();
