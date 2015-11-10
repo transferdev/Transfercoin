@@ -314,9 +314,9 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
 
 Value sendtoaddress(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 2 || params.size() > 5)
+    if (fHelp || params.size() < 2 || params.size() > 4)
         throw runtime_error(
-            "sendtoaddress \"transferaddress\" amount ( \"narration\" \"comment\" \"comment-to\" )\n"
+            "sendtoaddress \"transferaddress\" amount ( \"comment\" \"comment-to\" )\n"
             "\nSent an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
             + HelpRequiringPassphrase() +
             "\nArguments:\n"
@@ -763,7 +763,7 @@ Value sendfrom(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 7)
         throw runtime_error(
-            "sendfrom \"fromaccount\" \"totransferaddress\" amount ( minconf \"narration\" \"comment\" \"comment-to\" )\n"
+            "sendfrom \"fromaccount\" \"totransferaddress\" amount ( minconf \"comment\" \"comment-to\" )\n"
             "\nSent an amount from an account to a Transfer address.\n"
             "The amount is a real and is rounded to the nearest 0.00000001."
             + HelpRequiringPassphrase() + "\n"
@@ -2252,7 +2252,6 @@ Value sendtostealthaddress(const Array& params, bool fHelp)
     if (fHelp || params.size() < 2 || params.size() > 5)
         throw runtime_error(
             "sendtostealthaddress <stealth_address> <amount> [comment] [comment-to] [narration]\n"
-            "sendtostealthaddress <stealth_address> <amount> [narration]\n"
             "<amount> is a real and is rounded to the nearest 0.000001"
             + HelpRequiringPassphrase());
     
@@ -2263,27 +2262,30 @@ Value sendtostealthaddress(const Array& params, bool fHelp)
     CAmount nAmount = AmountFromValue(params[1]);
     
     std::string sNarr;
-    if (params.size() == 3 || params.size() == 5)
-    {
-        int nNarr = params.size() - 1;
-        if(params[nNarr].type() != null_type && !params[nNarr].get_str().empty())
-            sNarr = params[nNarr].get_str();
-    }
-
+    if (params.size() > 4 && params[4].type() != null_type && !params[4].get_str().empty())
+        sNarr = params[4].get_str();
 
     if (sNarr.length() > 24)
         throw runtime_error("Narration must be 24 characters or less.");
 
     CStealthAddress sxAddr;
-    
+
+    Object result;
+
     if (!sxAddr.SetEncoded(sEncoded))
-        throw runtime_error("Invalid DarkSilk stealth address.");
+    {
+        result.push_back(Pair("result", "Invalid Transfer stealth address."));
+        return result;
+    };
+    
+
 
     CWalletTx wtx;
+    if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
+        wtx.mapValue["comment"] = params[2].get_str();
     if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
-        wtx.mapValue["comment"] = params[3].get_str();
-    if (params.size() > 4 && params[4].type() != null_type && !params[4].get_str().empty())
-        wtx.mapValue["to"]      = params[4].get_str();
+        wtx.mapValue["to"]      = params[3].get_str();
+
 
     
     std::string sError;
@@ -2291,6 +2293,10 @@ Value sendtostealthaddress(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_ERROR, sError);
 
     return wtx.GetHash().GetHex();
+    
+    result.push_back(Pair("result", "Not implemented yet."));
+    
+    return result;
 }
 
 Value scanforalltxns(const Array& params, bool fHelp)

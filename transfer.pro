@@ -11,18 +11,20 @@ CONFIG += static
 #CONFIG += openssl-linked
 CONFIG += openssl
 
-BOOST_LIB_SUFFIX=-mgw49-mt-s-1_57
-BOOST_INCLUDE_PATH=C:/dev/coindeps32/boost_1_57_0/include
-BOOST_LIB_PATH=C:/dev/coindeps32/boost_1_57_0/lib
-BDB_INCLUDE_PATH=C:/dev/coindeps32/bdb-4.8/include
-BDB_LIB_PATH=C:/dev/coindeps32/bdb-4.8/lib
-OPENSSL_INCLUDE_PATH=C:/dev/coindeps32/openssl-1.0.1p/include
-OPENSSL_LIB_PATH=C:/dev/coindeps32/openssl-1.0.1p/lib
-MINIUPNPC_LIB_SUFFIX=-miniupnpc
-MINIUPNPC_INCLUDE_PATH=C:/dev/coindeps32/miniupnpc-1.9
-MINIUPNPC_LIB_PATH=C:/dev/coindeps32/miniupnpc-1.9
-#SECP256K1_LIB_PATH=C:\deps\secp256k1
-#SECP256K1_INCLUDE_PATH=C:\deps\secp256k1
+win32{
+    BOOST_LIB_SUFFIX=-mgw49-mt-s-1_57
+    BOOST_INCLUDE_PATH=C:/dev/coindeps32/boost_1_57_0/include
+    BOOST_LIB_PATH=C:/dev/coindeps32/boost_1_57_0/lib
+    BDB_INCLUDE_PATH=C:/dev/coindeps32/bdb-4.8/include
+    BDB_LIB_PATH=C:/dev/coindeps32/bdb-4.8/lib
+    OPENSSL_INCLUDE_PATH=C:/dev/coindeps32/openssl-1.0.1p/include
+    OPENSSL_LIB_PATH=C:/dev/coindeps32/openssl-1.0.1p/lib
+    MINIUPNPC_LIB_SUFFIX=-miniupnpc
+    MINIUPNPC_INCLUDE_PATH=C:/dev/coindeps32/miniupnpc-1.9
+    MINIUPNPC_LIB_PATH=C:/dev/coindeps32/miniupnpc-1.9
+    #SECP256K1_LIB_PATH=C:\deps\secp256k1
+    #SECP256K1_INCLUDE_PATH=C:\deps\secp256k1
+}
 
 greaterThan(QT_MAJOR_VERSION, 4) {
     QT += widgets

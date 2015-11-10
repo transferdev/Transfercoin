@@ -1037,7 +1037,7 @@ int CMerkleTx::GetBlocksToMaturity() const
 {
     if (!(IsCoinBase() || IsCoinStake()))
         return 0;
-    return max(0, (nCoinbaseMaturity+1) - GetDepthInMainChain());
+    return max(0, nCoinbaseMaturity - GetDepthInMainChain());
 }
 
 
@@ -2805,7 +2805,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
 
-    if(!fLiteMode){
+    if(!fLiteMode && !IsInitialBlockDownload()){
         if (!fImporting && !fReindex && pindexBest->nHeight > Checkpoints::GetTotalBlocksEstimate()){
 
             CScript payee;
@@ -2818,6 +2818,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
                 LogPrintf("ProcessBlock() : Update Masternode Last Paid Time - %d\n", pindexBest->nHeight);
             }
 
+            darkSendPool.CheckTimeout();
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
             mnscan.DoMasternodePOSChecks();
