@@ -2233,7 +2233,7 @@
     <widget class="QLineEdit" name="CSUnitsInput">
      <property name="geometry">
       <rect>
-       <x>70</x>
+       <x>140</x>
        <y>70</y>
        <width>101</width>
        <height>23</height>
@@ -2778,7 +2778,7 @@
     <widget class="QLabel" name="label_9">
      <property name="geometry">
       <rect>
-       <x>200</x>
+       <x>270</x>
        <y>70</y>
        <width>21</width>
        <height>23</height>
@@ -3436,7 +3436,7 @@
     <widget class="QLabel" name="label_27">
      <property name="geometry">
       <rect>
-       <x>10</x>
+       <x>80</x>
        <y>70</y>
        <width>61</width>
        <height>23</height>
@@ -3968,6 +3968,24 @@
       <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
      </property>
     </widget>
+    <widget class="QPushButton" name="CS_Max_Amount">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>70</y>
+       <width>61</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Max</string>
+     </property>
+    </widget>
     <zorder>label232_3</zorder>
     <zorder>TXAvailableLabel_3</zorder>
     <zorder>CSUnitsInput</zorder>
@@ -3990,6 +4008,7 @@
     <zorder>label232_15</zorder>
     <zorder>label232_6</zorder>
     <zorder>label232_7</zorder>
+    <zorder>CS_Max_Amount</zorder>
    </widget>
    <widget class="QWidget" name="OrderBook">
     <attribute name="title">

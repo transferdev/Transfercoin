@@ -61,6 +61,7 @@ private slots:
     void CalculateCSReceiveLabel();
     void on_CSUnitsInput_textChanged(const QString &arg1);
     void on_CSUnitsBtn_clicked();
+    void on_CS_Max_Amount_clicked();
 
     void on_Withdraw_Max_Amount_clicked();
     void on_WithdrawUnitsBtn_clicked();

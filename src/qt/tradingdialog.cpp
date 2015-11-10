@@ -855,6 +855,50 @@ void tradingDialog::on_Buy_Max_Amount_clicked()
     ui->UnitsInput->setText(str.number(Result,'i',8));
 }
 
+void tradingDialog::on_CS_Max_Amount_clicked()
+{
+    double Quantity = ui->TXAvailableLabel_3->text().toDouble();
+    double Received = 0;
+    double Qty = 0;
+    double Price = 0;
+    QString buyorders = GetOrderBook();
+    QJsonObject BuyObject = GetResultObjectFromJSONObject(buyorders);
+    QJsonObject obj;
+    QString str;
+
+    QJsonArray  BuyArray  = BuyObject.value("buy").toArray();                //get buy/sell object from result object
+
+    // For each buy order
+    foreach (const QJsonValue & value, BuyArray)
+    {
+        obj = value.toObject();
+
+        double x = obj["Rate"].toDouble(); //would like to use int64 here
+        double y = obj["Quantity"].toDouble();
+        // If 
+        if ( (Quantity - y) > 0 )
+        {
+            Price = x;
+            Received += ((Price * y) - ((Price * y / 100) * 0.25));
+            Qty += y;
+            Quantity -= y;
+
+        } else {
+            Price = x;
+            Received += ((Price * Quantity) - ((Price * Quantity / 100) * 0.25));
+            Qty += Quantity;
+
+            if ((Quantity * x) < 0.00055){
+                Quantity = (0.00055 / x);
+            }
+
+            break;
+        }
+    }
+
+    ui->CSUnitsInput->setText(str.number(Received,'i',8));
+}
+
 void tradingDialog::on_Withdraw_Max_Amount_clicked()
 {
     //calculate amount of currency than can be brought with the BTC balance available
