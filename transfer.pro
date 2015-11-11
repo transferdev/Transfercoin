@@ -11,21 +11,6 @@ CONFIG += static
 #CONFIG += openssl-linked
 CONFIG += openssl
 
-win32{
-    BOOST_LIB_SUFFIX=-mgw49-mt-s-1_57
-    BOOST_INCLUDE_PATH=C:/dev/coindeps32/boost_1_57_0/include
-    BOOST_LIB_PATH=C:/dev/coindeps32/boost_1_57_0/lib
-    BDB_INCLUDE_PATH=C:/dev/coindeps32/bdb-4.8/include
-    BDB_LIB_PATH=C:/dev/coindeps32/bdb-4.8/lib
-    OPENSSL_INCLUDE_PATH=C:/dev/coindeps32/openssl-1.0.1p/include
-    OPENSSL_LIB_PATH=C:/dev/coindeps32/openssl-1.0.1p/lib
-    MINIUPNPC_LIB_SUFFIX=-miniupnpc
-    MINIUPNPC_INCLUDE_PATH=C:/dev/coindeps32/miniupnpc-1.9
-    MINIUPNPC_LIB_PATH=C:/dev/coindeps32/miniupnpc-1.9
-    #SECP256K1_LIB_PATH=C:\deps\secp256k1
-    #SECP256K1_INCLUDE_PATH=C:\deps\secp256k1
-}
-
 greaterThan(QT_MAJOR_VERSION, 4) {
     QT += widgets
     DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
@@ -125,7 +110,7 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
 }
 
 # LIBSEC256K1 SUPPORT
-#QMAKE_CXXFLAGS *= -DUSE_SECP256K1
+QMAKE_CXXFLAGS *= -DUSE_SECP256K1
 
 INCLUDEPATH += src/leveldb/include src/leveldb/helpers
 LIBS += $$PWD/src/leveldb/libleveldb.a $$PWD/src/leveldb/libmemenv.a
@@ -205,6 +190,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/kernel.h \
     src/pbkdf2.h \
     src/serialize.h \
+    src/cleanse.h \
     src/core.h \
     src/main.h \
     src/miner.h \
@@ -392,6 +378,7 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/scrypt-x86.S \
     src/scrypt-x86_64.S \
     src/pbkdf2.cpp \
+    src/cleanse.cpp \
     src/stealth.cpp \
     src/qt/flowlayout.cpp \
     src/qt/darksendconfig.cpp \
@@ -499,7 +486,7 @@ OTHER_FILES += \
 # platform specific defaults, if not overridden on command line
 isEmpty(BOOST_LIB_SUFFIX) {
     macx:BOOST_LIB_SUFFIX = -mt
-    windows:BOOST_LIB_SUFFIX = -mt
+    windows:BOOST_LIB_SUFFIX=-mgw49-mt-s-1_57
 }
 
 isEmpty(BOOST_THREAD_LIB_SUFFIX) {
@@ -510,6 +497,7 @@ isEmpty(BOOST_THREAD_LIB_SUFFIX) {
 
 isEmpty(BDB_LIB_PATH) {
     macx:BDB_LIB_PATH = /usr/local/Cellar/berkeley-db4/4.8.30/lib
+    windows:BDB_LIB_PATH=C:/dev/coindeps32/bdb-4.8/lib
 }
 
 isEmpty(BDB_LIB_SUFFIX) {
@@ -518,14 +506,17 @@ isEmpty(BDB_LIB_SUFFIX) {
 
 isEmpty(BDB_INCLUDE_PATH) {
     macx:BDB_INCLUDE_PATH = /usr/local/Cellar/berkeley-db4/4.8.30/include
+    windows:BDB_INCLUDE_PATH=C:/dev/coindeps32/bdb-4.8/include
 }
 
 isEmpty(BOOST_LIB_PATH) {
     macx:BOOST_LIB_PATH = /usr/local/Cellar/boost/1.58.0/lib
+    windows:BOOST_LIB_PATH=C:/dev/coindeps32/boost_1_57_0/lib
 }
 
 isEmpty(BOOST_INCLUDE_PATH) {
     macx:BOOST_INCLUDE_PATH = /usr/local/Cellar/boost/1.58.0/include
+    windows:BOOST_INCLUDE_PATH=C:/dev/coindeps32/boost_1_57_0/include
 }
 
 isEmpty(QRENCODE_LIB_PATH) {
@@ -536,12 +527,34 @@ isEmpty(QRENCODE_INCLUDE_PATH) {
     macx:QRENCODE_INCLUDE_PATH = /usr/local/include
 }
 
+isEmpty(MINIUPNPC_LIB_SUFFIX) {
+    windows:MINIUPNPC_LIB_SUFFIX=-miniupnpc
+}
+
+isEmpty(MINIUPNPC_INCLUDE_PATH) {
+    windows:MINIUPNPC_INCLUDE_PATH=C:/dev/coindeps32/miniupnpc-1.9
+}
+
+isEmpty(MINIUPNPC_LIB_PATH) {
+    windows:MINIUPNPC_LIB_PATH=C:/dev/coindeps32/miniupnpc-1.9
+}
+
+isEmpty(OPENSSL_INCLUDE_PATH) {
+    windows:OPENSSL_INCLUDE_PATH=C:/dev/coindeps32/openssl-1.0.1p/include
+}
+
+isEmpty(OPENSSL_LIB_PATH) {
+    windows:OPENSSL_LIB_PATH=C:/dev/coindeps32/openssl-1.0.1p/lib
+}
+
 isEmpty(SECP256K1_LIB_PATH) {
     macx:SECP256K1_LIB_PATH = /usr/local/lib
+    windows:SECP256K1_LIB_PATH=C:/dev/coindeps32/secp256k1/.lib
 }
 
 isEmpty(SECP256K1_INCLUDE_PATH) {
     macx:SECP256K1_INCLUDE_PATH = /usr/local/include
+    windows:SECP256K1_INCLUDE_PATH=C:/dev/coindeps32/secp256k1/include
 }
 
 windows:DEFINES += WIN32
@@ -575,7 +588,7 @@ LIBS += $$join(SECP256K1_LIB_PATH,,-L,) $$join(BOOST_LIB_PATH,,-L,) $$join(BDB_L
 LIBS += -lssl -lcrypto -ldb_cxx$$BDB_LIB_SUFFIX
 # -lgdi32 has to happen after -lcrypto (see  #681)
 windows:LIBS += -lws2_32 -lshlwapi -lmswsock -lole32 -loleaut32 -luuid -lgdi32
-#LIBS += -lsecp256k1
+LIBS += -lsecp256k1
 LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_THREAD_LIB_SUFFIX
 windows:LIBS += -lboost_chrono$$BOOST_LIB_SUFFIX
 
