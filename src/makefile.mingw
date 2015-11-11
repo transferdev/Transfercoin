@@ -9,17 +9,17 @@ BOOST_SUFFIX?=-mgw49-mt-s-1_57
 
 INCLUDEPATHS= \
  -I"$(CURDIR)" \
- -I"c:/deps/coindeps32/boost_1_57_0/include" \
- -I"c:/deps/coindeps32/bdb-4.8/include" \
- -I"c:/deps/coindeps32/openssl-1.0.1p/include" \
- -I"c:/deps/coindeps32/miniupnpc"
+ -I"c:/dev/coindeps32/boost_1_57_0/include" \
+ -I"c:/dev/coindeps32/bdb-4.8/include" \
+ -I"c:/dev/coindeps32/openssl-1.0.1p/include" \
+ -I"c:/dev/coindeps32/miniupnpc-1.9"
 
 LIBPATHS= \
  -L"$(CURDIR)/leveldb" \
- -L"c:/deps/coindeps32/boost_1_57_0/lib" \
- -L"c:/deps/coindeps32/bdb-4.8/lib" \
- -L"c:/deps/coindeps32/openssl-1.0.1p/lib" \
- -L"c:/deps/coindeps32/miniupnpc-1.9"
+ -L"c:/dev/coindeps32/boost_1_57_0/lib" \
+ -L"c:/dev/coindeps32/bdb-4.8/lib" \
+ -L"c:/dev/coindeps32/openssl-1.0.1p/lib" \
+ -L"c:/dev/coindeps32/miniupnpc-1.9"
 
 LIBS= \
  -l leveldb \
@@ -55,6 +55,8 @@ HEADERS = $(wildcard *.h)
 
 OBJS= \
     obj/alert.o \
+    obj/cleanse.o \
+    obj/base58.o \
     obj/version.o \
     obj/checkpoints.o \
     obj/netbase.o \
@@ -97,6 +99,8 @@ OBJS= \
     obj/masternodeconfig.o \
     obj/masternodeman.o \
     obj/masternode.o \
+    obj/masternode-payments.o \
+    obj/masternode-pos.o \
     obj/rpcdarksend.o \
     obj/spork.o \
     obj/crypto/hmac_sha256.o \
@@ -151,9 +155,19 @@ obj/%.o: %.c $(HEADERS)
 transferd.exe: $(OBJS:obj/%=obj/%)
         g++ $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
+obj/scrypt-x86.o: scrypt-x86.S
+    $(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+
+obj/scrypt-x86_64.o: scrypt-x86_64.S
+    $(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+
+obj/scrypt-arm.o: scrypt-arm.S
+    $(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 
 clean:
-        -del /Q transferd
-        -del /Q obj\*
+    -rm -f obj/*.o
+    -rm -f darksilkd.exe
+    -rm -f obj/build.h
+    cd leveldb && TARGET_OS=NATIVE_WINDOWS $(MAKE) clean && cd ..
 
 FORCE:
