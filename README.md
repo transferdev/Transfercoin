@@ -20,13 +20,17 @@ RPC Port: 17171
 BUILD WINDOWS
 -------------
 
-1) Download Windows Build Environment.rar from https://github.com/Infernoman/Transfercoin/releases/tag/WBE and unpack to C:/
+1) Download Windows Build Environment.rar Unpack to C:/
 
-2) Download Transfercoin source and unpack to C:/Transfercoin
+2) Download Transfercoin source from https://github.com/Infernoman/Transfercoin/archive/master.zip 
+
+2.1) Unpack to C:/Transfercoin
 
 3) Install Perl for windows from the homepage http://www.activestate.com/activeperl/downloads
 
-4) Install Python from the homepage here https://www.python.org/downloads/windows/
+4) Download Python 2.7 https://www.python.org/downloads/windows/
+
+4.1) While installing python make sure to add python.exe to the path.
 
 5) Run msys.bat located in C:\MinGW49-32\msys\1.0
 

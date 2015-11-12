@@ -57,7 +57,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
         }
 
         BOOST_FOREACH(const CTxOut o, tx.vout){
-            if(!o.scriptPubKey.IsNormalPaymentScript()){
+            if(!o.scriptPubKey.IsNormalPaymentScript() && !o.scriptPubKey.IsUnspendable()){
                 LogPrintf("ProcessMessageInstantX::txlreq - Invalid Script %s\n", tx.ToString().c_str());
                 return;
             }
@@ -69,13 +69,19 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
         CValidationState state;
 
 
-        if (AcceptToMemoryPool(mempool, tx, true, &fMissingInputs))
+        bool fAccepted = false;
+        {
+            LOCK(cs_main);
+            fAccepted = AcceptToMemoryPool(mempool, tx, true, &fMissingInputs);
+        }
+        if (fAccepted)
         {
             vector<CInv> vInv;
             vInv.push_back(inv);
             LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* pnode, vNodes)
+            BOOST_FOREACH(CNode* pnode, vNodes){
                 pnode->PushMessage("inv", vInv);
+            }
 
             DoConsensusVote(tx, nBlockHeight);
 

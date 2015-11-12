@@ -116,6 +116,7 @@ inline void MilliSleep(int64_t n)
 
 extern bool fMasterNode;
 extern bool fLiteMode;
+extern bool fEnableInstantX;
 extern int nInstantXDepth;
 extern int nDarksendRounds;
 extern int nAnonymizeTransferAmount;
