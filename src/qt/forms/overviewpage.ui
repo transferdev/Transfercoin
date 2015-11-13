@@ -457,8 +457,8 @@
           </item>
           <item row="4" column="1">
            <widget class="QLabel" name="labelSubmittedDenom">
-            <property name="statusTip">
-             <string>The denominations you submitted to the Adrenaline Node. To mix, other users must submit the exact same denominations.</string>
+            <property name="toolTip">
+             <string>Amount submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denomination(s).</string>
             </property>
             <property name="styleSheet">
              <string notr="true">color: rgb(0, 0, 0);</string>

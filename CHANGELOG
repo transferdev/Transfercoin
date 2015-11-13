@@ -228,6 +228,19 @@ https://github.com/SCDeveloper/DarkSilk-Release-Candidate/commit/e6ebc2ec9a955f1
 Improve Trading Dialog page to include cross sending and withdrawing from bittrex.
 (wallet needs to be unlocked and SHOULD be encrypted)
 
+Fix PrepareDarksendDenominate - loop instead of if
+
+When DS inputs are selected in coincontrol:
+
+- spend exactly these inputs
+
+- allow to spend more than 0.1 as a fee (note: still will respect non-ss fee limits)
+
+Slight optimizations/readability improvements for ds 
+
+Unlock inputs on DS failure 
+
+
 -------------------------------------------------------------------------------
             ^       CLIENT BUILD 1.2.1-61402      ^
 -------------------------------------------------------------------------------

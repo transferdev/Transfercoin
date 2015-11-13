@@ -2136,8 +2136,29 @@ bool CWallet::SelectCoins(int64_t nTargetValue, unsigned int nSpendTime, set<pai
     vector<COutput> vCoins;
     AvailableCoins(vCoins, true, coinControl, coin_type, useIX);
 
+    // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
+    if (coinControl && coinControl->HasSelected())
+    {
+        BOOST_FOREACH(const COutput& out, vCoins)
+        {
+            if(!out.fSpendable)
+                continue;
+
+            if(coin_type == ONLY_DENOMINATED) {
+                CTxIn vin = CTxIn(out.tx->GetHash(),out.i);
+                int rounds = GetInputDarksendRounds(vin);
+                // make sure it's actually anonymized
+                if(rounds < nDarksendRounds) continue;
+            }
+
+            nValueRet += out.tx->vout[out.i].nValue;
+            setCoinsRet.insert(make_pair(out.tx, out.i));
+        }
+        return (nValueRet >= nTargetValue);
+    }
+
     //if we're doing only denominated, we need to round up to the nearest .1TX
-    if(coin_type == ONLY_DENOMINATED){
+    if(coin_type == ONLY_DENOMINATED) {
         // Make outputs by looping through denominations, from large to small
         BOOST_FOREACH(int64_t v, darkSendDenominations)
         {
@@ -2154,19 +2175,6 @@ bool CWallet::SelectCoins(int64_t nTargetValue, unsigned int nSpendTime, set<pai
                     setCoinsRet.insert(make_pair(out.tx, out.i));
                 }
             }
-        }
-        return (nValueRet >= nTargetValue);
-    }
-
-    // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
-    if (coinControl && coinControl->HasSelected())
-    {
-        BOOST_FOREACH(const COutput& out, vCoins)
-        {
-            if(!out.fSpendable)
-                continue;
-            nValueRet += out.tx->vout[out.i].nValue;
-            setCoinsRet.insert(make_pair(out.tx, out.i));
         }
         return (nValueRet >= nTargetValue);
     }
@@ -3998,7 +4006,7 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
         int nOutputs = 0;
 
         // add each output up to 10 times until it can't be added again
-        if(nValueLeft - v >= 0 && nOutputs <= 10) {
+        while(nValueLeft - v >= 0 && nOutputs <= 10) {
             CScript scriptChange;
             CPubKey vchPubKey;
             //use a unique change address
@@ -4042,15 +4050,18 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
 
     }
 
-    if(darkSendPool.GetDenominations(vOut) != darkSendPool.sessionDenom)
-    {
-   		LogPrintf("GetDenominations %d != sessionDenom %d \n", darkSendPool.GetDenominations(vOut), darkSendPool.sessionDenom);
-        return "Error: can't make current denominated outputs.";
+    if(darkSendPool.GetDenominations(vOut) != darkSendPool.sessionDenom) {
+        BOOST_FOREACH(CTxIn v, vCoins)
+            UnlockCoin(v.prevout);
+        return "Error: can't make current denominated outputs";
     }
 
     // we don't support change at all
-    if(nValueLeft != 0)
+    if(nValueLeft != 0) {
+        BOOST_FOREACH(CTxIn v, vCoins)
+            UnlockCoin(v.prevout);
         return "Error: change left-over in pool. Must use denominations only";
+    }
 
 
     //randomize the output order

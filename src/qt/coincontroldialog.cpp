@@ -1,14 +1,17 @@
 #include "coincontroldialog.h"
 #include "ui_coincontroldialog.h"
 
-#include "core.h"
-#include "init.h"
-#include "bitcoinunits.h"
-#include "walletmodel.h"
 #include "addresstablemodel.h"
-#include "optionsmodel.h"
+#include "bitcoinunits.h"
+#include "base58.h"
 #include "coincontrol.h"
+#include "core.h"
+#include "guiutil.h"
+#include "init.h"
+#include "optionsmodel.h"
 #include "darksend.h"
+#include "wallet.h"
+#include "walletmodel.h"
 
 #include <QMessageBox>
 #include <QApplication>
@@ -20,6 +23,7 @@
 #include <QDialogButtonBox>
 #include <QFlags>
 #include <QIcon>
+#include <QSettings>
 #include <QString>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>

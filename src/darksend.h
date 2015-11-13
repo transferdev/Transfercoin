@@ -260,6 +260,29 @@ public:
 class CDarksendPool
 {
 public:
+    enum messages {
+        ERR_ALREADY_HAVE,
+        ERR_DENOM,
+        ERR_ENTRIES_FULL,
+        ERR_EXISTING_TX,
+        ERR_FEES,
+        ERR_INVALID_COLLATERAL,
+        ERR_INVALID_INPUT,
+        ERR_INVALID_SCRIPT,
+        ERR_INVALID_TX,
+        ERR_MAXIMUM,
+        ERR_MN_LIST,
+        ERR_MODE,
+        ERR_NON_STANDARD_PUBKEY,
+        ERR_NOT_A_MN,
+        ERR_QUEUE_FULL,
+        ERR_RECENT,
+        ERR_SESSION,
+        ERR_MISSING_TX,
+        ERR_VERSION,
+        MSG_NOERR,
+        MSG_SUCCESS
+    };
 
     std::vector<CDarkSendEntry> myEntries; // clients entries
     std::vector<CDarkSendEntry> entries; // Masternode entries
@@ -464,7 +487,7 @@ public:
     bool GetLastValidBlockHash(uint256& hash, int mod=1, int nBlockHeight=0);
     /// Process a new block
     void NewBlock();
-    void CompletedTransaction(bool error, std::string lastMessageNew);
+    void CompletedTransaction(bool error, int errorID);
     void ClearLastMessage();
     /// Used for liquidity providers
     bool SendRandomPaymentToSelf();
@@ -483,6 +506,7 @@ public:
     int GetDenominationsByAmount(int64_t nAmount, int nDenomTarget=0);
     int GetDenominationsByAmounts(std::vector<int64_t>& vecAmount, bool fRandDenom = false);
 
+    std::string GetMessageByID(int messageID);
 
     //
     // Relay Darksend Messages
