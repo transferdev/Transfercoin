@@ -79,7 +79,7 @@ void ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 // grab the spork, otherwise say it's off
 bool IsSporkActive(int nSporkID)
 {
-    int64_t r = 0;
+    int64_t r = -1;
 
     if(mapSporksActive.count(nSporkID)){
         r = mapSporksActive[nSporkID].nValue;
@@ -101,7 +101,7 @@ bool IsSporkActive(int nSporkID)
 // grab the value of the spork on the network, or the default
 int GetSporkValue(int nSporkID)
 {
-    int r = 0;
+    int r = -1;
 
     if(mapSporksActive.count(nSporkID)){
         r = mapSporksActive[nSporkID].nValue;
