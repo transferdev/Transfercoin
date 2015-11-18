@@ -149,6 +149,8 @@ OverviewPage::OverviewPage(QWidget *parent) :
 
     if(fMasterNode || fLiteMode){
         ui->toggleDarksend->setText("(" + tr("Disabled") + ")");
+        ui->darksendAuto->setText("(" + tr("Disabled") + ")");
+        ui->darksendReset->setText("(" + tr("Disabled") + ")");
         ui->toggleDarksend->setEnabled(false);
     }else if(!fEnableDarksend){
         ui->toggleDarksend->setText(tr("Start Darksend"));
@@ -292,6 +294,13 @@ void OverviewPage::updateDarksendProgress()
         ui->darksendProgress->setValue(0);
         QString s(tr("No inputs detected"));
         ui->darksendProgress->setToolTip(s);
+        // when balance is zero just show info from settings
+        QString strSettings = BitcoinUnits::formatWithUnit(
+                    walletModel->getOptionsModel()->getDisplayUnit(),
+                    nAnonymizeTransferAmount * COIN
+                ) + " / " + tr("%n Rounds", "", nDarksendRounds);
+
+        ui->labelAmountRounds->setText(strSettings);
         return;
     }
 
@@ -304,10 +313,10 @@ void OverviewPage::updateDarksendProgress()
     }
 
     //Get the anon threshold
-    int64_t nMaxToAnonymize = nAnonymizeTransferAmount*COIN;
+    int64_t nMaxToAnonymize = pwalletMain->GetAnonymizableBalance(true);
 
-    // If it's more than the wallet amount, limit to that.
-    if(nMaxToAnonymize > nBalance) nMaxToAnonymize = nBalance;
+    // If it's more than the anon threshold, limit to that.
+    if(nMaxToAnonymize > nAnonymizeTransferAmount*COIN) nMaxToAnonymize = nAnonymizeTransferAmount*COIN;
 
     if(nMaxToAnonymize == 0) return;
 
@@ -332,14 +341,42 @@ void OverviewPage::updateDarksendProgress()
 
     // apply some weights to them (sum should be <=100) and calculate the whole progress
     int progress = 80 * denomPart + 20 * anonPart;
-    if(progress > 100) progress = 100;
+    if(progress >= 100) progress = 100;
 
     ui->darksendProgress->setValue(progress);
 
-    std::ostringstream convert;
-    convert << "Progress: " << progress << "%, inputs have an average of " << pwalletMain->GetAverageAnonymizedRounds() << " of " << nDarksendRounds << " rounds";
-    QString s(convert.str().c_str());
-    ui->darksendProgress->setToolTip(s);
+    QString strToolPip = tr("Progress: %1% (inputs have an average of %2 of %n rounds)", "", nDarksendRounds).arg(progress).arg(pwalletMain->GetAverageAnonymizedRounds());
+    ui->darksendProgress->setToolTip(strToolPip);
+
+    QString strSettings;
+    if(nMaxToAnonymize >= nAnonymizeTransferAmount * COIN) {
+        ui->labelAmountRounds->setToolTip(tr("Found enough compatible inputs to anonymize %1")
+                                          .arg(BitcoinUnits::formatWithUnit(
+                                                   walletModel->getOptionsModel()->getDisplayUnit(),
+                                                   nAnonymizeTransferAmount * COIN
+                                               )));
+        strSettings = BitcoinUnits::formatWithUnit(
+                    walletModel->getOptionsModel()->getDisplayUnit(),
+                    nAnonymizeTransferAmount * COIN
+                ) + " / " + tr("%n Rounds", "", nDarksendRounds);
+    } else {
+        ui->labelAmountRounds->setToolTip(tr("Not enough compatible inputs to anonymize <span style='color:red;'>%1</span>,<br/>"
+                                             "will anonymize <span style='color:red;'>%2</span> instead")
+                                          .arg(BitcoinUnits::formatWithUnit(
+                                                   walletModel->getOptionsModel()->getDisplayUnit(),
+                                                   nAnonymizeTransferAmount * COIN
+                                               ))
+                                          .arg(BitcoinUnits::formatWithUnit(
+                                                   walletModel->getOptionsModel()->getDisplayUnit(),
+                                                   nMaxToAnonymize
+                                               )));
+        strSettings = "<span style='color:red;'>" + BitcoinUnits::formatWithUnit(
+                    walletModel->getOptionsModel()->getDisplayUnit(),
+                    nMaxToAnonymize
+                ) + " / " + tr("%n Rounds", "", nDarksendRounds) + "</span>";
+    }
+
+    ui->labelAmountRounds->setText(strSettings);
 }
 
 
@@ -354,15 +391,6 @@ void OverviewPage::darkSendStatus()
         lastNewBlock = GetTime();
 
         updateDarksendProgress();
-
-        QString strSettings(" " + tr("Rounds"));
-        strSettings.prepend(QString::number(nDarksendRounds)).prepend(" / ");
-        strSettings.prepend(BitcoinUnits::formatWithUnit(
-            walletModel->getOptionsModel()->getDisplayUnit(),
-            nAnonymizeTransferAmount * COIN)
-        );
-
-        ui->labelAmountRounds->setText(strSettings);
     }
 
     if(!fEnableDarksend) {
@@ -420,9 +448,9 @@ void OverviewPage::darkSendStatus()
         }
     } else if(state == POOL_STATUS_SIGNING) {
         if(showingDarkSendMessage % 70 <= 10) convert << tr("Found enough users, signing ...").toStdString();
-        else if(showingDarkSendMessage % 70 <= 20) convert << tr("Found enough users, signing ( waiting. )").toStdString();
-        else if(showingDarkSendMessage % 70 <= 30) convert << tr("Found enough users, signing ( waiting.. )").toStdString();
-        else if(showingDarkSendMessage % 70 <= 40) convert << tr("Found enough users, signing ( waiting... )").toStdString();
+        else if(showingDarkSendMessage % 70 <= 20) convert << tr("Found enough users, signing ( waiting)").toStdString() << ". )";
+        else if(showingDarkSendMessage % 70 <= 30) convert << tr("Found enough users, signing ( waiting.. )").toStdString() << ".. )";
+        else if(showingDarkSendMessage % 70 <= 40) convert << tr("Found enough users, signing ( waiting... )").toStdString() << "... )";
     } else if(state == POOL_STATUS_TRANSMISSION) {
         convert << tr("Transmitting final transaction.").toStdString();
     } else if (state == POOL_STATUS_IDLE) {
@@ -434,9 +462,9 @@ void OverviewPage::darkSendStatus()
     } else if(state == POOL_STATUS_SUCCESS) {
         convert << tr("Darksend request complete:").toStdString() << " " << darkSendPool.lastMessage;
     } else if(state == POOL_STATUS_QUEUE) {
-        if(showingDarkSendMessage % 70 <= 50) convert << tr("Submitted to masternode, waiting in queue .").toStdString();
-        else if(showingDarkSendMessage % 70 <= 60) convert << tr("Submitted to masternode, waiting in queue ..").toStdString();
-        else if(showingDarkSendMessage % 70 <= 70) convert << tr("Submitted to masternode, waiting in queue ...").toStdString();
+        if(showingDarkSendMessage % 70 <= 50) convert << tr("Submitted to masternode, waiting in queue").toStdString() << ". )";
+        else if(showingDarkSendMessage % 70 <= 60) convert << tr("Submitted to masternode, waiting in queue").toStdString() << ".. )";
+        else if(showingDarkSendMessage % 70 <= 70) convert << tr("Submitted to masternode, waiting in queue").toStdString() << "... )";
     } else {
         convert << tr("Unknown state:").toStdString() << " id = " << state;
     }

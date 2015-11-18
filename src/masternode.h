@@ -6,7 +6,6 @@
 #define MASTERNODE_H
 
 #include "uint256.h"
-#include "uint256.h"
 #include "sync.h"
 #include "net.h"
 #include "key.h"
@@ -15,6 +14,9 @@
 #include "main.h"
 #include "timedata.h"
 #include "script.h"
+#include "masternode.h"
+#include "masternode-pos.h"
+
 class uint256;
 
 #define MASTERNODE_NOT_PROCESSED               0 // initial state
@@ -28,34 +30,20 @@ class uint256;
 #define MASTERNODE_REMOTELY_ENABLED            9
 
 #define MASTERNODE_MIN_CONFIRMATIONS           7
-#define MASTERNODE_MIN_DSEEP_SECONDS           (15*60)
+#define MASTERNODE_MIN_DSEEP_SECONDS           (30*60)
 #define MASTERNODE_MIN_DSEE_SECONDS            (5*60)
-#define MASTERNODE_PING_SECONDS                (1*60) //(1*60)
+#define MASTERNODE_PING_SECONDS                (1*60)
 #define MASTERNODE_EXPIRATION_SECONDS          (65*60)
 #define MASTERNODE_REMOVAL_SECONDS             (70*60)
 
 using namespace std;
 
 class CMasternode;
-class CMasternodePayments;
-class CMasternodePaymentWinner;
 
 extern CCriticalSection cs_masternodes;
-extern CMasternodePayments masternodePayments;
-extern map<uint256, CMasternodePaymentWinner> mapSeenMasternodeVotes;
 extern map<int64_t, uint256> mapCacheBlockHashes;
 
-enum masternodeState {
-    MASTERNODE_ENABLED = 1,
-    MASTERNODE_EXPIRED = 2,
-    MASTERNODE_VIN_SPENT = 3,
-    MASTERNODE_REMOVE = 4
-};
-
-// manage the masternode connections
-void ProcessMasternodeConnections();
-
-void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+bool GetBlockHash(uint256& hash, int nBlockHeight);
 
 //
 // The Masternode Class. For managing the darksend process. It contains the input of the 1000TX, signature to prove
@@ -68,7 +56,14 @@ private:
     mutable CCriticalSection cs;
 
 public:
-	static int minProtoVersion;
+    enum state {
+        MASTERNODE_ENABLED = 1,
+        MASTERNODE_EXPIRED = 2,
+        MASTERNODE_VIN_SPENT = 3,
+        MASTERNODE_REMOVE = 4,
+        MASTERNODE_POS_ERROR = 5
+    };
+
     CTxIn vin;  
     CService addr;
     CPubKey pubkey;
@@ -84,10 +79,18 @@ public:
     bool allowFreeTx;
     int protocolVersion;
     int64_t nLastDsq; //the dsq count from the last dsq broadcast of this node
+    CScript donationAddress;
+    int donationPercentage;
+    int nVote;
+    int64_t lastVote;
+    int nScanningErrorCount;
+    int nLastScanningErrorBlockHeight;
+    int64_t nLastPaid;
+
 
     CMasternode();
     CMasternode(const CMasternode& other);
-    CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn);
+    CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn, CScript donationAddress, int donationPercentage);
 
 
     void swap(CMasternode& first, CMasternode& second) // nothrow
@@ -108,10 +111,17 @@ public:
         swap(first.lastTimeSeen, second.lastTimeSeen);
         swap(first.cacheInputAge, second.cacheInputAge);
         swap(first.cacheInputAgeBlock, second.cacheInputAgeBlock);
+        swap(first.unitTest, second.unitTest);
         swap(first.allowFreeTx, second.allowFreeTx);
         swap(first.protocolVersion, second.protocolVersion);
-        swap(first.unitTest, second.unitTest);
         swap(first.nLastDsq, second.nLastDsq);
+        swap(first.donationAddress, second.donationAddress);
+        swap(first.donationPercentage, second.donationPercentage);
+        swap(first.nVote, second.nVote);
+        swap(first.lastVote, second.lastVote);
+        swap(first.nScanningErrorCount, second.nScanningErrorCount);
+        swap(first.nLastScanningErrorBlockHeight, second.nLastScanningErrorBlockHeight);
+        swap(first.nLastPaid, second.nLastPaid);
     }
 
     CMasternode& operator=(CMasternode from)
@@ -154,8 +164,20 @@ public:
                 READWRITE(allowFreeTx);
                 READWRITE(protocolVersion);
                 READWRITE(nLastDsq);
+                READWRITE(donationAddress);
+                READWRITE(donationPercentage);
+                READWRITE(nVote);
+                READWRITE(lastVote);
+                READWRITE(nScanningErrorCount);
+                READWRITE(nLastScanningErrorBlockHeight);
+                READWRITE(nLastPaid);
         }
     )
+
+    int64_t SecondsSincePayment()
+    {
+        return (GetAdjustedTime() - nLastPaid);
+    }
 
     void UpdateLastSeen(int64_t override=0)
     {
@@ -203,90 +225,34 @@ public:
 
         return cacheInputAge+(pindexBest->nHeight-cacheInputAgeBlock);
     }
-};
+    
+    void ApplyScanningError(CMasternodeScanningError& mnse)
+    {
+        if(!mnse.IsValid()) return;
 
-// for storing the winning payments
-class CMasternodePaymentWinner
-{
-public:
-    int nBlockHeight;
-    CTxIn vin;
-    CScript payee;
-    std::vector<unsigned char> vchSig;
-    uint64_t score;
+        if(mnse.nBlockHeight == nLastScanningErrorBlockHeight) return;
+        nLastScanningErrorBlockHeight = mnse.nBlockHeight;
 
-    CMasternodePaymentWinner() {
-        nBlockHeight = 0;
-        score = 0;
-        vin = CTxIn();
-        payee = CScript();
+        if(mnse.nErrorType == SCANNING_SUCCESS){
+            nScanningErrorCount--;
+            if(nScanningErrorCount < 0) nScanningErrorCount = 0;
+        } else { //all other codes are equally as bad
+            nScanningErrorCount++;
+            if(nScanningErrorCount > MASTERNODE_SCANNING_ERROR_THESHOLD*2) nScanningErrorCount = MASTERNODE_SCANNING_ERROR_THESHOLD*2;
+        }
     }
 
-    uint256 GetHash(){
-        uint256 n2 = Hash(BEGIN(nBlockHeight), END(nBlockHeight));
-        uint256 n3 = vin.prevout.hash > n2 ? (vin.prevout.hash - n2) : (n2 - vin.prevout.hash);
+    std::string Status() {
+        std::string strStatus = "ACTIVE";
 
-        return n3;
+        if(activeState == CMasternode::MASTERNODE_ENABLED) strStatus   = "ENABLED";
+        if(activeState == CMasternode::MASTERNODE_EXPIRED) strStatus   = "EXPIRED";
+        if(activeState == CMasternode::MASTERNODE_VIN_SPENT) strStatus = "VIN_SPENT";
+        if(activeState == CMasternode::MASTERNODE_REMOVE) strStatus    = "REMOVE";
+        if(activeState == CMasternode::MASTERNODE_POS_ERROR) strStatus = "POS_ERROR";
+
+        return strStatus;
     }
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion){
-	unsigned int nSerSize = 0;
-        READWRITE(nBlockHeight);
-        READWRITE(payee);
-        READWRITE(vin);
-        READWRITE(score);
-        READWRITE(vchSig);
-     }
 };
-
-//
-// Masternode Payments Class
-// Keeps track of who should get paid for which blocks
-//
-
-class CMasternodePayments
-{
-private:
-    std::vector<CMasternodePaymentWinner> vWinning;
-    int nSyncedFromPeer;
-    std::string strMasterPrivKey;
-    std::string strTestPubKey;
-    std::string strMainPubKey;
-    bool enabled;
-
-public:
-
-    CMasternodePayments() {
-        strMainPubKey = "02626bfeb86bc74a803055081e494e450b41d7555ad44cf448b5f9dd66e1c3e5d9";
-        strTestPubKey = "02626bfeb86bc74a803055081e494e450b41d7555ad44cf448b5f9dd66e1c3e5d9";
-        enabled = false;
-    }
-
-    bool SetPrivKey(std::string strPrivKey);
-    bool CheckSignature(CMasternodePaymentWinner& winner);
-    bool Sign(CMasternodePaymentWinner& winner);
-
-    // Deterministically calculate a given "score" for a masternode depending on how close it's hash is
-    // to the blockHeight. The further away they are the better, the furthest will win the election
-    // and get paid this block
-    //
-
-    uint64_t CalculateScore(uint256 blockHash, CTxIn& vin);
-    bool GetWinningMasternode(int nBlockHeight, CTxIn& vinOut);
-    bool AddWinningMasternode(CMasternodePaymentWinner& winner);
-    bool ProcessBlock(int nBlockHeight);
-    void Relay(CMasternodePaymentWinner& winner);
-    void Sync(CNode* node);
-    void CleanPaymentList();
-    int LastPayment(CMasternode& mn);
-
-    //slow
-    bool GetBlockPayee(int nBlockHeight, CScript& payee);
-};
-
-
 
 #endif

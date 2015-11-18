@@ -8,13 +8,18 @@
 
 #include <string>
 #include <vector>
-
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
+extern const signed char p_util_hexdigit[256]; // defined in util.cpp
+
 inline int Testuint256AdHoc(std::vector<std::string> vArg);
 
+inline signed char HexDigit(char c)
+{
+    return p_util_hexdigit[(unsigned char)c];
+}
 
 /** Base class without constructors for uint256 and uint160.
  * This makes the compiler let u use it in a union.
@@ -301,8 +306,7 @@ public:
 
     void SetHex(const char* psz)
     {
-        for (int i = 0; i < WIDTH; i++)
-            pn[i] = 0;
+        memset(pn,0,sizeof(pn));
 
         // skip leading spaces
         while (isspace(*psz))
@@ -313,19 +317,18 @@ public:
             psz += 2;
 
         // hex string to uint
-        static const unsigned char phexdigit[256] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,1,2,3,4,5,6,7,8,9,0,0,0,0,0,0, 0,0xa,0xb,0xc,0xd,0xe,0xf,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0xa,0xb,0xc,0xd,0xe,0xf,0,0,0,0,0,0,0,0,0 };
         const char* pbegin = psz;
-        while (phexdigit[(unsigned char)*psz] || *psz == '0')
+		while (::HexDigit(*psz) != -1)
             psz++;
         psz--;
         unsigned char* p1 = (unsigned char*)pn;
         unsigned char* pend = p1 + WIDTH * 4;
         while (psz >= pbegin && p1 < pend)
         {
-            *p1 = phexdigit[(unsigned char)*psz--];
+            *p1 = ::HexDigit(*psz--);
             if (psz >= pbegin)
             {
-                *p1 |= (phexdigit[(unsigned char)*psz--] << 4);
+                *p1 |= ((unsigned char)::HexDigit(*psz--) << 4);
                 p1++;
             }
         }

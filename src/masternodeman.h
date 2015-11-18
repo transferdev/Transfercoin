@@ -33,13 +33,15 @@ class CMasternodeDB
 {
 private:
     boost::filesystem::path pathMN;
+    std::string strMagicMessage;
 public:
     enum ReadResult {
         Ok,
        FileError,
         HashReadError,
         IncorrectHash,
-        IncorrectMagic,
+        IncorrectMagicMessage,
+        IncorrectMagicNumber,
         IncorrectFormat
     };
 
@@ -107,9 +109,10 @@ public:
 
     // Find an entry
     CMasternode* Find(const CTxIn& vin);
+    CMasternode* Find(const CPubKey& pubKeyMasternode);
 
     //Find an entry thta do not match every entry provided vector
-    CMasternode* FindOldestNotInVec(const std::vector<CTxIn> &vVins);
+    CMasternode* FindOldestNotInVec(const std::vector<CTxIn> &vVins, int nMinimumAge);
 
     // Find a random entry
     CMasternode* FindRandom();
@@ -119,12 +122,13 @@ public:
 
     std::vector<CMasternode> GetFullMasternodeVector() { Check(); return vMasternodes; }
 
-    int GetMasternodeRank(const CTxIn &vin, int64_t nBlockHeight, int minProtocol=0);
-    CMasternode* GetMasternodeByRank(int nRank, int64_t nBlockHeight, int minProtocol=0);
-
-    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+    std::vector<pair<int, CMasternode> > GetMasternodeRanks(int64_t nBlockHeight, int minProtocol=0);
+    int GetMasternodeRank(const CTxIn &vin, int64_t nBlockHeight, int minProtocol=0, bool fOnlyActive=true);
+    CMasternode* GetMasternodeByRank(int nRank, int64_t nBlockHeight, int minProtocol=0, bool fOnlyActive=true);
 
     void ProcessMasternodeConnections();
+
+    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
     // Return the number of (unique) masternodes
     int size() { return vMasternodes.size(); }
@@ -135,9 +139,10 @@ public:
     // Relay Masternode Messages
     //
 
-    void RelayMasternodeEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion);
+    void RelayMasternodeEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion, CScript donationAddress, int donationPercentage);
     void RelayMasternodeEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop);
 
+    void Remove(CTxIn vin);
 
 };
 

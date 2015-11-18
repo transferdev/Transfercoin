@@ -161,7 +161,7 @@ login again:
 $ ssh debian@localhost -p 22222
 
 $ git clone https://github.com/devrandom/gitian-builder.git
-$ git clone https://github.com/transferdev/Transfercoin.git transfer
+$ git clone https://github.com/SCDeveloper/Transfer.git transfer
 
 $ cd gitian-builder
 
@@ -171,7 +171,7 @@ $ ./bin/make-base-vm --lxc --arch i386 --suite trusty
 $ mkdir inputs;
 $ cd inputs;
 $ cp ../../transfer/libs/secp256k1-master.zip .
-$ wget http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20150917.tar.gz -Ominiupnpc-1.9.tar.gz;
+$ wget http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20151008.tar.gz -Ominiupnpc-1.9.20151008.tar.gz;
 $ wget http://download.icu-project.org/files/icu4c/55.1/icu4c-55_1-src.tgz;
 $ wget http://download.oracle.com/berkeley-db/db-6.1.26.NC.tar.gz;
 $ wget http://prdownloads.sourceforge.net/libpng/libpng-1.6.18.tar.xz;

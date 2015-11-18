@@ -106,9 +106,11 @@ xLDFLAGS=$(LDHARDENING) $(LDFLAGS)
 OBJS= \
     obj/alert.o \
     obj/version.o \
+    obj/cleanse.o \
     obj/checkpoints.o \
     obj/netbase.o \
     obj/addrman.o \
+    obj/base58.o \
     obj/crypter.o \
     obj/key.o \
     obj/eckey.o \
@@ -147,6 +149,8 @@ OBJS= \
     obj/masternodeconfig.o \
     obj/masternodeman.o \
     obj/masternode.o \
+    obj/masternode-payments.o \
+    obj/masternode-pos.o \
     obj/rpcdarksend.o \
     obj/spork.o \
     obj/crypto/hmac_sha256.o \
@@ -222,6 +226,7 @@ obj/%.o: %.c
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
+
 transferd: $(OBJS:obj/%=obj/%)
 	$(LINK) $(xCXXFLAGS) -o $@ $^ $(xLDFLAGS) $(LIBS)
 

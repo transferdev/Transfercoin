@@ -35,9 +35,9 @@ int nCompleteTXLocks;
 void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if(fLiteMode) return; //disable all darksend/masternode related functionality
-    if(!IsSporkActive(SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT)) return;
+    if(!IsSporkActive(SPORK_2_INSTANTX)) return;
     if(IsInitialBlockDownload()) return;
-    
+
     if (strCommand == "txlreq")
     {
         //LogPrintf("ProcessMessageInstantX::txlreq\n");
@@ -57,7 +57,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
         }
 
         BOOST_FOREACH(const CTxOut o, tx.vout){
-            if(!o.scriptPubKey.IsNormalPaymentScript()){
+            if(!o.scriptPubKey.IsNormalPaymentScript() && !o.scriptPubKey.IsUnspendable()){
                 LogPrintf("ProcessMessageInstantX::txlreq - Invalid Script %s\n", tx.ToString().c_str());
                 return;
             }
@@ -69,14 +69,19 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
         CValidationState state;
 
 
-        //if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
-        if (AcceptToMemoryPool(mempool, tx, true, &fMissingInputs))
+        bool fAccepted = false;
+        {
+            LOCK(cs_main);
+            fAccepted = AcceptToMemoryPool(mempool, tx, true, &fMissingInputs);
+        }
+        if (fAccepted)
         {
             vector<CInv> vInv;
             vInv.push_back(inv);
             LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* pnode, vNodes)
+            BOOST_FOREACH(CNode* pnode, vNodes){
                 pnode->PushMessage("inv", vInv);
+            }
 
             DoConsensusVote(tx, nBlockHeight);
 
@@ -186,8 +191,7 @@ bool IsIXTXValid(const CTransaction& txCollateral){
     BOOST_FOREACH(const CTxIn i, txCollateral.vin){
         CTransaction tx2;
         uint256 hash;
-        //if(GetTransaction(i.prevout.hash, tx2, hash, true)){
-	if(GetTransaction(i.prevout.hash, tx2, hash)){
+        if(GetTransaction(i.prevout.hash, tx2, hash)){
             if(tx2.vout.size() > i.prevout.n) {
                 nValueIn += tx2.vout[i.prevout.n].nValue;
             }
@@ -196,7 +200,7 @@ bool IsIXTXValid(const CTransaction& txCollateral){
         }
     }
 
-    if(nValueOut > GetSporkValue(SPORK_2_MAX_VALUE)*COIN){
+    if(nValueOut > GetSporkValue(SPORK_5_MAX_VALUE)*COIN){
         if(fDebug) LogPrintf ("IsIXTXValid - Transaction value too high - %s\n", txCollateral.ToString().c_str());
         return false;
     }
@@ -244,7 +248,7 @@ int64_t CreateNewLock(CTransaction tx)
 
         CTransactionLock newLock;
         newLock.nBlockHeight = nBlockHeight;
-        newLock.nExpiration = GetTime()+(60*60); //locks expire after 15 minutes (6 confirmations)
+        newLock.nExpiration = GetTime()+(10*60); //locks expire after 60 minutes (6 confirmations)
         newLock.nTimeout = GetTime()+(60*5);
         newLock.txHash = tx.GetHash();
         mapTxLocks.insert(make_pair(tx.GetHash(), newLock));
@@ -341,7 +345,7 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
 
         CTransactionLock newLock;
         newLock.nBlockHeight = 0;
-        newLock.nExpiration = GetTime()+(60*60);
+        newLock.nExpiration = GetTime()+(10*60);
         newLock.nTimeout = GetTime()+(60*5);
         newLock.txHash = ctx.txHash;
         mapTxLocks.insert(make_pair(ctx.txHash, newLock));
@@ -372,9 +376,9 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
 
 #ifdef ENABLE_WALLET
                 if(pwalletMain){
-                    pwalletMain->UpdatedTransaction((*i).second.txHash);
+                    if(pwalletMain->UpdatedTransaction((*i).second.txHash)){
                         nCompleteTXLocks++;
-                    
+                    }
                 }
 #endif
 
@@ -449,6 +453,27 @@ void CleanTransactionLocksList()
     while(it != mapTxLocks.end()) {
         if(GetTime() > it->second.nExpiration){ //keep them for an hour
             LogPrintf("Removing old transaction lock %s\n", it->second.txHash.ToString().c_str());
+
+            // loop through masternodes that responded
+            for(int nRank = 0; nRank <= INSTANTX_SIGNATURES_TOTAL; nRank++)
+            {
+                CMasternode* pmn = mnodeman.GetMasternodeByRank(nRank, it->second.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
+                if(!pmn) continue;
+
+                bool fFound = false;
+                BOOST_FOREACH(CConsensusVote& v, it->second.vecConsensusVotes)
+                {
+                    if(pmn->vin == v.vinMasternode){ //Masternode responded
+                        fFound = true;
+                    }
+                }
+
+                if(!fFound){
+                    //increment a scanning error
+                    CMasternodeScanningError mnse(pmn->vin, SCANNING_ERROR_IX_NO_RESPONSE, it->second.nBlockHeight);
+                    pmn->ApplyScanningError(mnse);
+                }
+            }
 
             if(mapTxLockReq.count(it->second.txHash)){
                 CTransaction& tx = mapTxLockReq[it->second.txHash];

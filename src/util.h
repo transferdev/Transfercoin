@@ -116,6 +116,7 @@ inline void MilliSleep(int64_t n)
 
 extern bool fMasterNode;
 extern bool fLiteMode;
+extern bool fEnableInstantX;
 extern int nInstantXDepth;
 extern int nDarksendRounds;
 extern int nAnonymizeTransferAmount;
@@ -123,11 +124,10 @@ extern int nLiquidityProvider;
 extern bool fEnableDarksend;
 extern int64_t enforceMasternodePaymentsTime;
 extern std::string strMasterNodeAddr;
+extern int nMasternodeMinProtocol;
 extern int keysLoaded;
 extern bool fSucessfullyLoaded;
 extern std::vector<int64_t> darkSendDenominations;
-
-
 extern std::map<std::string, std::string> mapArgs;
 extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
 extern bool fDebug;
@@ -135,7 +135,6 @@ extern bool fDebugSmsg;
 extern bool fNoSmsg;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugLog;
-extern bool fDaemon;
 extern bool fServer;
 extern bool fCommandLine;
 extern std::string strMiscWarning;
@@ -162,17 +161,25 @@ int LogPrintStr(const std::string &str);
     /*   Print to debug.log if -debug=category switch is given OR category is NULL. */ \
     template<TINYFORMAT_ARGTYPES(n)>                                          \
     static inline int LogPrint(const char* category, const char* format, TINYFORMAT_VARARGS(n))  \
-    {                                                                         \
-        if(!LogAcceptCategory(category)) return 0;                            \
-        return LogPrintStr(tfm::format(format, TINYFORMAT_PASSARGS(n))); \
-    }                                                                         \
-    /*   Log error and return false */                                        \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline bool error(const char* format, TINYFORMAT_VARARGS(n))                     \
-    {                                                                         \
+    {                                                                                \
+        if(!LogAcceptCategory(category)) return 0;                                   \
+        return LogPrintStr(tfm::format(format, TINYFORMAT_PASSARGS(n)));             \
+    }                                                                                \
+    /*   Log error and return false */                                               \
+    template<TINYFORMAT_ARGTYPES(n)>                                                 \
+    static inline bool error(const char* format, TINYFORMAT_VARARGS(n))              \
+    {                                                                                \
         LogPrintStr("ERROR: " + tfm::format(format, TINYFORMAT_PASSARGS(n)) + "\n"); \
-        return false;                                                         \
+        return false;                                                                \
+    }                                                                                \
+    /*   Log error and return n */                                                   \
+    template<TINYFORMAT_ARGTYPES(n)>                                                 \
+    static inline int errorN(int rv, const char* format, TINYFORMAT_VARARGS(n))      \
+    {                                                                                \
+        LogPrintStr("ERROR: " + tfm::format(format, TINYFORMAT_PASSARGS(n)) + "\n"); \
+        return rv;                                                                   \
     }
+
 
 TINYFORMAT_FOREACH_ARGNUM(MAKE_ERROR_AND_LOG_FUNC)
 
@@ -189,7 +196,17 @@ static inline bool error(const char* format)
     LogPrintStr(std::string("ERROR: ") + format + "\n");
     return false;
 }
+static inline int errorN(int n, const char* format)
+{
+    LogPrintStr(std::string("ERROR: ") + format + "\n");
+    return n;
+}
 
+extern std::map<std::string, std::string> mapArgs;
+extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
+
+void RandAddSeed();
+void RandAddSeedPerfmon();
 
 void PrintException(std::exception* pex, const char* pszThread);
 void PrintExceptionContinue(std::exception* pex, const char* pszThread);
