@@ -30,7 +30,7 @@
 using namespace std;
 using namespace boost;
 
-static const int MAX_OUTBOUND_CONNECTIONS = 16;
+static const int MAX_OUTBOUND_CONNECTIONS = 300;
 
 bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false);
 
@@ -831,14 +831,14 @@ void ThreadSocketHandler()
                     if (pnode->fInbound)
                         nInbound++;
             }
-
+			int nMaxOutbound = min(MAX_OUTBOUND_CONNECTIONS, (int)GetArg("-maxconnections", 25));
             if (hSocket == INVALID_SOCKET)
             {
                 int nErr = WSAGetLastError();
                 if (nErr != WSAEWOULDBLOCK)
                     LogPrintf("socket error accept failed: %d\n", nErr);
             }
-            else if (nInbound >= GetArg("-maxconnections", 25) - MAX_OUTBOUND_CONNECTIONS)
+            else if (nInbound >= nMaxOutbound)
             {
                 closesocket(hSocket);
             }
