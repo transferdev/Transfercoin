@@ -2453,13 +2453,16 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
         CBlockIndex *pindex = pindexBest;
         if(IsProofOfStake() && pindex != NULL){
             if(pindex->GetBlockHash() == hashPrevBlock){
-                CAmount masternodePaymentAmount = GetMasternodePayment(pindex->nHeight+1, vtx[1].GetValueOut());
                 bool fIsInitialDownload = IsInitialBlockDownload();
 
                 // If we don't already have its previous block, skip masternode payment step
                 if (!fIsInitialDownload)
                 {
-                    CAmount masternodePaymentAmount = GetMasternodePayment(pindex->nHeight+1, vtx[0].GetValueOut());
+                    CAmount masternodePaymentAmount;
+                    for (int i = vtx[1].vout.size(); i--> 0; ) {
+                        masternodePaymentAmount = vtx[1].vout[i].nValue;
+                        break;
+                    }
                     bool foundPaymentAmount = false;
                     bool foundPayee = false;
                     bool foundPaymentAndPayee = false;

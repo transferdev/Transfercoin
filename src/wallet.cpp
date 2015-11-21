@@ -3721,8 +3721,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
             if(winningNode){
                 payee = GetScriptForDestination(winningNode->pubkey.GetID());
             } else {
-                LogPrintf("CreateCoinStake: Failed to detect masternode to pay\n");
-                hasPayment = false;
+                return error("CreateCoinStake: Failed to detect masternode to pay\n");
             }
         }
     }

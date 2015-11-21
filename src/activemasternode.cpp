@@ -96,7 +96,7 @@ void CActiveMasternode::ManageStatus()
             	return;
             }
 
-            /* donations are not supported in darksilk.conf */
+            /* donations are not supported in transfer.conf */
             CScript donationAddress = CScript();
             int donationPercentage = 0;
 
