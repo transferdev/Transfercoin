@@ -8,6 +8,8 @@
 #include "init.h"
 #include <boost/algorithm/string/predicate.hpp>
 
+static bool fDaemon;
+
 void WaitForShutdown(boost::thread_group* threadGroup)
 {
     bool fShutdown = ShutdownRequested();
@@ -77,7 +79,7 @@ bool AppInit(int argc, char* argv[])
             int ret = CommandLineRPC(argc, argv);
             exit(ret);
         }
-#if !defined(WIN32)
+#if !WIN32
         fDaemon = GetBoolArg("-daemon", false);
         if (fDaemon)
         {
@@ -101,7 +103,7 @@ bool AppInit(int argc, char* argv[])
         }
 #endif
 
-        fRet = AppInit2(threadGroup);
+		fRet = AppInit2(threadGroup);
     }
     catch (std::exception& e) {
         PrintException(&e, "AppInit()");
@@ -127,7 +129,6 @@ extern void noui_connect();
 int main(int argc, char* argv[])
 {
     bool fRet = false;
-    fHaveGUI = false;
 
     // Connect bitcoind signal handlers
     noui_connect();

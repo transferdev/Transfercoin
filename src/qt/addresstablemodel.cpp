@@ -5,6 +5,7 @@
 
 #include "wallet.h"
 #include "base58.h"
+#include "stealth.h"
 
 #include <QFont>
 #include <QDebug>

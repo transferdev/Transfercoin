@@ -10,8 +10,8 @@ ARCH:=$(system lscpu | head -n 1 | awk '{print $2}')
 
 DEFS=-DBOOST_SPIRIT_THREADSAFE
 DEFS += -DUSE_SECP256K1
-DEFS += $(addprefix -I,$(CURDIR) $(CURDIR)/obj $(BOOST_INCLUDE_PATH) $(BDB_INCLUDE_PATH) $(OPENSSL_INCLUDE_PATH))
-LIBS = $(addprefix -L,$(BOOST_LIB_PATH) $(BDB_LIB_PATH) $(OPENSSL_LIB_PATH))
+DEFS += $(addprefix -I,$(CURDIR) $(CURDIR)/obj $(BOOST_INCLUDE_PATH) $(BDB_INCLUDE_PATH) $(OPENSSL_INCLUDE_PATH) $(CURDIR)/secp256k1 $(CURDIR)/secp256k1/src $(CURDIR)/secp256k1/include)
+LIBS = $(addprefix -L,$(BOOST_LIB_PATH) $(BDB_LIB_PATH) $(OPENSSL_LIB_PATH) $(CURDIR)/secp256k1/.libs)
 
 LMODE = dynamic
 LMODE2 = dynamic
@@ -106,9 +106,11 @@ xLDFLAGS=$(LDHARDENING) $(LDFLAGS)
 OBJS= \
     obj/alert.o \
     obj/version.o \
+    obj/cleanse.o \
     obj/checkpoints.o \
     obj/netbase.o \
     obj/addrman.o \
+    obj/base58.o \
     obj/crypter.o \
     obj/key.o \
     obj/eckey.o \
@@ -141,10 +143,14 @@ OBJS= \
     obj/stealth.o \
     obj/activemasternode.o \
     obj/darksend.o \
+    obj/darksend-relay.o \
     obj/eccryptoverify.o \
     obj/instantx.o \
     obj/masternodeconfig.o \
+    obj/masternodeman.o \
     obj/masternode.o \
+    obj/masternode-payments.o \
+    obj/masternode-pos.o \
     obj/rpcdarksend.o \
     obj/spork.o \
     obj/crypto/hmac_sha256.o \
@@ -220,6 +226,7 @@ obj/%.o: %.c
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
+
 transferd: $(OBJS:obj/%=obj/%)
 	$(LINK) $(xCXXFLAGS) -o $@ $^ $(xLDFLAGS) $(LIBS)
 

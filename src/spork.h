@@ -20,15 +20,19 @@ using namespace boost;
 
 // Don't ever reuse these IDs for other sporks
 #define SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT               10000
-#define SPORK_2_MAX_VALUE                                     10002
-#define SPORK_3_REPLAY_BLOCKS                                 10003
-#define SPORK_4_NOTUSED                                       10004
+#define SPORK_2_INSTANTX                                      10001
+#define SPORK_3_INSTANTX_BLOCK_FILTERING                      10002
+#define SPORK_4_NOTUSED                                       10003
+#define SPORK_5_MAX_VALUE                                     10004
+#define SPORK_6_REPLAY_BLOCKS                                 10005
+#define SPORK_7_MASTERNODE_SCANNING                           10006
 
-
-#define SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT_DEFAULT       2428537599  //2015-4-8 23:59:59 GMT
-#define SPORK_2_MAX_VALUE_DEFAULT                             500        //500 TX 
-#define SPORK_3_REPLAY_BLOCKS_DEFAULT                         0
-#define SPORK_4_RECONVERGE_DEFAULT                            1420070400  //2047-1-1
+#define SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT_DEFAULT       2428537599  //2015-4-8 23:59:59 GMT // NOT USED
+#define SPORK_2_INSTANTX_DEFAULT                              978307200   //2001-1-1 23:59:59 GMT
+#define SPORK_3_INSTANTX_BLOCK_FILTERING_DEFAULT              978307200   //2001-1-1 23:59:59 GMT
+#define SPORK_4_RECONVERGE_DEFAULT                            1451606400  //2016-01-01 // NOT USED
+#define SPORK_5_MAX_VALUE_DEFAULT                             500         //500 TX 
+#define SPORK_6_REPLAY_BLOCKS_DEFAULT                         0 		  // NOT USED
 
 class CSporkMessage;
 class CSporkManager;

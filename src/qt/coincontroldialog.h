@@ -10,11 +10,12 @@
 #include <QString>
 #include <QTreeWidgetItem>
 
+class WalletModel;
+class CCoinControl;
+
 namespace Ui {
     class CoinControlDialog;
 }
-class WalletModel;
-class CCoinControl;
 
 class CoinControlDialog : public QDialog
 {
@@ -55,6 +56,7 @@ private:
         COLUMN_AMOUNT,
         COLUMN_LABEL,
         COLUMN_ADDRESS,
+        COLUMN_DARKSEND_ROUNDS,
         COLUMN_DATE,
         COLUMN_CONFIRMATIONS,
         COLUMN_PRIORITY,

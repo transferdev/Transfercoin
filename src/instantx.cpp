@@ -9,8 +9,8 @@
 #include "base58.h"
 #include "protocol.h"
 #include "instantx.h"
-#include "masternode.h"
 #include "activemasternode.h"
+#include "masternodeman.h"
 #include "darksend.h"
 #include "spork.h"
 #include <boost/lexical_cast.hpp>
@@ -35,7 +35,8 @@ int nCompleteTXLocks;
 void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if(fLiteMode) return; //disable all darksend/masternode related functionality
-    if(!IsSporkActive(SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT)) return;
+    if(!IsSporkActive(SPORK_2_INSTANTX)) return;
+    if(IsInitialBlockDownload()) return;
 
     if (strCommand == "txlreq")
     {
@@ -56,8 +57,8 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
         }
 
         BOOST_FOREACH(const CTxOut o, tx.vout){
-            if(!o.scriptPubKey.IsNormalPaymentScript()){
-                printf ("ProcessMessageInstantX::txlreq - Invalid Script %s\n", tx.ToString().c_str());
+            if(!o.scriptPubKey.IsNormalPaymentScript() && !o.scriptPubKey.IsUnspendable()){
+                LogPrintf("ProcessMessageInstantX::txlreq - Invalid Script %s\n", tx.ToString().c_str());
                 return;
             }
         }
@@ -68,14 +69,19 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
         CValidationState state;
 
 
-        //if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
-        if (AcceptToMemoryPool(mempool, tx, true, &fMissingInputs))
+        bool fAccepted = false;
+        {
+            LOCK(cs_main);
+            fAccepted = AcceptToMemoryPool(mempool, tx, true, &fMissingInputs);
+        }
+        if (fAccepted)
         {
             vector<CInv> vInv;
             vInv.push_back(inv);
             LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* pnode, vNodes)
+            BOOST_FOREACH(CNode* pnode, vNodes){
                 pnode->PushMessage("inv", vInv);
+            }
 
             DoConsensusVote(tx, nBlockHeight);
 
@@ -185,8 +191,7 @@ bool IsIXTXValid(const CTransaction& txCollateral){
     BOOST_FOREACH(const CTxIn i, txCollateral.vin){
         CTransaction tx2;
         uint256 hash;
-        //if(GetTransaction(i.prevout.hash, tx2, hash, true)){
-	if(GetTransaction(i.prevout.hash, tx2, hash)){
+        if(GetTransaction(i.prevout.hash, tx2, hash)){
             if(tx2.vout.size() > i.prevout.n) {
                 nValueIn += tx2.vout[i.prevout.n].nValue;
             }
@@ -195,7 +200,7 @@ bool IsIXTXValid(const CTransaction& txCollateral){
         }
     }
 
-    if(nValueOut > GetSporkValue(SPORK_2_MAX_VALUE)*COIN){
+    if(nValueOut > GetSporkValue(SPORK_5_MAX_VALUE)*COIN){
         if(fDebug) LogPrintf ("IsIXTXValid - Transaction value too high - %s\n", txCollateral.ToString().c_str());
         return false;
     }
@@ -243,7 +248,7 @@ int64_t CreateNewLock(CTransaction tx)
 
         CTransactionLock newLock;
         newLock.nBlockHeight = nBlockHeight;
-        newLock.nExpiration = GetTime()+(60*60); //locks expire after 15 minutes (6 confirmations)
+        newLock.nExpiration = GetTime()+(10*60); //locks expire after 60 minutes (6 confirmations)
         newLock.nTimeout = GetTime()+(60*5);
         newLock.txHash = tx.GetHash();
         mapTxLocks.insert(make_pair(tx.GetHash(), newLock));
@@ -260,7 +265,7 @@ void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight)
 {
     if(!fMasterNode) return;
 
-    int n = GetMasternodeRank(activeMasternode.vin, nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
+    int n = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
 
     if(n == -1)
     {
@@ -308,11 +313,12 @@ void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight)
 //received a consensus vote
 bool ProcessConsensusVote(CConsensusVote& ctx)
 {
-    int n = GetMasternodeRank(ctx.vinMasternode, ctx.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
+    int n = mnodeman.GetMasternodeRank(ctx.vinMasternode, ctx.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
 
-    int x = GetMasternodeByVin(ctx.vinMasternode);
-    if(x != -1){
-        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Masternode ADDR %s %d\n", vecMasternodes[x].addr.ToString().c_str(), n);
+    CMasternode* pmn = mnodeman.Find(ctx.vinMasternode);
+    if(pmn != NULL)
+    {
+        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Masternode ADDR %s %d\n", pmn->addr.ToString().c_str(), n);
     }
 
     if(n == -1)
@@ -339,7 +345,7 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
 
         CTransactionLock newLock;
         newLock.nBlockHeight = 0;
-        newLock.nExpiration = GetTime()+(60*60);
+        newLock.nExpiration = GetTime()+(10*60);
         newLock.nTimeout = GetTime()+(60*5);
         newLock.txHash = ctx.txHash;
         mapTxLocks.insert(make_pair(ctx.txHash, newLock));
@@ -370,9 +376,9 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
 
 #ifdef ENABLE_WALLET
                 if(pwalletMain){
-                    pwalletMain->UpdatedTransaction((*i).second.txHash);
+                    if(pwalletMain->UpdatedTransaction((*i).second.txHash)){
                         nCompleteTXLocks++;
-                    
+                    }
                 }
 #endif
 
@@ -448,6 +454,27 @@ void CleanTransactionLocksList()
         if(GetTime() > it->second.nExpiration){ //keep them for an hour
             LogPrintf("Removing old transaction lock %s\n", it->second.txHash.ToString().c_str());
 
+            // loop through masternodes that responded
+            for(int nRank = 0; nRank <= INSTANTX_SIGNATURES_TOTAL; nRank++)
+            {
+                CMasternode* pmn = mnodeman.GetMasternodeByRank(nRank, it->second.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
+                if(!pmn) continue;
+
+                bool fFound = false;
+                BOOST_FOREACH(CConsensusVote& v, it->second.vecConsensusVotes)
+                {
+                    if(pmn->vin == v.vinMasternode){ //Masternode responded
+                        fFound = true;
+                    }
+                }
+
+                if(!fFound){
+                    //increment a scanning error
+                    CMasternodeScanningError mnse(pmn->vin, SCANNING_ERROR_IX_NO_RESPONSE, it->second.nBlockHeight);
+                    pmn->ApplyScanningError(mnse);
+                }
+            }
+
             if(mapTxLockReq.count(it->second.txHash)){
                 CTransaction& tx = mapTxLockReq[it->second.txHash];
 
@@ -481,9 +508,9 @@ bool CConsensusVote::SignatureValid()
     std::string strMessage = txHash.ToString().c_str() + boost::lexical_cast<std::string>(nBlockHeight);
     //LogPrintf("verify strMessage %s \n", strMessage.c_str());
 
-    int n = GetMasternodeByVin(vinMasternode);
+    CMasternode* pmn = mnodeman.Find(vinMasternode);
 
-    if(n == -1)
+    if(pmn == NULL)
     {
         LogPrintf("InstantX::CConsensusVote::SignatureValid() - Unknown Masternode\n");
         return false;
@@ -494,13 +521,13 @@ bool CConsensusVote::SignatureValid()
     //LogPrintf("verify addr %d %s \n", n, vecMasternodes[n].addr.ToString().c_str());
 
     CScript pubkey;
-    pubkey =GetScriptForDestination(vecMasternodes[n].pubkey2.GetID());
+    pubkey =GetScriptForDestination(pmn->pubkey2.GetID());
     CTxDestination address1;
     ExtractDestination(pubkey, address1);
     CBitcoinAddress address2(address1);
     //LogPrintf("verify pubkey2 %s \n", address2.ToString().c_str());
 
-    if(!darkSendSigner.VerifyMessage(vecMasternodes[n].pubkey2, vchMasterNodeSignature, strMessage, errorMessage)) {
+    if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchMasterNodeSignature, strMessage, errorMessage)) {
         LogPrintf("InstantX::CConsensusVote::SignatureValid() - Verify message failed\n");
         return false;
     }
@@ -550,7 +577,7 @@ bool CTransactionLock::SignaturesValid()
 
     BOOST_FOREACH(CConsensusVote vote, vecConsensusVotes)
     {
-        int n = GetMasternodeRank(vote.vinMasternode, vote.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
+        int n = mnodeman.GetMasternodeRank(vote.vinMasternode, vote.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
 
         if(n == -1)
         {
