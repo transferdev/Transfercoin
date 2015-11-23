@@ -355,11 +355,11 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
     // Wallet comments
     if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
-        sNarr = params[2].get_str();
+        wtx.mapValue["comment"] = params[2].get_str();
     if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
-        wtx.mapValue["comment"] = params[3].get_str();
+        wtx.mapValue["to"]      = params[3].get_str();
     if (params.size() > 4 && params[4].type() != null_type && !params[4].get_str().empty())
-        wtx.mapValue["to"]      = params[4].get_str();
+        sNarr = params[4].get_str();
     if (sNarr.length() > 24)
         throw std::runtime_error("Narration must be 24 characters or less.");
 
