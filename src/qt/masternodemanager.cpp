@@ -163,17 +163,18 @@ void MasternodeManager::updateNodeList()
         // Address, Rank, Active, Active Seconds, Last Seen, Pub Key
         QTableWidgetItem *activeItem = new QTableWidgetItem(QString::number(mn.IsEnabled()));
         QTableWidgetItem *addressItem = new QTableWidgetItem(QString::fromStdString(mn.addr.ToString()));
-        QTableWidgetItem *rankItem = new QTableWidgetItem(QString::number(mnodeman.GetMasternodeRank(mn.vin, pindexBest->nHeight)));
+        QString Rank = QString::number(mnodeman.GetMasternodeRank(mn.vin, pindexBest->nHeight));
+        QTableWidgetItem *rankItem = new QTableWidgetItem(Rank.rightJustified(2, '0', false));
         QTableWidgetItem *activeSecondsItem = new QTableWidgetItem(seconds_to_DHMS((qint64)(mn.lastTimeSeen - mn.sigTime)));
         QTableWidgetItem *lastSeenItem = new QTableWidgetItem(QString::fromStdString(DateTimeStrFormat(mn.lastTimeSeen)));
-	
+
         CScript pubkey;
         pubkey =GetScriptForDestination(mn.pubkey.GetID());
         CTxDestination address1;
         ExtractDestination(pubkey, address1);
         CBitcoinAddress address2(address1);
         QTableWidgetItem *pubkeyItem = new QTableWidgetItem(QString::fromStdString(address2.ToString()));
-	
+
         ui->tableWidget->setItem(mnRow, 0, addressItem);
         ui->tableWidget->setItem(mnRow, 1, rankItem);
         ui->tableWidget->setItem(mnRow, 2, activeItem);
