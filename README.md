@@ -16,6 +16,28 @@ Port: 17170
 RPC Port: 17171
 
 
+BUILD LINUX
+-----------
+1) git clone https://github.com/transferdev/Transfercoin.git transfercoin
+
+2) cd transfercoin/src/secp256k1 && chmod 755 *
+
+3) ./autogen.sh && ./configure
+
+4) make && sudo make install
+
+5) cd ..
+
+6) sudo make -f makefile.unix            # Headless transfer
+
+(optional)
+
+7) strip transferd
+
+8) sudo cp transferd /usr/local/bin
+
+
+
 
 BUILD WINDOWS
 -------------

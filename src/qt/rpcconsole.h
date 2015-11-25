@@ -57,6 +57,8 @@ public slots:
     void browseHistory(int offset);
     /** Scroll console view to end */
     void scrollToEnd();
+    /** Show folder with wallet backups in default browser */
+    void showBackups();
 signals:
     // For RPC command executor
     void stopExecutor();
