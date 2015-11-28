@@ -231,9 +231,7 @@ Improve Trading Dialog page to include cross sending and withdrawing from bittre
 Fix PrepareDarksendDenominate - loop instead of if
 
 When DS inputs are selected in coincontrol:
-
 - spend exactly these inputs
-
 - allow to spend more than 0.1 as a fee (note: still will respect non-ss fee limits)
 
 Slight optimizations/readability improvements for ds 
@@ -245,8 +243,40 @@ Unlock inputs on DS failure
             ^       CLIENT BUILD 1.2.1-61402      ^
 -------------------------------------------------------------------------------
 
+Update vAletrt pub/privkeys
 
+Add cryptostream for api key encryption
 
+Add removeSpaces in bitcoinunits.cpp
+
+Coin control fixes for Qt5
+
+move setClipboard to GUIUtil
+
+Add getMappedColumn -> coincontrol.h
+
+Add parentViewItemChanged which is currently unused
+
+Add timers into coincontrol
+- also helps to let users know the wallet isnt frozen when following the debug.log
+
+Api keys for Bittrex can be saved to a file which is in an encrypted format using cryptostream
+
+2 new DisplayBalance functions to help speed up the trading dialogs
+
+on_SaveKeys_clicked() and on_LoadKeys_clicked() added to tradingdialog.cpp
+
+Added a small wait time into cross sending
+- Some users were experiencing insufficient funds when withdrawing. 
+- Caused by sell orders not going through quickly enough
+- 50ms added to every trade. On the last trade this is increased to 100ms.
+- 500 ms added before the withdraw.
+
+transactiontablemodel.updateWallet cleaned and updated
+
+getdifficulty, getsubsidy, and getinfo no longer return POW values
+
+masternodelist updated to include new commands
 
 -------------------------------------------------------------------------------
 

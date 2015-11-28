@@ -275,7 +275,6 @@ void SendCoinsDialog::on_sendButton_clicked()
         accept();
         CoinControlDialog::coinControl->UnSelectAll();
         coinControlUpdateLabels();
-        break;
     }
     fNewRecipientAllowed = true;
 }
@@ -358,7 +357,8 @@ QWidget *SendCoinsDialog::setupTabChain(QWidget *prev)
         }
     }
     QWidget::setTabOrder(prev, ui->addButton);
-    QWidget::setTabOrder(ui->addButton, ui->sendButton);
+    QWidget::setTabOrder(ui->sendButton, ui->clearButton);
+    QWidget::setTabOrder(ui->clearButton, ui->addButton);
     return ui->sendButton;
 }
 
@@ -493,6 +493,9 @@ void SendCoinsDialog::coinControlFeatureChanged(bool checked)
 
     if (!checked && model) // coin control features disabled
         CoinControlDialog::coinControl->SetNull();
+
+    if (checked)
+        coinControlUpdateLabels();
 }
 
 // Coin Control: button inputs -> show actual coin control dialog

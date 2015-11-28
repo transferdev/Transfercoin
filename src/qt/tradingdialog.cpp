@@ -5,6 +5,12 @@
 #include <qmessagebox.h>
 #include <qtimer.h>
 #include <rpcserver.h>
+#include "cryptostreampp/Algorithms.hpp"
+#include "cryptostreampp/CryptoStreamPP.hpp"
+#include "cryptostreampp/RandomNumberGenerator.hpp"
+
+#include <iosfwd>
+#include <iostream>
 
 #include <QDebug>
 #include <QNetworkAccessManager>
@@ -22,8 +28,10 @@
 #include <QTime>
 
 #include <openssl/hmac.h>
+#include <stdlib.h>
 
 using namespace std;
+using namespace cryptostreampp;
 
 tradingDialog::tradingDialog(QWidget *parent) :
     QDialog(parent),
@@ -334,6 +342,29 @@ void tradingDialog::DisplayBalance(QLabel &BalanceLabel,QLabel &Available, QLabe
     Pending.setText("<span style='font-weight:bold; font-size:11px; color:green'>" + str.number( ResultObject["Pending"].toDouble(),'i',8) + "</span> " +Currency);
 }
 
+void tradingDialog::DisplayBalance(QLabel &BalanceLabel, QString Response){
+
+    QString str;
+
+    //Set the labels, parse the json result to get values.
+    QJsonObject ResultObject = GetResultObjectFromJSONObject(Response);
+
+    BalanceLabel.setText(str.number(ResultObject["Available"].toDouble(),'i',8));
+}
+
+void tradingDialog::DisplayBalance(QLabel &BalanceLabel, QLabel &BalanceLabel2, QString Response, QString Response2){
+
+    QString str;
+    QString str2;
+
+    //Set the labels, parse the json result to get values.
+    QJsonObject ResultObject = GetResultObjectFromJSONObject(Response);
+    QJsonObject ResultObject2 = GetResultObjectFromJSONObject(Response2);
+
+    BalanceLabel.setText(str.number(ResultObject["Available"].toDouble(),'i',8));
+    BalanceLabel2.setText(str2.number(ResultObject2["Available"].toDouble(),'i',8));
+}
+
 void tradingDialog::ParseAndPopulateOpenOrdersTable(QString Response){
 
     int itteration = 0, RowCount = 0;
@@ -560,6 +591,7 @@ void tradingDialog::ParseAndPopulateMarketHistoryTable(QString Response){
 void tradingDialog::ActionsOnSwitch(int index = -1){
 
     QString Response = "";
+    QString Response2 = "";
 
     if(index == -1){
        index = ui->TradingTabWidget->currentIndex();
@@ -567,78 +599,66 @@ void tradingDialog::ActionsOnSwitch(int index = -1){
 
     switch (index){
                 case 0:    //buy tab is active
-                           Response = GetMarketSummary();
-                           if(Response.size() > 0 && Response != "Error"){
 
-                               QString balance = GetBalance("BTC");
-                               QString TXbalance = GetBalance("TX");
+                    Response = GetBalance("BTC");
+                    Response2 = GetBalance("TX");
 
-                               QString str;
-                               QString TXstr;
-                               QJsonObject ResultObject =  GetResultObjectFromJSONObject(balance);
-                               QJsonObject TXResultObject =  GetResultObjectFromJSONObject(TXbalance);
-
-                               ui->BtcAvailableLbl->setText(str.number(ResultObject["Available"].toDouble(),'i',8));
-                               ui->TXAvailableLabel->setText(TXstr.number(TXResultObject["Available"].toDouble(),'i',8));
-                             }
+                    if((Response.size() > 0 && Response != "Error") || (Response2.size() > 0 && Response2 != "Error")){
+                        DisplayBalance(*ui->BtcAvailableLbl, *ui->TXAvailableLabel, Response, Response2);
+                    }
 
                 break;
 
                 case 1: //Cross send tab active
-                                   //Cross send tab is active
-                                   Response = GetMarketSummary();
-                                   if(Response.size() > 0 && Response != "Error"){
+                    Response = GetBalance("TX");
 
-                                       QString balance = GetBalance("TX");
-                                       QString str;
-                                       QJsonObject ResultObject =  GetResultObjectFromJSONObject(balance);
-
-                                       ui->TXAvailableLabel_3->setText(str.number(ResultObject["Available"].toDouble(),'i',8));
-                                     }
+                    if(Response.size() > 0 && Response != "Error"){
+                        DisplayBalance(*ui->TXAvailableLabel_3, Response);
+                    }
 
                 break;
 
                 case 2: //Order book tab is the current tab - update the info
-                       Response = GetOrderBook();
-                       if(Response.size() > 0 && Response != "Error"){
-                          ParseAndPopulateOrderBookTables(Response);
-                       }
+                    Response = GetOrderBook();
+                    if(Response.size() > 0 && Response != "Error"){
+                        ParseAndPopulateOrderBookTables(Response);
+                    }
 
                 break;
 
                 case 3://market history tab
-                       Response = GetMarketHistory();
-                           if(Response.size() > 0 && Response != "Error"){
-                              ParseAndPopulateMarketHistoryTable(Response);
-                         }
+                    Response = GetMarketHistory();
+                    if(Response.size() > 0 && Response != "Error"){
+                        ParseAndPopulateMarketHistoryTable(Response);
+                    }
                 break;
 
                 case 4: //open orders tab
-                       Response = GetOpenOrders();
-                         if(Response.size() > 0 && Response != "Error"){
-                            ParseAndPopulateOpenOrdersTable(Response);
-                         }
+                    Response = GetOpenOrders();
+                    if(Response.size() > 0 && Response != "Error"){
+                        ParseAndPopulateOpenOrdersTable(Response);
+                    }
 
                 break;
 
                 case 5://account history tab
-                       Response = GetAccountHistory();
-                         if(Response.size() > 0 && Response != "Error"){
-                            ParseAndPopulateAccountHistoryTable(Response);
-                         }
+                    Response = GetAccountHistory();
+                    if(Response.size() > 0 && Response != "Error"){
+                        ParseAndPopulateAccountHistoryTable(Response);
+                    }
                 break;
 
                 case 6://show balance tab
-                       Response = GetBalance("BTC");
-                         if(Response.size() > 0 && Response != "Error"){
-                          DisplayBalance(*ui->BitcoinBalanceLabel,*ui->BitcoinAvailableLabel,*ui->BitcoinPendingLabel, QString::fromUtf8("BTC"),Response);
-                         }
+                    Response = GetBalance("BTC");
+                    if(Response.size() > 0 && Response != "Error"){
+                        DisplayBalance(*ui->BitcoinBalanceLabel,*ui->BitcoinAvailableLabel,*ui->BitcoinPendingLabel, QString::fromUtf8("BTC"),Response);
+                    }
 
-                         Response = GetBalance("TX");
+                    Response = GetBalance("TX");
 
-                       if(Response.size() > 0 && Response != "Error"){
-                         DisplayBalance(*ui->TXBalanceLabel,*ui->TXAvailableLabel_2,*ui->TXPendingLabel, QString::fromUtf8("TX"),Response);
-                        }
+                    if(Response.size() > 0 && Response != "Error"){
+                        DisplayBalance(*ui->TXBalanceLabel,*ui->TXAvailableLabel_2,*ui->TXPendingLabel, QString::fromUtf8("TX"),Response);
+                    }
                 break;
 
                 case 7:
@@ -811,6 +831,115 @@ void tradingDialog::on_UpdateKeys_clicked()
          ui->TradingTabWidget->setTabEnabled(5,true);
          ui->TradingTabWidget->setTabEnabled(6,true);
   }
+
+}
+
+void tradingDialog::on_SaveKeys_clicked()
+{
+    // Encryption properties store iv and password information
+    EncryptionProperties props;
+
+    // Generate a 256 bit random IV from 4 separate 64 bit numbers
+    props.iv = crypto_random();
+    props.iv2 = crypto_random();
+    props.iv3 = crypto_random();
+    props.iv4 = crypto_random();
+
+    // What cipher function do we require?
+    props.cipher = Algorithm::AES;
+
+    // Qstring to string
+    string password = ui->PasswordInput->text().toUtf8().constData();
+    // the password used for encryption / decryption
+    props.password = string(password);
+
+    /*==========  The main cryptostreampp usage  ==========*/
+    boost::filesystem::path pathAPI = GetDataDir() / "APIcache.txt";
+    // Create a stream in output mode to create a brand new file called apicache.txt
+    //CryptoStreamPP stream(pathAPI.string(), props, std::ios::out | std::ios::binary | std::ios::trunc);
+    CryptoStreamPP stream(pathAPI.string(), props, std::ios::out | std::ios::binary | std::ios::trunc);
+
+    // ------------------------------------------------------
+    // NOTE:
+    // After creating the stream, there will be a short pause
+    // as the key stream is initialized. This accounts for
+    // one million iterations of PBKDF2
+    // ------------------------------------------------------
+
+    // write to the stream as you would a normal fstream. Normally
+    // you would write a buffer of char data. In this example,
+    // we write a string which is basically the same thing.
+    // Stream operator support to be properly added in future.
+
+    // qstring to std string add space and convert to const char for stream
+    const char* API = (ui->ApiKeyInput->text().toStdString() + ui->SecretKeyInput->text().toStdString()).c_str();
+    stream.write(API, 64);
+
+    // make sure stream is flushed before closing it
+    stream.flush();
+    stream.close();
+}
+
+void tradingDialog::on_LoadKeys_clicked()
+{
+    // Encryption properties store iv and password information
+    EncryptionProperties props;
+
+    // Generate a 256 bit random IV from 4 separate 64 bit numbers
+    props.iv = crypto_random();
+    props.iv2 = crypto_random();
+    props.iv3 = crypto_random();
+    props.iv4 = crypto_random();
+
+    // What cipher function do we require?
+    props.cipher = Algorithm::AES;
+
+    // Qstring to string
+    string password = ui->PasswordInput->text().toUtf8().constData();
+    // the password used for encryption / decryption
+    props.password = string(password);
+
+    boost::filesystem::path pathAPI = GetDataDir() / "APIcache.txt";
+    // Create a stream in input mode to open a file named APIcache.txt
+    CryptoStreamPP stream(pathAPI.string(), props, std::ios::in | std::ios::binary);
+
+    // Read in a buffer of data
+    {
+        stream.seekg(0);
+        char buffer[33];
+        stream.read(buffer, 32);
+        buffer[32] = '\0';
+
+        // Should print out "api key 32 digit"
+        std::ostringstream ApiKey;
+        std::streambuf * old = std::cout.rdbuf(ApiKey.rdbuf());
+        std::cout<<buffer;
+        //stringstream to standard string to Qstring
+        QString Key = QString::fromStdString(ApiKey.str());
+        ui->ApiKeyInput->setText(Key);
+    }
+
+    stream.flush();
+
+    // now seek to digit 32 and read in api secret
+    {
+        stream.seekg(32);
+        char buffer[33];
+        stream.read(buffer, 32);
+        buffer[32] = '\0';
+
+        // Should print out "api secret 32 digit"
+        std::ostringstream ApiSecret;
+        std::streambuf * old = std::cout.rdbuf(ApiSecret.rdbuf());
+        std::cout<<buffer;
+        //stringstream to standard string to Qstring
+        QString Secret = QString::fromStdString(ApiSecret.str());
+        ui->SecretKeyInput->setText(Secret);
+    }
+
+    stream.flush();
+    stream.close();
+    ui->PasswordInput->setText("");
 
 }
 
@@ -1142,6 +1271,7 @@ void tradingDialog::on_CSUnitsBtn_clicked()
             // If 
             if ( ((Quantity / x) - y) > 0 )
             {
+                sleep(0.050);
                 Price = x;
                 Received += ((Price * y) - ((Price * y / 100) * 0.25));
                 Qty += y;
@@ -1157,6 +1287,7 @@ void tradingDialog::on_CSUnitsBtn_clicked()
                 }
 
             } else {
+                sleep(0.100);
                 Price = x;
                 Received += ((Price * (Quantity / x)) - ((Price * (Quantity / x) / 100) * 0.25));
                 Qty += (Quantity / x);
@@ -1171,6 +1302,7 @@ void tradingDialog::on_CSUnitsBtn_clicked()
                     QMessageBox::information(this,"sFailed",SellResponse);
 
                 } else if (SellResponseObject["success"].toBool() == true){
+                    sleep(0.500);
                     QString Response = Withdraw(ui->CSUnitsInput->text().toDouble(),ui->CSUnitsAddress->text(),Coin);
                     QJsonDocument jsonResponse = QJsonDocument::fromJson(Response.toUtf8());          //get json from str.
                     QJsonObject ResponseObject = jsonResponse.object();                              //get json obj

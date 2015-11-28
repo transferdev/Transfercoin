@@ -38,7 +38,7 @@
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>7</number>
    </property>
    <widget class="QWidget" name="BuyTab">
     <attribute name="title">
@@ -4720,7 +4720,7 @@
      <property name="geometry">
       <rect>
        <x>30</x>
-       <y>90</y>
+       <y>80</y>
        <width>71</width>
        <height>20</height>
       </rect>
@@ -4758,7 +4758,7 @@
      <property name="geometry">
       <rect>
        <x>200</x>
-       <y>90</y>
+       <y>80</y>
        <width>300</width>
        <height>23</height>
       </rect>
@@ -4767,9 +4767,9 @@
     <widget class="QPushButton" name="UpdateKeys">
      <property name="geometry">
       <rect>
-       <x>560</x>
-       <y>90</y>
-       <width>191</width>
+       <x>190</x>
+       <y>150</y>
+       <width>151</width>
        <height>23</height>
       </rect>
      </property>
@@ -4777,11 +4777,115 @@
       <string>Update API Keys</string>
      </property>
     </widget>
+    <widget class="QPushButton" name="SaveKeys">
+     <property name="geometry">
+      <rect>
+       <x>350</x>
+       <y>150</y>
+       <width>151</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Save API Keys</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="LoadKeys">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>150</y>
+       <width>151</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Load API Keys</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label232_16">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>200</y>
+       <width>231</width>
+       <height>161</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Saving keys:&lt;/p&gt;&lt;p&gt;1) Enter in API Keys found at &lt;a href=&quot;https://bittrex.com/Account/ManageApiKey&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Bittrex&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;2) Enter Password&lt;/p&gt;&lt;p&gt;3) Save API Keys&lt;/p&gt;&lt;p&gt;4) Update API Keys&lt;/p&gt;&lt;p&gt;5) Start trading on Bittrex&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label232_17">
+     <property name="geometry">
+      <rect>
+       <x>280</x>
+       <y>190</y>
+       <width>221</width>
+       <height>151</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Loading keys:&lt;/p&gt;&lt;p&gt;1) Enter Password&lt;/p&gt;&lt;p&gt;2) Load API Keys&lt;/p&gt;&lt;p&gt;3) Update API Keys&lt;/p&gt;&lt;p&gt;4) Start trading on Bittrex&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_28">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>110</y>
+       <width>71</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Password</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="PasswordInput">
+     <property name="geometry">
+      <rect>
+       <x>200</x>
+       <y>110</y>
+       <width>300</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="echoMode">
+      <enum>QLineEdit::Password</enum>
+     </property>
+    </widget>
     <zorder>label</zorder>
     <zorder>ApiKeyInput</zorder>
     <zorder>label_2</zorder>
     <zorder>SecretKeyInput</zorder>
     <zorder>UpdateKeys</zorder>
+    <zorder>SaveKeys</zorder>
+    <zorder>LoadKeys</zorder>
+    <zorder>label232_16</zorder>
+    <zorder>label232_17</zorder>
+    <zorder>label_28</zorder>
+    <zorder>PasswordInput</zorder>
    </widget>
   </widget>
   <widget class="QFrame" name="tradingHeaderContainer">

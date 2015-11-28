@@ -509,6 +509,12 @@ void SetBlackThemeQSS(QApplication& app)
                       "QToolBar       { background: rgb(30,32,36); border: none; }");
 }
 
+void setClipboard(const QString& str)
+{
+    QApplication::clipboard()->setText(str, QClipboard::Clipboard);
+    QApplication::clipboard()->setText(str, QClipboard::Selection);
+}
+
 #if BOOST_FILESYSTEM_VERSION >= 3
 boost::filesystem::path qstringToBoostPath(const QString &path)
 {

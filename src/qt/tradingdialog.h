@@ -38,9 +38,13 @@ private slots:
     void UpdaterFunction();
     void CreateOrderBookTables(QTableWidget& Table,QStringList TableHeader);
     void DisplayBalance(QLabel &BalanceLabel,QLabel &Available, QLabel &Pending, QString Currency,QString Response);
+    void DisplayBalance(QLabel &BalanceLabel, QLabel &BalanceLabel2, QString Response, QString Response2);
+    void DisplayBalance(QLabel &BalanceLabel, QString Response);
     void ActionsOnSwitch(int index);
     void CancelOrderSlot(int row, int col);
     void on_UpdateKeys_clicked();
+    void on_LoadKeys_clicked();
+    void on_SaveKeys_clicked();
     void on_GenDepositBTN_clicked();
 
     void CalculateBuyCostLabel();
