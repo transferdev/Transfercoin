@@ -971,14 +971,15 @@ QString tradingDialog::HMAC_SHA512_SIGNER(QString UrlToSign, QString Secret){
     QByteArray byteArrayB = Secret.toUtf8();
     const char* Secretkey = byteArrayB.constData();
 
-    unsigned char* digest;
+    const EVP_MD *md = EVP_sha512();
+    unsigned char* digest = NULL;
 
     // Using sha512 hash engine here.
-    digest = HMAC(EVP_sha512(),  Secretkey, strlen( Secretkey), (unsigned char*) URL, strlen( URL), NULL, NULL);
+    digest = HMAC(md,  Secretkey, strlen( Secretkey), (unsigned char*) URL, strlen( URL), NULL, NULL);
 
     // Be careful of the length of string with the choosen hash engine. SHA1 produces a 20-byte hash value which rendered as 40 characters.
     // Change the length accordingly with your choosen hash engine
-    char mdString[128];
+    char mdString[129] = { 0 };
 
     for(int i = 0; i < 64; i++){
         sprintf(&mdString[i*2], "%02x", (unsigned int)digest[i]);
