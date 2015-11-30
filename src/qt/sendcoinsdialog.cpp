@@ -123,7 +123,7 @@ void SendCoinsDialog::setModel(WalletModel *model)
     if(model && model->getOptionsModel())
     {
         setBalance(model->getBalance(), model->getStake(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance());
-        connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64, qint64)));
+        connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64, qint64, qint64)));
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
         updateDisplayUnit();
 
@@ -267,6 +267,15 @@ void SendCoinsDialog::on_sendButton_clicked()
     case WalletModel::TransactionCommitFailed:
         QMessageBox::warning(this, tr("Send Coins"),
             tr("Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."),
+            QMessageBox::Ok, QMessageBox::Ok);
+        break;
+    case WalletModel::AnonymizeOnlyUnlocked:
+        QMessageBox::warning(this, tr("Send Coins"),
+            tr("Error: The wallet was unlocked only to anonymize coins."),
+            QMessageBox::Ok, QMessageBox::Ok);
+    case WalletModel::NarrationTooLong:
+        QMessageBox::warning(this, tr("Send Coins"),
+            tr("Error: Narration is too long."),
             QMessageBox::Ok, QMessageBox::Ok);
         break;
     case WalletModel::Aborted: // User aborted, nothing to do

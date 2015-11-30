@@ -5,12 +5,6 @@
 #include <qmessagebox.h>
 #include <qtimer.h>
 #include <rpcserver.h>
-#include "cryptostreampp/Algorithms.hpp"
-#include "cryptostreampp/CryptoStreamPP.hpp"
-#include "cryptostreampp/RandomNumberGenerator.hpp"
-
-#include <iosfwd>
-#include <iostream>
 
 #include <QDebug>
 #include <QNetworkAccessManager>
@@ -31,7 +25,6 @@
 #include <stdlib.h>
 
 using namespace std;
-using namespace cryptostreampp;
 
 tradingDialog::tradingDialog(QWidget *parent) :
     QDialog(parent),
@@ -824,6 +817,7 @@ void tradingDialog::on_UpdateKeys_clicked()
          QMessageBox::information(this,"API Configuration Complete","Api connection has been successfully configured and tested.");
          ui->ApiKeyInput->setEchoMode(QLineEdit::Password);
          ui->SecretKeyInput->setEchoMode(QLineEdit::Password);
+         ui->PasswordInput->setText("");
          ui->TradingTabWidget->setTabEnabled(0,true);
          ui->TradingTabWidget->setTabEnabled(1,true);
          ui->TradingTabWidget->setTabEnabled(3,true);
@@ -834,112 +828,91 @@ void tradingDialog::on_UpdateKeys_clicked()
 
 }
 
+string tradingDialog::encryptDecrypt(string toEncrypt, string password) {
+
+    char * key = new char [password.size()+1];
+    std::strcpy (key, password.c_str());
+	key[password.size()] = '\0'; // don't forget the terminating 0
+
+    string output = toEncrypt;
+    
+    for (unsigned int i = 0; i < toEncrypt.size(); i++)
+        output[i] = toEncrypt[i] ^ key[i % (sizeof(key) / sizeof(char))];
+    return output;
+}
+
 void tradingDialog::on_SaveKeys_clicked()
 {
-    // Encryption properties store iv and password information
-    EncryptionProperties props;
-
-    // Generate a 256 bit random IV from 4 separate 64 bit numbers
-    props.iv = crypto_random();
-    props.iv2 = crypto_random();
-    props.iv3 = crypto_random();
-    props.iv4 = crypto_random();
-
-    // What cipher function do we require?
-    props.cipher = Algorithm::AES;
+    bool fSuccess = true;
+    boost::filesystem::path pathConfigFile = GetDataDir() / "APIcache.txt";
+    boost::filesystem::ofstream stream (pathConfigFile.string(), ios::out | ios::trunc);
 
     // Qstring to string
     string password = ui->PasswordInput->text().toUtf8().constData();
-    // the password used for encryption / decryption
-    props.password = string(password);
 
-    /*==========  The main cryptostreampp usage  ==========*/
-    boost::filesystem::path pathAPI = GetDataDir() / "APIcache.txt";
-    // Create a stream in output mode to create a brand new file called apicache.txt
-    //CryptoStreamPP stream(pathAPI.string(), props, std::ios::out | std::ios::binary | std::ios::trunc);
-    CryptoStreamPP stream(pathAPI.string(), props, std::ios::out | std::ios::binary | std::ios::trunc);
+    if (password.length() <= 6){
+        QMessageBox::information(this,"Error !","Your password is too short !");
+        fSuccess = false;
+        stream.close();
+    }
 
-    // ------------------------------------------------------
-    // NOTE:
-    // After creating the stream, there will be a short pause
-    // as the key stream is initialized. This accounts for
-    // one million iterations of PBKDF2
-    // ------------------------------------------------------
+    // qstrings to utf8, add to byteArray and convert to const char for stream
+    string Secret = ui->SecretKeyInput->text().toUtf8().constData();
+    string Key = ui->ApiKeyInput->text().toUtf8().constData();
+    string ESecret = "";
+    string EKey = "";
 
-    // write to the stream as you would a normal fstream. Normally
-    // you would write a buffer of char data. In this example,
-    // we write a string which is basically the same thing.
-    // Stream operator support to be properly added in future.
+    if (stream.is_open() && fSuccess)
+    {
+        ESecret = encryptDecrypt(Secret, password);
+        EKey = encryptDecrypt(Key, password);
+        stream << ESecret << '\n';
+        stream << EKey;
+        stream.close();
+    }
+    if (fSuccess) {
+        QMessageBox::information(this,"Success !","Saved keys successfully to APIcache.txt");
+    }
 
-    // qstring to std string add space and convert to const char for stream
-    const char* API = (ui->ApiKeyInput->text().toStdString() + ui->SecretKeyInput->text().toStdString()).c_str();
-    stream.write(API, 64);
-
-    // make sure stream is flushed before closing it
-    stream.flush();
-    stream.close();
 }
 
 void tradingDialog::on_LoadKeys_clicked()
 {
-    // Encryption properties store iv and password information
-    EncryptionProperties props;
-
-    // Generate a 256 bit random IV from 4 separate 64 bit numbers
-    props.iv = crypto_random();
-    props.iv2 = crypto_random();
-    props.iv3 = crypto_random();
-    props.iv4 = crypto_random();
-
-    // What cipher function do we require?
-    props.cipher = Algorithm::AES;
+    bool fSuccess = true;
+    boost::filesystem::path pathConfigFile = GetDataDir() / "APIcache.txt";
+    boost::filesystem::ifstream stream (pathConfigFile.string());
 
     // Qstring to string
     string password = ui->PasswordInput->text().toUtf8().constData();
-    // the password used for encryption / decryption
-    props.password = string(password);
 
-    boost::filesystem::path pathAPI = GetDataDir() / "APIcache.txt";
-    // Create a stream in input mode to open a file named APIcache.txt
-    CryptoStreamPP stream(pathAPI.string(), props, std::ios::in | std::ios::binary);
-
-    // Read in a buffer of data
-    {
-        stream.seekg(0);
-        char buffer[33];
-        stream.read(buffer, 32);
-        buffer[32] = '\0';
-
-        // Should print out "api key 32 digit"
-        std::ostringstream ApiKey;
-        std::streambuf * old = std::cout.rdbuf(ApiKey.rdbuf());
-        std::cout<<buffer;
-        //stringstream to standard string to Qstring
-        QString Key = QString::fromStdString(ApiKey.str());
-        ui->ApiKeyInput->setText(Key);
+    if (password.length() <= 6){
+        QMessageBox::information(this,"Error !","Your password is too short !");
+        fSuccess = false;
+        stream.close();
     }
 
-    stream.flush();
+    QString DSecret = "";
+    QString DKey = "";
 
-    // now seek to digit 32 and read in api secret
+    if (stream.is_open() && fSuccess)
     {
-        stream.seekg(32);
-        char buffer[33];
-        stream.read(buffer, 32);
-        buffer[32] = '\0';
-
-        // Should print out "api secret 32 digit"
-        std::ostringstream ApiSecret;
-        std::streambuf * old = std::cout.rdbuf(ApiSecret.rdbuf());
-        std::cout<<buffer;
-        //stringstream to standard string to Qstring
-        QString Secret = QString::fromStdString(ApiSecret.str());
-        ui->SecretKeyInput->setText(Secret);
+        int i =0;
+        for ( std::string line; std::getline(stream,line); )
+        {
+            if (i == 0 ){
+                DSecret = QString::fromUtf8(encryptDecrypt(line, password).c_str());
+                ui->SecretKeyInput->setText(DSecret);
+            } else if (i == 1){
+                DKey = QString::fromUtf8(encryptDecrypt(line, password).c_str());
+                ui->ApiKeyInput->setText(DKey);
+            }
+            i++;
+        }
+        stream.close();
     }
-
-    stream.flush();
-    stream.close();
-    ui->PasswordInput->setText("");
+    if (fSuccess) {
+        QMessageBox::information(this,"Success !","Loaded keys successfully from APIcache.txt");
+    }
 
 }
 
@@ -1100,14 +1073,15 @@ QString tradingDialog::HMAC_SHA512_SIGNER(QString UrlToSign, QString Secret){
     QByteArray byteArrayB = Secret.toUtf8();
     const char* Secretkey = byteArrayB.constData();
 
-    unsigned char* digest;
+    const EVP_MD *md = EVP_sha512();
+    unsigned char* digest = NULL;
 
     // Using sha512 hash engine here.
-    digest = HMAC(EVP_sha512(),  Secretkey, strlen( Secretkey), (unsigned char*) URL, strlen( URL), NULL, NULL);
+    digest = HMAC(md,  Secretkey, strlen( Secretkey), (unsigned char*) URL, strlen( URL), NULL, NULL);
 
     // Be careful of the length of string with the choosen hash engine. SHA1 produces a 20-byte hash value which rendered as 40 characters.
     // Change the length accordingly with your choosen hash engine
-    char mdString[128];
+    char mdString[129] = { 0 };
 
     for(int i = 0; i < 64; i++){
         sprintf(&mdString[i*2], "%02x", (unsigned int)digest[i]);

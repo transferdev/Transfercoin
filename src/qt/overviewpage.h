@@ -50,8 +50,6 @@ private:
     qint64 cachedTxLocks;
     qint64 lastNewBlock;
 
-    int showingDarkSendMessage;
-    int darksendActionCheck;
     int cachedNumBlocks;
     TxViewDelegate *txdelegate;
     TransactionFilterProxy *filter;

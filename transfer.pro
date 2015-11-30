@@ -10,7 +10,6 @@ CONFIG += thread
 CONFIG += static
 #CONFIG += openssl-linked
 CONFIG += openssl
-CONFIG += cryptopp
 
 greaterThan(QT_MAJOR_VERSION, 4) {
     QT += widgets
@@ -159,7 +158,9 @@ contains(USE_O3, 1) {
     QMAKE_CFLAGS += -msse2
 }
 
-QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter -Wstack-protector -Wno-unused-function -fpermissive -Wconversion-null -Wno-maybe-uninitialized -std=c++11 -Wno-unused-variable -Wno-unused-local-typedefs
+QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter -Wstack-protector -Wno-unused-function -fpermissive -Wconversion-null -Wno-unused-variable -Wno-unused-local-typedefs
+
+windows:QMAKE_CXXFLAGS_WARN_ON += -Wno-cpp -Wno-maybe-uninitialized
 
 # Input
 DEPENDPATH += src src/json src/qt
@@ -562,16 +563,6 @@ isEmpty(SECP256K1_INCLUDE_PATH) {
     windows:SECP256K1_INCLUDE_PATH=C:/dev/coindeps32/secp256k1/include
 }
 
-isEmpty(CRYPTOPP_LIB_PATH) {
-    windows:CRYPTOPP_LIB_PATH=C:/dev/coindeps32/cryptopp563/lib
-    LIBS += C:/dev/coindeps32/cryptopp563/lib/libcryptopp563.a
-    LIBS += $$join(CRYPTOPP_LIB_PATH,,-L,)
-}
-
-isEmpty(CRYPTOPP_INCLUDE_PATH) {
-    windows:CRYPTOPP_INCLUDE_PATH=C:/dev/coindeps32/cryptopp563/include
-}
-
 windows:DEFINES += WIN32
 windows:RC_FILE = src/qt/res/bitcoin-qt.rc
 
@@ -598,7 +589,7 @@ macx:QMAKE_CXXFLAGS_THREAD += -pthread
 macx:QMAKE_INFO_PLIST = share/qt/Info.plist
 
 # Set libraries and includes at end, to use platform-defined defaults if not overridden
-INCLUDEPATH += $$SECP256K1_INCLUDE_PATH $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH $$QRENCODE_INCLUDE_PATH $$CRYPTOPP_INCLUDE_PATH
+INCLUDEPATH += $$SECP256K1_INCLUDE_PATH $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH $$QRENCODE_INCLUDE_PATH
 LIBS += $$join(SECP256K1_LIB_PATH,,-L,) $$join(BOOST_LIB_PATH,,-L,) $$join(BDB_LIB_PATH,,-L,) $$join(OPENSSL_LIB_PATH,,-L,) $$join(QRENCODE_LIB_PATH,,-L,)
 LIBS += -lssl -lcrypto -ldb_cxx$$BDB_LIB_SUFFIX
 # -lgdi32 has to happen after -lcrypto (see  #681)

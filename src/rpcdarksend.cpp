@@ -135,8 +135,9 @@ Value masternode(const Array& params, bool fHelp)
         strCommand = params[0].get_str();
 
     if (fHelp  ||
-        (strCommand != "start" && strCommand != "start-alias" && strCommand != "start-many" && strCommand != "stop" && strCommand != "stop-alias" && strCommand != "stop-many" && strCommand != "list" && strCommand != "list-conf" && strCommand != "count"  && strCommand != "enforce"
-            && strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" && strCommand != "outputs" && strCommand != "vote-many" && strCommand != "vote"))
+        (strCommand != "count" && strCommand != "current" && strCommand != "debug" && strCommand != "genkey" && strCommand != "enforce" && strCommand != "list" && strCommand != "list-conf"
+        	&& strCommand != "start" && strCommand != "start-alias" && strCommand != "start-many" && strCommand != "status" && strCommand != "stop" && strCommand != "stop-alias"
+                && strCommand != "stop-many" && strCommand != "winners" && strCommand != "connect" && strCommand != "outputs" && strCommand != "vote-many" && strCommand != "vote"))
         throw runtime_error(
                 "masternode \"command\"... ( \"passphrase\" )\n"
                 "Set of commands to execute masternode related actions\n"
@@ -149,15 +150,16 @@ Value masternode(const Array& params, bool fHelp)
                 "  debug        - Print masternode status\n"
                 "  genkey       - Generate new masternodeprivkey\n"
                 "  enforce      - Enforce masternode payments\n"
+                "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
+                "  list-conf    - Print masternode.conf in JSON format\n"
                 "  outputs      - Print masternode compatible outputs\n"
                 "  start        - Start masternode configured in darkcoin.conf\n"
                 "  start-alias  - Start single masternode by assigned alias configured in masternode.conf\n"
                 "  start-many   - Start all masternodes configured in masternode.conf\n"
+                "  status       - Print masternode status information\n"
                 "  stop         - Stop masternode configured in darkcoin.conf\n"
                 "  stop-alias   - Stop single masternode by assigned alias configured in masternode.conf\n"
                 "  stop-many    - Stop all masternodes configured in masternode.conf\n"
-                "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
-                "  list-conf    - Print masternode.conf in JSON format\n"
                 "  winners      - Print list of masternode winners\n"
                 "  vote-many    - Vote on a Transfer initiative\n"
                 "  vote         - Vote on a Transfer initiative\n"
@@ -730,6 +732,26 @@ Value masternode(const Array& params, bool fHelp)
         BOOST_FOREACH(CNode* pnode, vNodes)
             pnode->PushMessage("mvote", activeMasternode.vin, vchMasterNodeSignature, nVote);
 
+    }
+
+    if(strCommand == "status")
+    {
+        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
+        mnEntries = masternodeConfig.getEntries();
+
+        CScript pubkey;
+        pubkey = GetScriptForDestination(activeMasternode.pubKeyMasternode.GetID());
+        CTxDestination address1;
+        ExtractDestination(pubkey, address1);
+        CBitcoinAddress address2(address1);
+
+        Object mnObj;
+        mnObj.push_back(Pair("vin", activeMasternode.vin.ToString().c_str()));
+        mnObj.push_back(Pair("service", activeMasternode.service.ToString().c_str()));
+        mnObj.push_back(Pair("status", activeMasternode.status));
+        mnObj.push_back(Pair("pubKeyMasternode", address2.ToString().c_str()));
+        mnObj.push_back(Pair("notCapableReason", activeMasternode.notCapableReason.c_str()));
+        return mnObj;
     }
 
     return Value::null;

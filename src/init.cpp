@@ -97,6 +97,7 @@ bool ShutdownRequested()
 
 void Shutdown()
 {
+	fRequestShutdown = true; // Needed when we shutdown the wallet
     LogPrintf("Shutdown : In progress...\n");
     static CCriticalSection cs_Shutdown;
     TRY_LOCK(cs_Shutdown, lockShutdown);
@@ -213,9 +214,11 @@ std::string HelpMessage()
 #endif
     strUsage += "  -paytxfee=<amt>        " + _("Fee per KB to add to transactions you send") + "\n";
     strUsage += "  -mininput=<amt>        " + _("When creating transactions, ignore inputs with value less than this (default: 0.01)") + "\n";
-    strUsage += "  -server                " + _("Accept command line and JSON-RPC commands") + "\n";
+    if (fHaveGUI)
+        strUsage += "  -server                " + _("Accept command line and JSON-RPC commands") + "\n";
 #if !defined(WIN32)
-    strUsage += "  -daemon                " + _("Run in the background as a daemon and accept commands") + "\n";
+    if (fHaveGUI)
+        strUsage += "  -daemon                " + _("Run in the background as a daemon and accept commands") + "\n";
 #endif
     strUsage += "  -testnet               " + _("Use the test network") + "\n";
     strUsage += "  -debug=<category>      " + _("Output debugging information (default: 0, supplying <category> is optional)") + "\n";
@@ -223,8 +226,11 @@ std::string HelpMessage()
     strUsage +=                               _("<category> can be:");
     strUsage +=                                 " addrman, alert, db, lock, rand, rpc, selectcoins, mempool, net,"; // Don't translate these and qt below
     strUsage +=                                 " coinage, coinstake, creation, stakemodifier";
-    strUsage += ", qt.\n";
-    strUsage += ".\n";
+    if (fHaveGUI){
+        strUsage += ", qt.\n";
+    }else{
+        strUsage += ".\n";
+    }
     strUsage += "  -logtimestamps         " + _("Prepend debug output with timestamp") + "\n";
     strUsage += "  -shrinkdebugfile       " + _("Shrink debug.log file on client startup (default: 1 when no -debug)") + "\n";
     strUsage += "  -printtoconsole        " + _("Send trace/debug info to console instead of debug.log file") + "\n";
@@ -234,8 +240,10 @@ std::string HelpMessage()
     strUsage += "  -rpcpassword=<pw>      " + _("Password for JSON-RPC connections") + "\n";
     strUsage += "  -rpcport=<port>        " + _("Listen for JSON-RPC connections on <port> (default: 15715 or testnet: 25715)") + "\n";
     strUsage += "  -rpcallowip=<ip>       " + _("Allow JSON-RPC connections from specified IP address") + "\n";
-    strUsage += "  -rpcconnect=<ip>       " + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n";
-    strUsage += "  -rpcwait               " + _("Wait for RPC server to start") + "\n";
+    if (!fHaveGUI){
+        strUsage += "  -rpcconnect=<ip>       " + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n";
+        strUsage += "  -rpcwait               " + _("Wait for RPC server to start") + "\n";
+    }
     strUsage += "  -rpcthreads=<n>        " + _("Set the number of threads to service RPC calls (default: 4)") + "\n";
     strUsage += "  -blocknotify=<cmd>     " + _("Execute command when the best block changes (%s in cmd is replaced by block hash)") + "\n";
     strUsage += "  -walletnotify=<cmd>    " + _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)") + "\n";
@@ -441,8 +449,12 @@ bool AppInit2(boost::thread_group& threadGroup)
     // Check for -socks - as this is a privacy risk to continue, exit here
     if (mapArgs.count("-socks"))
         return InitError(_("Error: Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported."));
-
-    fServer = GetBoolArg("-server", false);
+    if (fDaemon)
+        fServer = true;
+    else
+    	fServer = GetBoolArg("-server", false);
+    if (!fHaveGUI) 
+       fServer = true;
     fPrintToConsole = GetBoolArg("-printtoconsole", false);
     fLogTimestamps = GetBoolArg("-logtimestamps", true);
 #ifdef ENABLE_WALLET
@@ -520,6 +532,9 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     //ignore masternodes below protocol version
     nMasternodeMinProtocol = GetArg("-masternodeminprotocol", MIN_POOL_PEER_PROTO_VERSION);
+
+    if (fDaemon)
+        fprintf(stdout, "Transfer server starting\n"); 
 
     int64_t nStart;
 
@@ -979,6 +994,8 @@ bool AppInit2(boost::thread_group& threadGroup)
         } else {
             return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
         }
+
+        activeMasternode.ManageStatus();
     }
 
     if(GetBoolArg("-mnconflock", true)) {

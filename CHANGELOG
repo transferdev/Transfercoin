@@ -278,6 +278,12 @@ getdifficulty, getsubsidy, and getinfo no longer return POW values
 
 masternodelist updated to include new commands
 
+added "masternode status" command
+
+Autostart masternode upon startup
+
+Move DS pool status out of overview page
+
 -------------------------------------------------------------------------------
 
 

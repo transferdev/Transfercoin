@@ -9,6 +9,9 @@
 #include "clientmodel.h"
 #include "walletmodel.h"
 
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+
 #include <QJsonObject>
 #include <QJsonArray>
 
@@ -87,6 +90,7 @@ private slots:
     QString GetDepositAddress();
     QString HMAC_SHA512_SIGNER(QString UrlToSign,QString Secretkey);
     QString sendRequest(QString url);
+    string encryptDecrypt(string toEncrypt, string password);
     QJsonObject GetResultObjectFromJSONObject(QString response);
     QJsonObject GetResultObjectFromJSONArray(QString response);
     QJsonArray  GetResultArrayFromJSONObject(QString response);

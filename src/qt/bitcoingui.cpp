@@ -777,6 +777,17 @@ void BitcoinGUI::message(const QString &title, const QString &message, bool moda
         notificator->notify((Notificator::Class)nNotifyIcon, strTitle, message);
 }
 
+void BitcoinGUI::error(const QString &title, const QString &message, bool modal)
+{
+    // Report errors from network/worker thread
+    if(modal)
+    {
+        QMessageBox::critical(this, title, message, QMessageBox::Ok, QMessageBox::Ok);
+    } else {
+        notificator->notify(Notificator::Critical, title, message);
+    }
+}
+
 void BitcoinGUI::changeEvent(QEvent *e)
 {
     QMainWindow::changeEvent(e);

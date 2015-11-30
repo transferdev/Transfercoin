@@ -72,8 +72,8 @@ qint64 WalletModel::getImmatureBalance() const
 
 qint64 WalletModel::getAnonymizedBalance() const
 {
-    qint64 ret = wallet->GetAnonymizedBalance();
-    return ret;
+    
+    return wallet->GetAnonymizedBalance();;
 }
 
 void WalletModel::updateStatus()

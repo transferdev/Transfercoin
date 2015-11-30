@@ -233,7 +233,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     unsigned int nHash;
     memcpy(&nHash, &hash, 2);
 
-    LogPrintf(" ProcessBlock Start nHeight %d. \n", nBlockHeight);
+    LogPrintf(" ProcessBlock Start nHeight %d - vin %s. \n", nBlockHeight, activeMasternode.vin.ToString().c_str());
 
     std::vector<CTxIn> vecLastPayments;
     BOOST_REVERSE_FOREACH(CMasternodePaymentWinner& winner, vWinning)

@@ -60,6 +60,7 @@ int64_t nTimeBestReceived = 0;
 bool fImporting = false;
 bool fReindex = false;
 bool fAddrIndex = false;
+bool fHaveGUI = false;
 
 struct COrphanBlock {
     uint256 hashBlock;

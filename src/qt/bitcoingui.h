@@ -147,6 +147,8 @@ public slots:
     */
     void setEncryptionStatus(int status);
 
+    /** Notify the user of an error in the network or transaction handling code. */
+    void error(const QString &title, const QString &message, bool modal);
     /** Notify the user of an event from the core network or transaction handling code.
        @param[in] title     the message box / notification title
        @param[in] message   the displayed text

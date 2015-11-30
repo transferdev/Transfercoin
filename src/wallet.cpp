@@ -4075,6 +4075,7 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 {
     if (!fFileBacked)
         return DB_LOAD_OK;
+    fFirstRunRet = false;
     DBErrors nLoadWalletRet = CWalletDB(strWalletFile,"cr+").LoadWallet(this);
     if (nLoadWalletRet == DB_NEED_REWRITE)
     {
@@ -4090,6 +4091,7 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 
     if (nLoadWalletRet != DB_LOAD_OK)
         return nLoadWalletRet;
+    fFirstRunRet = !vchDefaultKey.IsValid(); 
 
     return DB_LOAD_OK;
 }
