@@ -961,9 +961,8 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64_t> >& listReceived,
         if (nDebit > 0)
         {
             // Don't report 'change' txouts
-        // TXNOTE: CoinControl possible fix related... with HD wallet we need to report change?
-            //if (pwallet->IsChange(txout))
-            //    continue;
+            if (pwallet->IsChange(txout))
+                continue;
             fIsMine = pwallet->IsMine(txout);
         }
         else if (!(fIsMine = pwallet->IsMine(txout)))
