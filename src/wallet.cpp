@@ -962,8 +962,8 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64_t> >& listReceived,
         {
             // Don't report 'change' txouts
         // TXNOTE: CoinControl possible fix related... with HD wallet we need to report change?
-            //if (pwallet->IsChange(txout))
-            //    continue;
+            if (pwallet->IsChange(txout))
+                continue;
             fIsMine = pwallet->IsMine(txout);
         }
         else if (!(fIsMine = pwallet->IsMine(txout)))
@@ -992,7 +992,7 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64_t> >& listReceived,
 void CWalletTx::GetAccountAmounts(const string& strAccount, int64_t& nReceived,
                                   int64_t& nSent, int64_t& nFee) const
 {
-    LOCK(pwallet->cs_wallet);
+
     nReceived = nSent = nFee = 0;
 
     int64_t allFee;
@@ -1008,7 +1008,7 @@ void CWalletTx::GetAccountAmounts(const string& strAccount, int64_t& nReceived,
         nFee = allFee;
     }
     {
-
+    	LOCK(pwallet->cs_wallet);
         BOOST_FOREACH(const PAIRTYPE(CTxDestination,int64_t)& r, listReceived)
         {
             if (pwallet->mapAddressBook.count(r.first))

@@ -10,21 +10,6 @@ software written by Thomas Bernard.
 UNIX BUILD NOTES
 ================
 
-To Build
---------
-
-cd secp256k1 && chmod 755 *
-./autogen.sh && ./configure
-make && sudo make install
-cd ..
-make -f makefile.unix            # Headless transfer
-strip transferd
-
-Take the following steps to build (no UPnP support):
- cd src/
- make -f makefile.unix USE_UPNP=
- strip transferd
-
 Dependencies
 ---------------------
 
@@ -45,7 +30,6 @@ Optional dependencies:
  qt          | GUI              | GUI toolkit (only needed when GUI enabled)
  protobuf    | Payments in GUI  | Data interchange format used for payment protocol (only needed when GUI enabled)
  libqrencode | QR codes in GUI  | Optional for generating QR codes (only needed when GUI enabled)
- libzmq3     | ZMQ notification | Optional, allows generating ZMQ notifications (requires ZMQ version >= 4.x)
 
 For the versions used in the release, see [release-process.md](release-process.md) under *Fetch and build inputs*.
 
@@ -60,7 +44,7 @@ Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
 Build requirements:
 
-    sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev libevent-dev bsdmainutils
+    sudo apt-get install build-essential libtool automake autotools-dev autoconf pkg-config libssl-dev libevent-dev bsdmainutils
 
 On at least Ubuntu 14.04+ and Debian 7+ there are generic names for the
 individual boost development packages, so the following can be used to only
@@ -110,21 +94,6 @@ libqrencode (optional) can be installed with:
 Once these are installed, they will be found by configure and a transfer-qt executable will be
 built by default.
 
-Notes
------
-The release is built with GCC and then "strip transferd" to strip the debug
-symbols, which reduces the executable size by about 90%.
-
-
-miniupnpc
----------
-tar -xzvf miniupnpc-1.6.tar.gz
-cd miniupnpc-1.6
-make
-sudo su
-make install
-
-
 Berkeley DB
 -----------
 It is recommended to use Berkeley DB 4.8. If you have to build it yourself:
@@ -154,7 +123,50 @@ cd $TRANSFER_ROOT
 ./configure LDFLAGS="-L${BDB_PREFIX}/lib/" CPPFLAGS="-I${BDB_PREFIX}/include/" # (other args...)
 ```
 
-**Note**: You only need Berkeley DB if the wallet is enabled (see the section *Disable-Wallet mode* below).
+Notes
+-----
+1) You only need Berkeley DB if the wallet is enabled (see the section *Disable-Wallet mode* below).
+
+2) The release is built with GCC and then "strip transferd" to strip the debug
+symbols, which reduces the executable size by about 90%.
+
+To Build Transferd
+--------
+
+With UPNP:
+
+    cd src/secp256k1 && chmod 755 * && \
+    ./autogen.sh && ./configure && \
+    make && sudo make install && \
+    cd ../.. && make -f makefile.unix && \
+    strip transferd
+
+(Recommended) Without UPNP:
+
+    cd src/secp256k1 && chmod 755 * && \
+    ./autogen.sh && ./configure && \
+    make && sudo make install && \
+    cd ../.. && make -f makefile.unix USE_UPNP= && \
+    strip transferd
+
+To Build Transfer-QT
+--------
+
+With UPNP:
+
+    cd src/secp256k1 && chmod 755 * && \
+    ./autogen.sh && ./configure && \
+    make && sudo make install && \
+    cd ../.. && qmake -qt=qt5 && \
+    make \
+
+(Recommended) Without UPNP:
+
+    cd src/secp256k1 && chmod 755 * && \
+    ./autogen.sh && ./configure && \
+    make && sudo make install && \
+    cd ../.. && qmake -qt=qt5 USE_UPNP=- && \
+    make \
 
 Boost
 -----
@@ -164,6 +176,15 @@ If you need to build Boost yourself:
 	./bootstrap.sh
 	./bjam install
 
+Upnp
+---------
+If you need to build miniupnpc yourself:
+
+    tar -xzvf miniupnpc-1.6.tar.gz
+    cd miniupnpc-1.6
+    make
+    sudo su
+    make install
 
 Security
 --------

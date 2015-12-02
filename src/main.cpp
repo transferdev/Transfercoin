@@ -2552,6 +2552,7 @@ bool CBlock::AcceptBlock()
 {
     AssertLockHeld(cs_main);
 
+    // Remove for BIP-0034 FORK
     if (nVersion > CURRENT_VERSION)
         return DoS(100, error("AcceptBlock() : reject unknown block version %d", nVersion));
 
@@ -2618,6 +2619,14 @@ bool CBlock::AcceptBlock()
     if (!Checkpoints::CheckSync(nHeight))
         return error("AcceptBlock() : rejected by synchronized checkpoint");
 
+    // Reject block.nVersion=1 blocks when 95% of the network has upgraded:
+    if (nVersion < 2)
+    {
+        if (CBlockIndex::IsSuperMajority(2, pindexPrev, 950, 1000))
+        {
+            return error("AcceptBlock() : rejected nVersion=1 block");
+        }
+    }
     // Enforce rule that the coinbase starts with serialized block height
     CScript expect = CScript() << nHeight;
     if (vtx[0].vin[0].scriptSig.size() < expect.size() ||

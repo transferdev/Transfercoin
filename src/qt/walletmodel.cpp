@@ -8,6 +8,8 @@
 #include "wallet.h"
 #include "walletdb.h" // for BackupWallet
 #include "base58.h"
+#include "checkpoints.h"
+#include "main.h"
 #include "spork.h"
 #include "smessage.h"
 
@@ -129,8 +131,11 @@ void WalletModel::checkBalanceChanged()
 
 void WalletModel::updateTransaction(const QString &hash, int status)
 {
-    if(transactionTableModel)
+    if(transactionTableModel){
+        if ((pindexBest->nHeight+100) < Checkpoints::GetTotalBlocksEstimate())
+            return;
         transactionTableModel->updateTransaction(hash, status, true);
+    }
 
     // Balance and number of transactions might have changed
     checkBalanceChanged();

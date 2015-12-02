@@ -284,6 +284,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         accept();
         CoinControlDialog::coinControl->UnSelectAll();
         coinControlUpdateLabels();
+        break;
     }
     fNewRecipientAllowed = true;
 }

@@ -116,9 +116,12 @@ tradingDialog::tradingDialog(QWidget *parent) :
 
     /*populate static combo values*/
     ui->BuyBidcomboBox   -> addItems(QStringList()<<"Last"<<"Bid"<<"Ask");
-    ui->buyOrdertypeCombo-> addItems(QStringList()<<"Limit"<<"Market");
+    ui->buyOrdertypeCombo->hide();
+    //ui->buyOrdertypeCombo-> addItems(QStringList()<<"Limit"<<"Conditional");
     ui->SellBidcomboBox  -> addItems(QStringList()<<"Last"<<"Bid"<<"Ask");
-    ui->SellOrdertypeCombo-> addItems(QStringList()<<"Limit"<<"Market");
+    //ui->SellOrdertypeCombo-> addItems(QStringList()<<"Limit"<<"Conditional");
+    ui->SellOrdertypeCombo->hide();
+    ui->OrderTypeL->hide();
     //ui->BuyTimeInForceCombo-> addItems(QStringList()<<"Good 'Til Cancelled"<<"Immediate Or Cancel");
     //ui->BuyConditionCombo->   addItems(QStringList()<<"Greater Than Or Equal To"<<"Less Than Or Equal To");
     //ui->BuyConditionCombo->hide();
@@ -1029,7 +1032,6 @@ void tradingDialog::on_buyOrdertypeCombo_activated(const QString &arg1)
                                                       }
 }
 
-
 QJsonObject tradingDialog::GetResultObjectFromJSONObject(QString response){
 
     QJsonDocument jsonResponse = QJsonDocument::fromJson(response.toUtf8());          //get json from str.
@@ -1124,7 +1126,7 @@ void tradingDialog::on_BuyTX_clicked()
     Rate     = ui->BuyBidPriceEdit->text().toDouble();
     Quantity = ui->UnitsInput->text().toDouble();
 
-    QString OrderType = ui->buyOrdertypeCombo->currentText();
+    QString OrderType = "Limit";
     QString Order;
 
     if(OrderType == "Limit"){Order = "buylimit";}else if (OrderType == "Market"){ Order = "buymarket";}
@@ -1164,7 +1166,7 @@ void tradingDialog::on_SellTXBTN_clicked()
     Rate     = ui->SellBidPriceEdit->text().toDouble();
     Quantity = ui->UnitsInputTX->text().toDouble();
 
-    QString OrderType = ui->SellOrdertypeCombo->currentText();
+    QString OrderType = "Limit";
     QString Order;
 
     if(OrderType == "Limit"){Order = "selllimit";}else if (OrderType == "Market"){ Order = "sellmarket";}
@@ -1202,6 +1204,8 @@ void tradingDialog::on_CSUnitsBtn_clicked()
     double Received = 0;
     double Qty = 0;
     double Price = 0;
+    double Add = 0;
+
     QString buyorders = GetOrderBook();
     QJsonObject BuyObject = GetResultObjectFromJSONObject(buyorders);
     QJsonObject obj;
@@ -1245,7 +1249,6 @@ void tradingDialog::on_CSUnitsBtn_clicked()
             // If 
             if ( ((Quantity / x) - y) > 0 )
             {
-                sleep(0.050);
                 Price = x;
                 Received += ((Price * y) - ((Price * y / 100) * 0.25));
                 Qty += y;
@@ -1256,15 +1259,20 @@ void tradingDialog::on_CSUnitsBtn_clicked()
                 QJsonObject SellResponseObject = SelljsonResponse.object();                              //get json obj
 
                 if (SellResponseObject["success"].toBool() == false){
+                    if (SellResponseObject["message"] == "DUST_TRADE_DISALLOWED_MIN_VALUE_50K_SAT"){
+                        Add = y;
+                        continue;
+                    }
                     QMessageBox::information(this,"sFailed",SellResponse);
                     break;
                 }
+                MilliSleep(100);
 
             } else {
-                sleep(0.100);
                 Price = x;
                 Received += ((Price * (Quantity / x)) - ((Price * (Quantity / x) / 100) * 0.25));
                 Qty += (Quantity / x);
+                Quantity += (Add / x);
                 if (Quantity < 0.00055){
                     Quantity = 0.00055;
                 }
@@ -1276,17 +1284,24 @@ void tradingDialog::on_CSUnitsBtn_clicked()
                     QMessageBox::information(this,"sFailed",SellResponse);
 
                 } else if (SellResponseObject["success"].toBool() == true){
-                    sleep(0.500);
+                    MilliSleep(5000);
                     QString Response = Withdraw(ui->CSUnitsInput->text().toDouble(),ui->CSUnitsAddress->text(),Coin);
                     QJsonDocument jsonResponse = QJsonDocument::fromJson(Response.toUtf8());          //get json from str.
                     QJsonObject ResponseObject = jsonResponse.object();                              //get json obj
 
                     if (ResponseObject["success"].toBool() == false){
-                        QMessageBox::information(this,"Failed",ResponseObject["message"].toString());
+                        MilliSleep(5000);
+                        QString Response = Withdraw(ui->CSUnitsInput->text().toDouble(),ui->CSUnitsAddress->text(),Coin);
+                        QJsonDocument jsonResponse = QJsonDocument::fromJson(Response.toUtf8());          //get json from str.
+                        QJsonObject ResponseObject = jsonResponse.object();
 
-                    } else if (ResponseObject["success"].toBool() == true){ 
-                        QMessageBox::information(this,"Success","<center>Cross-Send Successful</center>\n Sold "+Astr.number(Qty,'i',4)+" TX for "+Qstr.number((ui->CSUnitsInput->text().toDouble()-0.0002),'i',8)+" BTC");
-
+                        if (ResponseObject["success"].toBool() == false){
+                            QMessageBox::information(this,"Failed",ResponseObject["message"].toString());
+                        } else if (ResponseObject["success"].toBool() == true){
+                            QMessageBox::information(this,"Success","<center>Cross-Send Successful</center>\n Sold "+Astr.number(Qty,'i',4)+" BSTY for "+Qstr.number((ui->CSUnitsInput->text().toDouble()-0.0002),'i',8)+" BTC");
+                        }
+                    } else if (ResponseObject["success"].toBool() == true){
+                        QMessageBox::information(this,"Success","<center>Cross-Send Successful</center>\n Sold "+Astr.number(Qty,'i',4)+" BSTY for "+Qstr.number((ui->CSUnitsInput->text().toDouble()-0.0002),'i',8)+" BTC");
                     }
                 }
                 break;
