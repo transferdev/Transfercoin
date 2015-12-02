@@ -155,7 +155,7 @@
       <string>Bid</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_7">
+    <widget class="QLabel" name="OrderTypeL">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -4809,7 +4809,7 @@
        <x>20</x>
        <y>200</y>
        <width>231</width>
-       <height>161</height>
+       <height>131</height>
       </rect>
      </property>
      <property name="font">
@@ -4820,7 +4820,7 @@
       </font>
      </property>
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Saving keys:&lt;/p&gt;&lt;p&gt;1) Enter in API Keys found at &lt;a href=&quot;https://bittrex.com/Account/ManageApiKey&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Bittrex&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;2) Enter Password&lt;/p&gt;&lt;p&gt;3) Save API Keys&lt;/p&gt;&lt;p&gt;4) Update API Keys&lt;/p&gt;&lt;p&gt;5) Start trading on Bittrex&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Saving keys:&lt;/p&gt;&lt;p&gt;1) Enter in API Keys found at &lt;a href=&quot;https://bittrex.com/Account/ManageApiKey&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Bittrex&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;2) Enter Password&lt;/p&gt;&lt;p&gt;3) Save API Keys&lt;/p&gt;&lt;p&gt;5) Start trading on Bittrex&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
     <widget class="QLabel" name="label232_17">
@@ -4829,7 +4829,7 @@
        <x>280</x>
        <y>190</y>
        <width>221</width>
-       <height>151</height>
+       <height>121</height>
       </rect>
      </property>
      <property name="font">
@@ -4840,7 +4840,7 @@
       </font>
      </property>
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Loading keys:&lt;/p&gt;&lt;p&gt;1) Enter Password&lt;/p&gt;&lt;p&gt;2) Load API Keys&lt;/p&gt;&lt;p&gt;3) Update API Keys&lt;/p&gt;&lt;p&gt;4) Start trading on Bittrex&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Loading keys:&lt;/p&gt;&lt;p&gt;1) Enter Password&lt;/p&gt;&lt;p&gt;2) Load API Keys&lt;/p&gt;&lt;p&gt;4) Start trading on Bittrex&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_28">

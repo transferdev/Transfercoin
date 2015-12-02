@@ -875,6 +875,7 @@ void tradingDialog::on_SaveKeys_clicked()
     }
     if (fSuccess) {
         QMessageBox::information(this,"Success !","Saved keys successfully to APIcache.txt");
+        on_UpdateKeys_clicked();
     }
 
 }
@@ -915,6 +916,7 @@ void tradingDialog::on_LoadKeys_clicked()
     }
     if (fSuccess) {
         QMessageBox::information(this,"Success !","Loaded keys successfully from APIcache.txt");
+        on_UpdateKeys_clicked();
     }
 
 }
@@ -1260,7 +1262,7 @@ void tradingDialog::on_CSUnitsBtn_clicked()
 
                 if (SellResponseObject["success"].toBool() == false){
                     if (SellResponseObject["message"] == "DUST_TRADE_DISALLOWED_MIN_VALUE_50K_SAT"){
-                        Add = y;
+                        Add += y;
                         continue;
                     }
                     QMessageBox::information(this,"sFailed",SellResponse);
@@ -1272,9 +1274,10 @@ void tradingDialog::on_CSUnitsBtn_clicked()
                 Price = x;
                 Received += ((Price * (Quantity / x)) - ((Price * (Quantity / x) / 100) * 0.25));
                 Qty += (Quantity / x);
-                Quantity += (Add / x);
-                if (Quantity < 0.00055){
-                    Quantity = 0.00055;
+                if (Add > 0)
+                    Quantity += (Add * x);
+                if (Quantity < 0.00051){
+                    Quantity = 0.00051;
                 }
                 QString SellResponse = SellTX(Order,(Quantity / x),x);
                 QJsonDocument SelljsonResponse = QJsonDocument::fromJson(SellResponse.toUtf8());          //get json from str.
@@ -1298,10 +1301,10 @@ void tradingDialog::on_CSUnitsBtn_clicked()
                         if (ResponseObject["success"].toBool() == false){
                             QMessageBox::information(this,"Failed",ResponseObject["message"].toString());
                         } else if (ResponseObject["success"].toBool() == true){
-                            QMessageBox::information(this,"Success","<center>Cross-Send Successful</center>\n Sold "+Astr.number(Qty,'i',4)+" BSTY for "+Qstr.number((ui->CSUnitsInput->text().toDouble()-0.0002),'i',8)+" BTC");
+                            QMessageBox::information(this,"Success","<center>Cross-Send Successful</center>\n Sold "+Astr.number(Qty,'i',4)+" TX for "+Qstr.number((ui->CSUnitsInput->text().toDouble()-0.0002),'i',8)+" BTC");
                         }
                     } else if (ResponseObject["success"].toBool() == true){
-                        QMessageBox::information(this,"Success","<center>Cross-Send Successful</center>\n Sold "+Astr.number(Qty,'i',4)+" BSTY for "+Qstr.number((ui->CSUnitsInput->text().toDouble()-0.0002),'i',8)+" BTC");
+                        QMessageBox::information(this,"Success","<center>Cross-Send Successful</center>\n Sold "+Astr.number(Qty,'i',4)+" TX for "+Qstr.number((ui->CSUnitsInput->text().toDouble()-0.0002),'i',8)+" BTC");
                     }
                 }
                 break;
