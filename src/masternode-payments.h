@@ -99,6 +99,7 @@ public:
     void Sync(CNode* node);
     void CleanPaymentList();
     int LastPayment(CMasternode& mn);
+    int GetMinMasternodePaymentsProto();
 
     bool GetBlockPayee(int nBlockHeight, CScript& payee, CTxIn& vin);
 };

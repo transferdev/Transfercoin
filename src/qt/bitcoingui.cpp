@@ -529,6 +529,7 @@ void BitcoinGUI::setWalletModel(WalletModel *walletModel)
     {
         // Receive and report messages from wallet thread
         connect(walletModel, SIGNAL(message(QString,QString,bool,unsigned int)), this, SLOT(message(QString,QString,bool,unsigned int)));
+        connect(sendCoinsPage, SIGNAL(message(QString,QString,bool,unsigned int)), this, SLOT(message(QString,QString,bool,unsigned int)));
 
         // Put transaction list in tabs
         transactionView->setModel(walletModel);

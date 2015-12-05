@@ -23,8 +23,6 @@ class CDarksendBroadcastTx;
 class CActiveMasternode;
 
 // pool states for mixing
-#define POOL_MAX_TRANSACTIONS                  1 // wait for X transactions to merge and publish
-#define POOL_MAX_TRANSACTIONS_TESTNET          1 // wait for X transactions to merge and publish
 #define POOL_STATUS_UNKNOWN                    0 // waiting for update
 #define POOL_STATUS_IDLE                       1 // waiting for update
 #define POOL_STATUS_QUEUE                      2 // waiting in a queue
@@ -40,8 +38,8 @@ class CActiveMasternode;
 #define MASTERNODE_REJECTED                    0
 #define MASTERNODE_RESET                       -1
 
-#define DARKSEND_QUEUE_TIMEOUT                 120
-#define DARKSEND_SIGNING_TIMEOUT               60
+#define DARKSEND_QUEUE_TIMEOUT                 60
+#define DARKSEND_SIGNING_TIMEOUT               30
 
 // used for anonymous relaying of inputs/outputs/sigs
 #define DARKSEND_RELAY_IN                 1
@@ -54,9 +52,6 @@ extern std::vector<CDarksendQueue> vecDarksendQueue;
 extern std::string strMasterNodePrivKey;
 extern map<uint256, CDarksendBroadcastTx> mapDarksendBroadcastTxes;
 extern CActiveMasternode activeMasternode;
-
-// get the Darksend chain depth for a given input
-int GetInputDarksendRounds(CTxIn in, int rounds=0);
 
 /** Holds an Darksend input
  */
@@ -259,6 +254,40 @@ public:
  */
 class CDarksendPool
 {
+private:
+    mutable CCriticalSection cs_darksend;
+
+    std::vector<CDarkSendEntry> entries; // Masternode entries
+    CTransaction finalTransaction; // the finalized transaction ready for signing
+
+    int64_t lastTimeChanged; // last time the 'state' changed, in UTC milliseconds
+
+    unsigned int state; // should be one of the POOL_STATUS_XXX values
+    unsigned int entriesCount;
+    unsigned int lastEntryAccepted;
+    unsigned int countEntriesAccepted;
+
+    std::vector<CTxIn> lockedCoins;
+
+    std::string lastMessage;
+    bool unitTest;
+
+    int sessionID;
+
+    int sessionUsers; //N Users have said they'll join
+    bool sessionFoundMasternode; //If we've found a compatible Masternode
+    std::vector<CTransaction> vecSessionCollateral;
+
+    int cachedLastSuccess;
+
+    int minBlockSpacing; //required blocks between mixes
+    CTransaction txCollateral;
+
+    int64_t lastNewBlock;
+
+    //debugging data
+    std::string strAutoDenomResult;
+
 public:
     enum messages {
         ERR_ALREADY_HAVE,
@@ -286,44 +315,20 @@ public:
     };
 
     std::vector<CDarkSendEntry> myEntries; // clients entries
-    std::vector<CDarkSendEntry> entries; // Masternode entries
-    CTransaction finalTransaction; // the finalized transaction ready for signing
 
-    int64_t lastTimeChanged; // last time the 'state' changed, in UTC milliseconds
     int64_t lastAutoDenomination; // TODO; not used - Delete?
-
-    unsigned int state; // should be one of the POOL_STATUS_XXX values
-    unsigned int entriesCount;
-    unsigned int lastEntryAccepted;
-    unsigned int countEntriesAccepted;
 
     // where collateral should be made out to
     CScript collateralPubKey;
 
-    std::vector<CTxIn> lockedCoins;
-
     uint256 masterNodeBlockHash;
 
-    std::string lastMessage;
     bool completedTransaction;
-    bool unitTest;
     CMasternode* pSubmittedToMasternode;
 
-    int sessionID;
     int sessionDenom; //Users must submit an denom matching this
-    int sessionUsers; //N Users have said they'll join
-    bool sessionFoundMasternode; //If we've found a compatible Masternode
-    std::vector<CTransaction> vecSessionCollateral;
 
-    int cachedLastSuccess;
     int cachedNumBlocks; //used for the overview screen
-    int minBlockSpacing; //required blocks between mixes
-    CTransaction txCollateral;
-
-    int64_t lastNewBlock;
-
-    //debugging data
-    std::string strAutoDenomResult;
 
     CDarksendPool()
     {
@@ -331,10 +336,10 @@ public:
             to behave themselves. If they don't it takes their money. */
 
         cachedLastSuccess = 0;
-        cachedNumBlocks = 0;
+        cachedNumBlocks = std::numeric_limits<int>::max();
         unitTest = false;
         txCollateral = CTransaction();
-        minBlockSpacing = 1;
+        minBlockSpacing = 0;
         lastNewBlock = 0;
 
         SetNull();
@@ -358,13 +363,7 @@ public:
     void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
     void InitCollateralAddress(){
-        std::string strAddress = "";
-        if(Params().NetworkID() == CChainParams::MAIN) {
-            strAddress = "TfFxcTN7BJQp88cPJYRvFpUAAKefTib9uh";
-        } else {
-            strAddress = "TfFxcTN7BJQp88cPJYRvFpUAAKefTib9uh";
-        }
-        SetCollateralAddress(strAddress);
+        SetCollateralAddress(Params().DarksendPoolDummyAddress());
     }
 
     void SetMinBlockSpacing(int minBlockSpacingIn){
@@ -373,13 +372,13 @@ public:
 
     bool SetCollateralAddress(std::string strAddress);
     void Reset();
-    void SetNull(bool clearEverything=false);
+    void SetNull();
 
     void UnlockCoins();
 
     bool IsNull() const
     {
-        return (state == POOL_STATUS_ACCEPTING_ENTRIES && entries.empty() && myEntries.empty());
+        return state == POOL_STATUS_ACCEPTING_ENTRIES && myEntries.empty();
     }
 
     int GetState() const
@@ -391,11 +390,7 @@ public:
 
     int GetEntriesCount() const
     {
-        if(fMasterNode){
-            return entries.size();
-        } else {
-            return entriesCount;
-        }
+        return entries.size();
     }
 
     /// Get the time the last entry was accepted (time in UTC milliseconds)
@@ -420,7 +415,7 @@ public:
     void UpdateState(unsigned int newState)
     {
         if (fMasterNode && (newState == POOL_STATUS_ERROR || newState == POOL_STATUS_SUCCESS)){
-            LogPrintf("CDarksendPool::UpdateState() - Can't set state to ERROR or SUCCESS when running as a Masternode. \n");
+            LogPrint("darksend", "CDarksendPool::UpdateState() - Can't set state to ERROR or SUCCESS as a Masternode. \n");
             return;
         }
 
@@ -437,11 +432,7 @@ public:
     /// Get the maximum number of transactions for the pool
     int GetMaxPoolTransactions()
     {
-        /*//if we're on testnet, just use two transactions per merge
-        if(Params().NetworkID() == CChainParams::TESTNET || Params().NetworkID() == CChainParams::REGTEST) return POOL_MAX_TRANSACTIONS_TESTNET;
-        */
-        //use the production amount
-        return POOL_MAX_TRANSACTIONS;
+        return Params().PoolMaxTransactions();
     }
 
     /// Do we have enough users to take entries?
@@ -456,8 +447,11 @@ public:
     bool IsCompatibleWithSession(int64_t nAmount, CTransaction txCollateral, std::string& strReason);
 
     /// Passively run Darksend in the background according to the configuration in settings (only for QT)
-    bool DoAutomaticDenominating(bool fDryRun=false, bool ready=false);
+    bool DoAutomaticDenominating(bool fDryRun=false);
     bool PrepareDarksendDenominate();
+
+    /// from masternode-sync.h
+    bool IsBlockchainSynced();
 
     /// Check for process in Darksend
     void Check();
@@ -500,14 +494,14 @@ public:
     bool CreateDenominated(int64_t nTotalValue);
 
     /// Get the denominations for a list of outputs (returns a bitshifted integer)
-    int GetDenominations(const std::vector<CTxOut>& vout, bool fRandDenom = false);
+    int GetDenominations(const std::vector<CTxOut>& vout, bool fSingleRandomDenom = false);
     int GetDenominations(const std::vector<CTxDSOut>& vout);
 
     void GetDenominationsToString(int nDenom, std::string& strDenom);
 
     /// Get the denominations for a specific amount of dash.
-    int GetDenominationsByAmount(int64_t nAmount, int nDenomTarget=0);
-    int GetDenominationsByAmounts(std::vector<int64_t>& vecAmount, bool fRandDenom = false);
+    int GetDenominationsByAmount(int64_t nAmount, int nDenomTarget=0); // is not used anymore?
+    int GetDenominationsByAmounts(std::vector<int64_t>& vecAmount);
 
     std::string GetMessageByID(int messageID);
 
@@ -519,7 +513,7 @@ public:
     void RelaySignaturesAnon(std::vector<CTxIn>& vin);
     void RelayInAnon(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout);
     void RelayIn(const std::vector<CTxDSIn>& vin, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxDSOut>& vout);
-    void RelayStatus(const int sessionID, const int newState, const int newEntriesCount, const int newAccepted, const std::string error="");
+    void RelayStatus(const int sessionID, const int newState, const int newEntriesCount, const int newAccepted, const int errorID=MSG_NOERR);
     void RelayCompletedTransaction(const int sessionID, const bool error, const std::string errorMessage);
 };
 

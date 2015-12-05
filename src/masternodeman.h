@@ -101,7 +101,7 @@ public:
     // Clear masternode vector
     void Clear();
 
-    int CountEnabled();
+    int CountEnabled(int protocolVersion = -1);
 
     int CountMasternodesAboveProtocol(int protocolVersion);
 
@@ -116,6 +116,9 @@ public:
 
     // Find a random entry
     CMasternode* FindRandom();
+
+    /// Find a random entry
+    CMasternode* FindRandomNotInVec(std::vector<CTxIn> &vecToExclude, int protocolVersion = -1);
 
     // Get the current winner for this block
     CMasternode* GetCurrentMasterNode(int mod=1, int64_t nBlockHeight=0, int minProtocol=0);

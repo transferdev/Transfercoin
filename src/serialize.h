@@ -46,7 +46,7 @@ inline T* NCONST_PTR(const T* val)
     return const_cast<T*>(val);
 }
 
-/** 
+/**
  * Get begin pointer of vector (non-const version).
  * @note These functions avoid the undefined case of indexing into an empty
  * vector, as well as that of indexing after the end of the vector.
@@ -136,11 +136,11 @@ enum
 #define READWRITES(obj)	    (::SerReadWrite(s, (obj), nType, nVersion, ser_action))
 
 
-/** 
+/**
  * Implement three methods for serializable objects. These are actually wrappers over
  * "SerializationOp" template, which implements the body of each class' serialization
  * code. Adding "ADD_SERIALIZE_METHODS" in the body of the class causes these wrappers to be
- * added as members. 
+ * added as members.
  */
 #define ADD_SERIALIZE_METHODS                                                          \
     size_t GetSerializeSize(int nType, int nVersion) const {                         \
@@ -818,8 +818,14 @@ void Unserialize(Stream& is, std::set<K, Pred, A>& m, int nType, int nVersion)
 // Support for IMPLEMENT_SERIALIZE and READWRITE macro
 //
 class CSerActionGetSerializeSize { };
-class CSerActionSerialize { };
-class CSerActionUnserialize { };
+struct CSerActionSerialize
+{
+    bool ForRead() const { return false; }
+};
+struct CSerActionUnserialize
+{
+    bool ForRead() const { return true; }
+};
 
 template<typename Stream, typename T>
 inline unsigned int SerReadWrite(Stream& s, const T& obj, int nType, int nVersion, CSerActionGetSerializeSize ser_action)
@@ -1305,7 +1311,5 @@ public:
         return (*this);
     }
 };
-
-
 
 #endif

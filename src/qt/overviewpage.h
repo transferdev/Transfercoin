@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QTimer>
+#include "util.h"
 
 namespace Ui {
     class OverviewPage;
@@ -32,7 +33,7 @@ public:
 
 public slots:
     void darkSendStatus();
-    void setBalance(qint64 balance, qint64 stake, qint64 unconfirmedBalance, qint64 immatureBalance, qint64 anonymizedBalance);
+    void setBalance(const CAmount& balance, const CAmount& stake, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance);
 
 signals:
     void transactionClicked(const QModelIndex &index);
@@ -42,13 +43,13 @@ private:
     Ui::OverviewPage *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;
-    qint64 currentBalance;
-    qint64 currentStake;
-    qint64 currentUnconfirmedBalance;
-    qint64 currentImmatureBalance;
-    qint64 currentAnonymizedBalance;
-    qint64 cachedTxLocks;
-    qint64 lastNewBlock;
+    CAmount currentBalance;
+    CAmount currentStake;
+    CAmount currentUnconfirmedBalance;
+    CAmount currentImmatureBalance;
+    CAmount currentAnonymizedBalance;
+    CAmount cachedTxLocks;
+    CAmount lastNewBlock;
 
     int cachedNumBlocks;
     TxViewDelegate *txdelegate;

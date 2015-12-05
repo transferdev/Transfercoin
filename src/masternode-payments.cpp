@@ -7,6 +7,7 @@
 #include "darksend.h"
 #include "util.h"
 #include "sync.h"
+#include "spork.h"
 #include "addrman.h"
 #include <boost/lexical_cast.hpp>
 
@@ -16,6 +17,12 @@ CCriticalSection cs_masternodepayments;
 CMasternodePayments masternodePayments;
 // keep track of Masternode votes I've seen
 map<uint256, CMasternodePaymentWinner> mapSeenMasternodeVotes;
+
+int CMasternodePayments::GetMinMasternodePaymentsProto() {
+    return IsSporkActive(SPORK_10_MASTERNODE_PAY_UPDATED_NODES)
+            ? MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2
+            : MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1;
+}
 
 void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {

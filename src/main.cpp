@@ -659,16 +659,12 @@ int64_t GetMinFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree, 
 }
 
 
-bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, bool* pfMissingInputs, bool ignoreFees)
+bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree,
+                        bool* pfMissingInputs, bool fRejectInsaneFee, bool ignoreFees)
 {
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
         *pfMissingInputs = false;
-
-    // Hard fork to ignore fees
-    if (pindexBest->nHeight < HARD_FORK_BLOCK2) {
-        ignoreFees = false;
-   	}
 
     if (!tx.CheckTransaction())
         return error("AcceptToMemoryPool : CheckTransaction failed");
@@ -722,7 +718,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, boo
         // do we already have it?
         if (txdb.ContainsTx(hash))
             return false;
-        
+
         // do all inputs exist?
         // Note that this does not check for the presence of actual outputs (see the next check for that),
         // only helps filling in pfMissingInputs (to determine missing vs spent).
@@ -763,7 +759,11 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, boo
         unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 
         // Don't accept it if it can't get into a block
-        if(!ignoreFees){
+        // but prioritise dstx and don't check fees for it
+        if(mapDarksendBroadcastTxes.count(hash)) {
+            // Normally we would PrioritiseTransaction But currently it is unimplemented
+            // mempool.PrioritiseTransaction(hash, hash.ToString(), 1000, 0.1*COIN);
+        } else if(!ignoreFees){
             int64_t txMinFee = GetMinFee(tx, nSize, true, GMF_RELAY);
             if (fLimitFree && nFees < txMinFee)
                 return error("AcceptToMemoryPool : not enough fees %s, %d < %d",
@@ -793,6 +793,11 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, boo
                 dFreeCount += nSize;
             }
         }
+
+        if (fRejectInsaneFee && nFees > MIN_RELAY_TX_FEE * 10000)
+            return error("AcceptableInputs: : insane fees %s, %d > %d",
+                         hash.ToString(),
+                         nFees, MIN_RELAY_TX_FEE * 10000);
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
@@ -829,16 +834,14 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, boo
     return true;
 }
 
-bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree, bool ignoreFees)
+bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree,
+                         bool* pfMissingInputs, bool fRejectInsaneFee, bool isDSTX)
 {
     AssertLockHeld(cs_main);
+    if (pfMissingInputs)
+        *pfMissingInputs = false;
 
     CTransaction tx(txo);
-
-    // Hard fork to ignore fees
-    if (pindexBest->nHeight < HARD_FORK_BLOCK2) {
-        ignoreFees = false;
-   	}
 
     if (!tx.CheckTransaction())
         return error("AcceptableInputs : CheckTransaction failed");
@@ -856,7 +859,7 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
     //if (!TestNet() && !IsStandardTx(tx, reason))
     //    return error("AcceptableInputs : nonstandard transaction: %s",
     //                 reason);
-    
+
 
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();
@@ -914,7 +917,10 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
         unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 
         // Don't accept it if it can't get into a block
-        if(!ignoreFees){
+        if(isDSTX) {
+            // Normally we would PrioritiseTransaction But currently it is unimplemented
+            // mempool.PrioritiseTransaction(hash, hash.ToString(), 1000, 0.1*COIN);
+        } else { // same as !ignoreFees for AcceptToMemoryPool
             int64_t txMinFee = GetMinFee(tx, nSize, true, GMF_RELAY);
             if (fLimitFree && nFees < txMinFee)
                 return error("AcceptableInputs : not enough fees %s, %d < %d",
@@ -944,6 +950,11 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
                 dFreeCount += nSize;
             }
         }
+
+        if (fRejectInsaneFee && nFees > MIN_RELAY_TX_FEE * 10000)
+            return error("AcceptableInputs: : insane fees %s, %d > %d",
+                         hash.ToString(),
+                         nFees, MIN_RELAY_TX_FEE * 10000);
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
@@ -1042,9 +1053,9 @@ int CMerkleTx::GetBlocksToMaturity() const
 }
 
 
-bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree)
+bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree, bool fRejectInsaneFee, bool ignoreFees)
 {
-    return ::AcceptToMemoryPool(mempool, *this, fLimitFree, NULL);
+    return ::AcceptToMemoryPool(mempool, *this, fLimitFree, NULL, fRejectInsaneFee, ignoreFees);
 }
 
 
@@ -1280,7 +1291,7 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfSta
 }
 
 unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake)
-{   
+{
     CBigNum bnTargetLimit = fProofOfStake ? GetProofOfStakeLimit(pindexLast->nHeight) : Params().ProofOfWorkLimit();
 
     if (pindexLast == NULL)
@@ -1377,7 +1388,7 @@ void Misbehaving(NodeId pnode, int howmuch)
             {
                 LogPrintf("Misbehaving: %s (%d -> %d) BAN THRESHOLD EXCEEDED\n", pn->addrName, pn->nMisbehavior-howmuch, pn->nMisbehavior);
                 //pn->fShouldBan = true;
-            } 
+            }
             else
                 LogPrintf("Misbehaving: %s (%d -> %d)\n", pn->addrName, pn->nMisbehavior-howmuch, pn->nMisbehavior);
 
@@ -1584,7 +1595,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
 
             // If prev is coinbase or coinstake, check that it's matured
             if(pindexBest->nHeight >= HARD_FORK_BLOCK){
-                if (txPrev.IsCoinBase() || txPrev.IsCoinStake()) 
+                if (txPrev.IsCoinBase() || txPrev.IsCoinStake())
                 {
                     int nSpendDepth;
                     if (IsConfirmedInNPrevBlocks(txindex, pindexBlock, nCoinbaseMaturity, nSpendDepth)){
@@ -1598,7 +1609,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
                             return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", pindexBlock->nHeight - pindex->nHeight);
                         }
                     }
-                }     
+                }
             }
             // ppcoin: check transaction timestamp
             if (txPrev.nTime > nTime)
@@ -1777,7 +1788,7 @@ void CBlock::RebuildAddressIndex(CTxDB& txdb)
     {
         uint256 hashTx = tx.GetHash();
         // inputs
-        if(!tx.IsCoinBase()) 
+        if(!tx.IsCoinBase())
         {
             MapPrevTx mapInputs;
             map<uint256, CTxIndex> mapQueuedChangesT;
@@ -1952,7 +1963,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
         {
             uint256 hashTx = tx.GetHash();
             // inputs
-            if(!tx.IsCoinBase()) 
+            if(!tx.IsCoinBase())
             {
                 MapPrevTx mapInputs;
                 map<uint256, CTxIndex> mapQueuedChangesT;
@@ -2259,7 +2270,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
 // ppcoin: total coin age spent in transaction, in the unit of coin-days.
 // Only those coins meeting minimum age requirement counts. As those
 // transactions not in main chain are not currently indexed so we
-// might not find out about their coin age. Older transactions are 
+// might not find out about their coin age. Older transactions are
 // guaranteed to be in main chain by sync-checkpoint. This rule is
 // introduced to help nodes establish a consistent view of the coin
 // age (trust score) of competing branches.
@@ -2446,7 +2457,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
     bool MasternodePayments = false;
 
     if(nTime > START_MASTERNODE_PAYMENTS) MasternodePayments = true;
-   
+
     if(MasternodePayments)
     {
         LOCK2(cs_main, mempool.cs);
@@ -2726,7 +2737,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     if (!fReindex && !fImporting && pblock->IsProofOfStake() && setStakeSeen.count(pblock->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash))
         return error("ProcessBlock() : duplicate proof-of-stake (%s, %d) for block %s", pblock->GetProofOfStake().first.ToString(), pblock->GetProofOfStake().second, hash.ToString());
 
-    if (pblock->hashPrevBlock != hashBestChain) 
+    if (pblock->hashPrevBlock != hashBestChain)
     {
         // Extra checks to prevent "fill up memory by spamming with bogus blocks"
         const CBlockIndex* pcheckpoint = Checkpoints::AutoSelectSyncCheckpoint();
@@ -3349,7 +3360,7 @@ void static ProcessGetData(CNode* pfrom)
             }
             else if (inv.IsKnownType())
             {
-            	if(fDebug) LogPrintf("ProcessGetData -- Starting \n");
+                if(fDebug) LogPrintf("ProcessGetData -- Starting \n");
                 // Send stream from relay memory
                 bool pushed = false;
                 /*{
@@ -3362,8 +3373,8 @@ void static ProcessGetData(CNode* pfrom)
                     }
                 }*/
                 if (!pushed && inv.type == MSG_TX) {
-                	string txHash = inv.hash.ToString().c_str();
-                	if(fDebug) LogPrintf("ProcessGetData -- txHash %d \n", txHash);
+                    string txHash = inv.hash.ToString().c_str();
+                    if(fDebug) LogPrintf("ProcessGetData -- txHash %d \n", txHash);
                     if(mapDarksendBroadcastTxes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
@@ -3804,7 +3815,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CTransaction tx;
 
         //masternode signed transaction
-        bool allowFree = false;
+        bool ignoreFees = false;
         CTxIn vin;
         vector<unsigned char> vchSig;
         int64_t sigTime;
@@ -3835,7 +3846,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
                 LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString().c_str());
 
-                allowFree = true;
+                ignoreFees = true;
                 pmn->allowFreeTx = false;
 
                 if(!mapDarksendBroadcastTxes.count(tx.GetHash())){
@@ -3859,7 +3870,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         mapAlreadyAskedFor.erase(inv);
 
-        if (AcceptToMemoryPool(mempool, tx, true, &fMissingInputs, allowFree))
+        if (AcceptToMemoryPool(mempool, tx, true, &fMissingInputs, false, ignoreFees))
         {
             RelayTransaction(tx, inv.hash);
             vWorkQueue.push_back(inv.hash);

@@ -196,6 +196,41 @@ void CoinControlDialog::buttonSelectAllClicked()
     LogPrintf("CoinControlDialog::buttonSelectAllClicked(CoinControlDialog::updateLabels) - Time elapsed: %f \n", t);
 }
 
+/* Toggle lock state
+void CoinControlDialog::buttonToggleLockClicked()
+{
+    QTreeWidgetItem *item;
+    // Works in list-mode only
+    if(ui->radioListMode->isChecked()){
+        ui->treeWidget->setEnabled(false);
+        for (int i = 0; i < ui->treeWidget->topLevelItemCount(); i++){
+            item = ui->treeWidget->topLevelItem(i);
+            COutPoint outpt(uint256(item->text(COLUMN_TXHASH).toStdString()), item->text(COLUMN_VOUT_INDEX).toUInt());
+            if (model->isLockedCoin(uint256(item->text(COLUMN_TXHASH).toStdString()), item->text(COLUMN_VOUT_INDEX).toUInt())){
+                model->unlockCoin(outpt);
+                item->setDisabled(false);
+                item->setIcon(COLUMN_CHECKBOX, QIcon());
+            }
+            else{
+                model->lockCoin(outpt);
+                item->setDisabled(true);
+                item->setIcon(COLUMN_CHECKBOX, QIcon(":/icons/lock_closed"));
+            }
+            updateLabelLocked();
+        }
+        ui->treeWidget->setEnabled(true);
+        CoinControlDialog::updateLabels(model, this);
+    }
+    else{
+        QMessageBox msgBox;
+        msgBox.setObjectName("lockMessageBox");
+        msgBox.setStyleSheet(GUIUtil::loadStyleSheet());
+        msgBox.setText(tr("Please switch to \"List mode\" to use this function."));
+        msgBox.exec();
+    }
+}
+*/
+
 // context menu
 void CoinControlDialog::showMenu(const QPoint &point)
 {
@@ -350,7 +385,7 @@ void CoinControlDialog::headerSectionClicked(int logicalIndex)
     }
     else
     {
-    	logicalIndex = getMappedColumn(logicalIndex, false);
+        logicalIndex = getMappedColumn(logicalIndex, false);
 
         if (sortColumn == logicalIndex)
             sortOrder = ((sortOrder == Qt::AscendingOrder) ? Qt::DescendingOrder : Qt::AscendingOrder);
@@ -421,21 +456,23 @@ void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
         else {
             coinControl->Select(outpt);
             CTxIn vin(outpt);
-            int rounds = GetInputDarksendRounds(vin);
+            int rounds = pwalletMain->GetInputDarksendRounds(vin);
             if(coinControl->useDarkSend && rounds < nDarksendRounds) {
                 QMessageBox::warning(this, windowTitle(),
-                    tr("Non-anonymized input selected. <b>Darksend will be disabled.</b><br><br>If you still want to use Darksend, please deselect all non-anonymized inputs first and then check Darksend checkbox again."),
+                    tr("Non-anonymized input selected. <b>Darksend will be disabled.</b><br><br>If you still want to use Darksend, please deselect all non-nonymized inputs first and then check Darksend checkbox again."),
                     QMessageBox::Ok, QMessageBox::Ok);
                 coinControl->useDarkSend = false;
             }
         }
+
         // selection changed -> update labels
         if (ui->treeWidget->isEnabled()) // do not update on every click for (un)select all
             CoinControlDialog::updateLabels(model, this);
     }
+
     // todo: this is a temporary qt5 fix: when clicking a parent node in tree mode, the parent node
-    //       including all children are partially selected. But the parent node should be fully selected
-    //       as well as the children. Children should never be partially selected in the first place.
+    //       including all childs are partially selected. But the parent node should be fully selected
+    //       as well as the childs. Childs should never be partially selected in the first place.
     //       Please remove this ugly fix, once the bug is solved upstream.
 #if QT_VERSION >= 0x050000
     else if (column == COLUMN_CHECKBOX && item->childCount() > 0)
@@ -782,7 +819,7 @@ void CoinControlDialog::updateView()
 
             // ds+ rounds
             CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
-            int rounds = GetInputDarksendRounds(vin);
+            int rounds = pwalletMain->GetInputDarksendRounds(vin);
 
             if(rounds >= 0) itemOutput->setText(COLUMN_DARKSEND_ROUNDS, strPad(QString::number(rounds), 15, " "));
             else itemOutput->setText(COLUMN_DARKSEND_ROUNDS, strPad(QString(tr("n/a")), 15, " "));

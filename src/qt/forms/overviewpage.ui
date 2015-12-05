@@ -249,7 +249,7 @@
              </widget>
             </item>
             <item row="4" column="0" colspan="2">
-             <widget class="Line" name="line">
+             <widget class="Line" name="lineSpendableBalance">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -421,7 +421,7 @@
              <string notr="true">color: rgb(0, 0, 0);</string>
             </property>
             <property name="text">
-             <string>0 TX</string>
+             <string notr="true">0 TX</string>
             </property>
            </widget>
           </item>

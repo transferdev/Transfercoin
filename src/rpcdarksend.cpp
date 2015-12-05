@@ -76,7 +76,7 @@ Value darksend(const Array& params, bool fHelp)
     }
 
     if(params[0].get_str() == "reset"){
-        darkSendPool.SetNull(true);
+        darkSendPool.SetNull();
         darkSendPool.UnlockCoins();
         return "successfully reset darksend";
     }

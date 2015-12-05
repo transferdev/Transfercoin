@@ -53,8 +53,8 @@ enum AvailableCoinsType
 {
     ALL_COINS = 1,
     ONLY_DENOMINATED = 2,
-    ONLY_NONDENOMINATED = 3,
-    ONLY_NONDENOMINATED_NOTMN = 4 // ONLY_NONDENOMINATED and not 1000 TX at the same time
+    ONLY_NOT10000IFMN = 3,
+    ONLY_NONDENOMINATED_NOT10000IFMN = 4
 };
 
 /** IsMine() return codes */
@@ -133,12 +133,11 @@ public:
     bool SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t nValueMax, std::vector<CTxIn>& vCoinsRet, std::vector<COutput>& vCoinsRet2, int64_t& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax);
     bool SelectCoinsDarkDenominated(int64_t nTargetValue, std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet) const;
     bool SelectCoinsMasternode(CTxIn& vin, int64_t& nValueRet, CScript& pubScript) const;
-    bool HasCollateralInputs() const;
+    bool HasCollateralInputs(bool fOnlyConfirmed = true) const;
     bool IsCollateralAmount(int64_t nInputAmount) const;
     int  CountInputsWithAmount(int64_t nInputAmount);
 
     bool SelectCoinsCollateral(std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet) const ;
-    bool SelectCoinsWithoutDenomination(int64_t nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const;
     bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);
 
     bool fFileBacked;
@@ -199,6 +198,8 @@ public:
     std::set<COutPoint> setLockedCoins;
 
     int64_t nTimeFirstKey;
+
+    const CWalletTx* GetWalletTx(const uint256& hash) const;
 
     // check whether we are allowed to upgrade (or already support) to the named feature
     bool CanSupportFeature(enum WalletFeature wf) { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }
@@ -274,11 +275,11 @@ public:
     CAmount GetBalance() const;
     CAmount GetUnconfirmedBalance() const;
     CAmount GetImmatureBalance() const;
-    CAmount GetAnonymizableBalance(bool includeAlreadyAnonymized=false) const; 
+    CAmount GetAnonymizableBalance() const; 
     CAmount GetAnonymizedBalance() const;
     double GetAverageAnonymizedRounds() const;
     CAmount GetNormalizedAnonymizedBalance() const;
-    CAmount GetDenominatedBalance(bool onlyDenom=true, bool onlyUnconfirmed=false, bool includeAlreadyAnonymized = true) const;
+    CAmount GetDenominatedBalance(bool unconfirmed=false) const;
 
     bool CreateTransaction(const std::vector<std::pair<CScript, int64_t> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64_t& nFeeRet, int32_t& nChangePos, std::string& strFailReason, const CCoinControl *coinControl=NULL, AvailableCoinsType coin_type=ALL_COINS, bool useIX=false);
     bool CreateTransaction(CScript scriptPubKey, int64_t nValue, std::string& sNarr, CWalletTx& wtxNew, CReserveKey& reservekey, int64_t& nFeeRet, const CCoinControl *coinControl=NULL);
@@ -318,6 +319,10 @@ public:
     std::set< std::set<CTxDestination> > GetAddressGroupings();
     std::map<CTxDestination, int64_t> GetAddressBalances();
 
+    // get the Darksend chain depth for a given input
+    int GetRealInputDarksendRounds(CTxIn in, int rounds) const;
+    // respect current settings
+    int GetInputDarksendRounds(CTxIn in) const;
 
     bool IsDenominated(const CTxIn &txin) const;
 
@@ -526,11 +531,30 @@ public:
     // memory only
     mutable bool fDebitCached;
     mutable bool fCreditCached;
+    mutable bool fImmatureCreditCached;
     mutable bool fAvailableCreditCached;
+    mutable bool fAnonymizableCreditCached;
+    mutable bool fAnonymizedCreditCached;
+    mutable bool fDenomUnconfCreditCached;
+    mutable bool fDenomConfCreditCached;
+    mutable bool fWatchDebitCached;
+    mutable bool fWatchCreditCached;
+    mutable bool fImmatureWatchCreditCached;
+    mutable bool fAvailableWatchCreditCached;
     mutable bool fChangeCached;
+
     mutable int64_t nDebitCached;
     mutable int64_t nCreditCached;
+    mutable int64_t nImmatureCreditCached;
     mutable int64_t nAvailableCreditCached;
+    mutable CAmount nAnonymizableCreditCached;
+    mutable CAmount nAnonymizedCreditCached;
+    mutable CAmount nDenomUnconfCreditCached;
+    mutable CAmount nDenomConfCreditCached;
+    //mutable CAmount nWatchDebitCached;
+    //mutable CAmount nWatchCreditCached;
+    //mutable CAmount nImmatureWatchCreditCached;
+    //mutable CAmount nAvailableWatchCreditCached;
     mutable int64_t nChangeCached;
 
     CWalletTx()
@@ -567,11 +591,26 @@ public:
         vfSpent.clear();
         fDebitCached = false;
         fCreditCached = false;
+        fImmatureCreditCached = false;
         fAvailableCreditCached = false;
+        fAnonymizableCreditCached = false;
+        fAnonymizedCreditCached = false;
+        fDenomUnconfCreditCached = false;
+        fDenomConfCreditCached = false;
+        //fWatchDebitCached = false;
+        //fWatchCreditCached = false;
+        //fImmatureWatchCreditCached = false;
+        //fAvailableWatchCreditCached = false;
         fChangeCached = false;
         nDebitCached = 0;
         nCreditCached = 0;
         nAvailableCreditCached = 0;
+        nAnonymizableCreditCached = 0;
+        nAnonymizedCreditCached = 0;
+        nDenomUnconfCreditCached = 0;
+        nDenomConfCreditCached = 0;
+        //nWatchDebitCached = 0;
+        //nWatchCreditCached = 0;
         nChangeCached = 0;
         nOrderPos = -1;
     }
@@ -658,6 +697,14 @@ public:
     {
         fCreditCached = false;
         fAvailableCreditCached = false;
+        fAnonymizableCreditCached = false;
+        fAnonymizedCreditCached = false;
+        fDenomUnconfCreditCached = false;
+        fDenomConfCreditCached = false;
+        //fWatchDebitCached = false;
+        //fWatchCreditCached = false;
+        //fAvailableWatchCreditCached = false;
+        //fImmatureWatchCreditCached = false;
         fDebitCached = false;
         fChangeCached = false;
     }
@@ -733,6 +780,20 @@ public:
         return nCreditCached;
     }
 
+    CAmount GetImmatureCredit(bool fUseCache=true) const
+    {
+        if (IsCoinBase() && GetBlocksToMaturity() > 0 && IsInMainChain())
+        {
+            if (fUseCache && fImmatureCreditCached)
+                return nImmatureCreditCached;
+            nImmatureCreditCached = pwallet->GetCredit(*this);
+            fImmatureCreditCached = true;
+            return nImmatureCreditCached;
+        }
+
+        return 0;
+    }
+
     int64_t GetAvailableCredit(bool fUseCache=true) const
     {
         // Must wait until coinbase is safely deep enough in the chain before valuing it
@@ -759,6 +820,120 @@ public:
         return nCredit;
     }
 
+    CAmount GetAnonymizableCredit(bool fUseCache=true) const
+    {
+        if (pwallet == 0)
+            return 0;
+
+        // Must wait until coinbase is safely deep enough in the chain before valuing it
+        if (IsCoinBase() && GetBlocksToMaturity() > 0)
+            return 0;
+
+        //if (fUseCache && fAnonymizableCreditCached)
+            //return nAnonymizableCreditCached;
+
+        CAmount nCredit = 0;
+        uint256 hashTx = GetHash();
+        for (unsigned int i = 0; i < vout.size(); i++)
+        {
+            const CTxOut &txout = vout[i];
+            const CTxIn vin = CTxIn(hashTx, i);
+
+            if(pwallet->IsSpent(hashTx, i) || pwallet->IsLockedCoin(hashTx, i)) continue;
+            if(fMasterNode && vout[i].nValue == GetMNCollateral(pindexBest->nHeight)*COIN) continue; // do not count MN-like outputs
+
+            const int rounds = pwallet->GetInputDarksendRounds(vin);
+            if(rounds >=-2 && rounds < nDarksendRounds) {
+                nCredit += pwallet->GetCredit(txout);
+                if (!MoneyRange(nCredit))
+                    throw std::runtime_error("CWalletTx::GetAnonamizableCredit() : value out of range");
+            }
+        }
+
+        nAnonymizableCreditCached = nCredit;
+        fAnonymizableCreditCached = true;
+        return nCredit;
+    }
+
+    CAmount GetAnonymizedCredit(bool fUseCache=true) const
+    {
+        if (pwallet == 0)
+            return 0;
+
+        // Must wait until coinbase is safely deep enough in the chain before valuing it
+        if (IsCoinBase() && GetBlocksToMaturity() > 0)
+            return 0;
+
+        if (fUseCache && fAnonymizedCreditCached)
+            return nAnonymizedCreditCached;
+
+        CAmount nCredit = 0;
+        uint256 hashTx = GetHash();
+        for (unsigned int i = 0; i < vout.size(); i++)
+        {
+            const CTxOut &txout = vout[i];
+            const CTxIn vin = CTxIn(hashTx, i);
+
+            if(pwallet->IsSpent(hashTx, i) || !pwallet->IsDenominated(vin)) continue;
+
+            const int rounds = pwallet->GetInputDarksendRounds(vin);
+            if(rounds >= nDarksendRounds){
+                nCredit += pwallet->GetCredit(txout);
+                if (!MoneyRange(nCredit))
+                    throw std::runtime_error("CWalletTx::GetAnonymizedCredit() : value out of range");
+            }
+        }
+
+        nAnonymizedCreditCached = nCredit;
+        fAnonymizedCreditCached = true;
+        return nCredit;
+    }
+
+
+    CAmount GetDenominatedCredit(bool unconfirmed, bool fUseCache=true) const
+    {
+        if (pwallet == 0)
+            return 0;
+
+        // Must wait until coinbase is safely deep enough in the chain before valuing it
+        if (IsCoinBase() && GetBlocksToMaturity() > 0)
+            return 0;
+
+        int nDepth = GetDepthInMainChain(false);
+        if(nDepth < 0) return 0;
+
+        bool isUnconfirmed = !IsFinalTx(*this) || (!IsTrusted() && nDepth == 0);
+        if(unconfirmed != isUnconfirmed) return 0;
+
+        if (fUseCache) {
+            if(unconfirmed && fDenomUnconfCreditCached)
+                return nDenomUnconfCreditCached;
+            else if (!unconfirmed && fDenomConfCreditCached)
+                return nDenomConfCreditCached;
+        }
+
+        CAmount nCredit = 0;
+        uint256 hashTx = GetHash();
+        for (unsigned int i = 0; i < vout.size(); i++)
+        {
+            const CTxOut &txout = vout[i];
+
+            if(pwallet->IsSpent(hashTx, i) || !pwallet->IsDenominatedAmount(vout[i].nValue)) continue;
+
+            nCredit += pwallet->GetCredit(txout);
+            if (!MoneyRange(nCredit))
+                throw std::runtime_error("CWalletTx::GetDenominatedCredit() : value out of range");
+        }
+
+        if(unconfirmed) {
+            nDenomUnconfCreditCached = nCredit;
+            fDenomUnconfCreditCached = true;
+        } else {
+            nDenomConfCreditCached = nCredit;
+            fDenomConfCreditCached = true;
+        }
+        return nCredit;
+    }
 
     int64_t GetChange() const
     {

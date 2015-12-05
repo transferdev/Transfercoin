@@ -106,6 +106,10 @@ public:
         vSeeds.push_back(CDNSSeedData("First",  "txdns.infernopool.com"));
         convertSeeds(vFixedSeeds, pnSeed, ARRAYLEN(pnSeed), nDefaultPort);
 
+        nPoolMaxTransactions = 3;
+        //strSporkKey = "046f78dcf911fbd61910136f7f0f8d90578f68d0b3ac973b5040fb7afb501b5939f39b108b0569dca71488f5bbf498d92e4d1194f6f941307ffd95f75e76869f0e";
+        //strMasternodePaymentsPubKey = "046f78dcf911fbd61910136f7f0f8d90578f68d0b3ac973b5040fb7afb501b5939f39b108b0569dca71488f5bbf498d92e4d1194f6f941307ffd95f75e76869f0e";
+        strDarksendPoolDummyAddress = "TcYM6qFTC9i1CHb4GoHTQchF7Z2Qru73gv";
         nLastPOWBlock = 15000;
         nPOSStartBlock = 1000;
     }

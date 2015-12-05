@@ -202,7 +202,7 @@ bool CMasternodeMan::Add(CMasternode &mn)
 
     if (pmn == NULL)
     {
-        if(fDebug) LogPrintf("CMasternodeMan: Adding new masternode %s - %i now\n", mn.addr.ToString().c_str(), size() + 1);
+        LogPrint("masternode", "CMasternodeMan: Adding new masternode %s - %i now\n", mn.addr.ToString().c_str(), size() + 1);
         vMasternodes.push_back(mn);
         return true;
     }
@@ -228,7 +228,7 @@ void CMasternodeMan::CheckAndRemove()
     vector<CMasternode>::iterator it = vMasternodes.begin();
     while(it != vMasternodes.end()){
         if((*it).activeState == CMasternode::MASTERNODE_REMOVE || (*it).activeState == CMasternode::MASTERNODE_VIN_SPENT || (*it).protocolVersion < nMasternodeMinProtocol){
-            if(fDebug) LogPrintf("CMasternodeMan: Removing inactive masternode %s - %i now\n", (*it).addr.ToString().c_str(), size() - 1);
+            LogPrint("masternode", "CMasternodeMan: Removing inactive masternode %s - %i now\n", (*it).addr.ToString().c_str(), size() - 1);
             it = vMasternodes.erase(it);
         } else {
             ++it;
@@ -277,13 +277,15 @@ void CMasternodeMan::Clear()
     nDsqCount = 0;
 }
 
-int CMasternodeMan::CountEnabled()
+int CMasternodeMan::CountEnabled(int protocolVersion)
 {
     int i = 0;
+    protocolVersion = protocolVersion == -1 ? masternodePayments.GetMinMasternodePaymentsProto() : protocolVersion;
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
         mn.Check();
-        if(mn.IsEnabled()) i++;
+        if(mn.protocolVersion < protocolVersion || !mn.IsEnabled()) continue;
+        i++;
     }
 
     return i;
@@ -380,6 +382,38 @@ CMasternode *CMasternodeMan::Find(const CPubKey &pubKeyMasternode)
         if(mn.pubkey2 == pubKeyMasternode)
             return &mn;
     }
+    return NULL;
+}
+
+CMasternode *CMasternodeMan::FindRandomNotInVec(std::vector<CTxIn> &vecToExclude, int protocolVersion)
+{
+    LOCK(cs);
+
+    protocolVersion = protocolVersion == -1 ? masternodePayments.GetMinMasternodePaymentsProto() : protocolVersion;
+
+    int nCountEnabled = CountEnabled(protocolVersion);
+    LogPrintf("CMasternodeMan::FindRandomNotInVec - nCountEnabled - vecToExclude.size() %d\n", nCountEnabled - vecToExclude.size());
+    if(nCountEnabled - vecToExclude.size() < 1) return NULL;
+
+    int rand = GetRandInt(nCountEnabled - vecToExclude.size());
+    LogPrintf("CMasternodeMan::FindRandomNotInVec - rand %d\n", rand);
+    bool found;
+
+    BOOST_FOREACH(CMasternode &mn, vMasternodes) {
+        if(mn.protocolVersion < protocolVersion || !mn.IsEnabled()) continue;
+        found = false;
+        BOOST_FOREACH(CTxIn &usedVin, vecToExclude) {
+            if(mn.vin.prevout == usedVin.prevout) {
+                found = true;
+                break;
+            }
+        }
+        if(found) continue;
+        if(--rand < 1) {
+            return &mn;
+        }
+    }
+
     return NULL;
 }
 
@@ -536,7 +570,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 {
 
     if(fLiteMode) return; //disable all darksend/masternode related functionality
-    if(IsInitialBlockDownload()) return;
+    if(!darkSendPool.IsBlockchainSynced()) return;
 
     LOCK(cs_process_message);
 
@@ -650,7 +684,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        if(fDebug) LogPrintf("dsee - Got NEW masternode entry %s\n", addr.ToString().c_str());
+        LogPrint("masternode", "dsee - Got NEW masternode entry %s\n", addr.ToString().c_str());
 
         // make sure it's still unspent
         //  - this is checked later by .check() in many places and by ThreadCheckDarkSendPool()
@@ -660,8 +694,14 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CTxOut vout = CTxOut(DARKSEND_POOL_MAX, darkSendPool.collateralPubKey);
         tx.vin.push_back(vin);
         tx.vout.push_back(vout);
-        if(AcceptableInputs(mempool, tx, false)){
-            if(fDebug) LogPrintf("dsee - Accepted masternode entry %i %i\n", count, current);
+        bool fAcceptable = false;
+        {
+            TRY_LOCK(cs_main, lockMain);
+            if(!lockMain) return;
+            fAcceptable = AcceptableInputs(mempool, tx, false, NULL);
+        }
+        if(fAcceptable){
+            LogPrint("masternode", "dsee - Accepted masternode entry %i %i\n", count, current);
 
             if(GetInputAge(vin) < MASTERNODE_MIN_CONFIRMATIONS){
                 LogPrintf("dsee - Input must have least %d confirmations\n", MASTERNODE_MIN_CONFIRMATIONS);
@@ -778,7 +818,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        if(fDebug) LogPrintf("dseep - Couldn't find masternode entry %s\n", vin.ToString().c_str());
+        LogPrint("masternode", "dseep - Couldn't find masternode entry %s\n", vin.ToString().c_str());
 
         std::map<COutPoint, int64_t>::iterator i = mWeAskedForMasternodeListEntry.find(vin.prevout);
         if (i != mWeAskedForMasternodeListEntry.end())
@@ -862,7 +902,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
             if(mn.IsEnabled())
             {
-                if(fDebug) LogPrintf("dseg - Sending masternode entry - %s \n", mn.addr.ToString().c_str());
+                LogPrint("masternode", "dseg - Sending masternode entry - %s \n", mn.addr.ToString().c_str());
                 if(vin == CTxIn()){
                     pfrom->PushMessage("dsee", mn.vin, mn.addr, mn.sig, mn.sigTime, mn.pubkey, mn.pubkey2, count, i, mn.lastTimeSeen, mn.protocolVersion, mn.donationAddress, mn.donationPercentage);
                 } else if (vin == mn.vin) {
@@ -900,7 +940,7 @@ void CMasternodeMan::Remove(CTxIn vin)
     vector<CMasternode>::iterator it = vMasternodes.begin();
     while(it != vMasternodes.end()){
         if((*it).vin == vin){
-            if(fDebug) LogPrintf("CMasternodeMan: Removing Masternode %s - %i now\n", (*it).addr.ToString().c_str(), size() - 1);
+            LogPrint("masternode", "CMasternodeMan: Removing Masternode %s - %i now\n", (*it).addr.ToString().c_str(), size() - 1);
             vMasternodes.erase(it);
             break;
         }

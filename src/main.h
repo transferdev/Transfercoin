@@ -18,13 +18,13 @@
 
 class CValidationState;
 
-#define START_MASTERNODE_PAYMENTS_TESTNET 1429456427 
+#define START_MASTERNODE_PAYMENTS_TESTNET 1429456427
 #define START_MASTERNODE_PAYMENTS 1429456427
 
 static const int64_t DARKSEND_COLLATERAL = (0.01*COIN);
 static const int64_t DARKSEND_POOL_MAX = (9999.99*COIN);
 
-static const int64_t STATIC_POS_REWARD = 1 * COIN; //Constant reward of 1 TX per COIN i.e. 8% 
+static const int64_t STATIC_POS_REWARD = 1 * COIN; //Constant reward of 1 TX per COIN i.e. 8%
 static const int64_t TARGET_SPACING_FORK = 60;
 static const int64_t TARGET_SPACING = 69;
 static const signed int HARD_FORK_BLOCK = 90000;
@@ -170,9 +170,11 @@ void ThreadStakeMiner(CWallet *pwallet);
 
 
 /** (try to) add transaction to memory pool **/
-bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, bool* pfMissingInputs, bool ignoreFees=false);
+bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree,
+                        bool* pfMissingInputs, bool fRejectInsaneFee=false, bool ignoreFees=false);
 
-bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree, bool ignoreFees=true);
+bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree,
+                        bool* pfMissingInputs, bool fRejectInsaneFee=false, bool isDSTX=false);
 
 
 bool FindTransactionsByDestination(const CTxDestination &dest, std::vector<uint256> &vtxhash);
@@ -549,7 +551,7 @@ public:
     int GetDepthInMainChain(bool enableIX=true) const { CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet, enableIX); }
     bool IsInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChainINTERNAL(pindexRet) > 0; }
     int GetBlocksToMaturity() const;
-    bool AcceptToMemoryPool(bool fLimitFree=true);
+    bool AcceptToMemoryPool(bool fLimitFree=true, bool fRejectInsaneFee=true, bool ignoreFees=false);
     int GetTransactionLockSignatures() const;
     bool IsTransactionLockTimedOut() const;
 };
@@ -921,7 +923,7 @@ public:
     int64_t nMoneySupply;
 
     unsigned int nFlags;  // ppcoin: block index flags
-    enum  
+    enum
     {
         BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
         BLOCK_STAKE_ENTROPY  = (1 << 1), // entropy bit for stake modifier

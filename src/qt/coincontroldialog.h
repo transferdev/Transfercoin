@@ -116,6 +116,7 @@ private slots:
     void buttonBoxClicked(QAbstractButton*);
     void buttonSelectAllClicked();
     //void updateLabelLocked();
+    //void buttonToggleLockClicked();
 };
 
 #endif // COINCONTROLDIALOG_H

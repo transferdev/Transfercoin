@@ -55,6 +55,13 @@ public:
         uBTC
     };
 
+    enum SeparatorStyle
+    {
+        separatorNever,
+        separatorStandard,
+        separatorAlways
+    };
+
     //! @name Static API
     //! Unit conversion and formatting
     ///@{
@@ -74,11 +81,18 @@ public:
     //! Number of decimals left
     static int decimals(int unit);
     //! Format as string
-    static QString format(int unit, qint64 amount, bool plussign=false);
+    static QString format(int unit, const qint64& amount, bool plussign=false, SeparatorStyle separators=separatorStandard);
+    static QString simpleFormat(int unit, const qint64& amount, bool plussign=false, SeparatorStyle separators=separatorStandard);
     //! Format as string (with unit)
-    static QString formatWithUnit(int unit, qint64 amount, bool plussign=false);
+    static QString formatWithUnit(int unit, const qint64& amount, bool plussign=false, SeparatorStyle separators=separatorStandard);
+    static QString formatHtmlWithUnit(int unit, const qint64& amount, bool plussign=false, SeparatorStyle separators=separatorStandard);
+    //! Format as string (with unit) but floor value up to "digits" settings
+    static QString floorWithUnit(int unit, const qint64& amount, bool plussign=false, SeparatorStyle separators=separatorStandard);
+    static QString floorHtmlWithUnit(int unit, const qint64& amount, bool plussign=false, SeparatorStyle separators=separatorStandard);
     //! Parse string to coin amount
     static bool parse(int unit, const QString &value, qint64 *val_out);
+    //! Gets title for amount column including current display unit if optionsModel reference available */
+    static QString getAmountColumnTitle(int unit);
     ///@}
 
     //! @name AbstractListModel implementation
@@ -100,6 +114,9 @@ public:
 #endif
         return text;
     }
+
+    //! Return maximum number of base units (Satoshis)
+    static qint64 maxMoney();
 
 private:
     QList<BitcoinUnits::Unit> unitlist;

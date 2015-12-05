@@ -53,8 +53,8 @@ private:
     OptionsModel *optionsModel;
 
     int cachedNumBlocks;
-    QString cachedMasternodeCountString;
     int numBlocksAtStartup;
+    QString cachedMasternodeCountString;
 
     QTimer *pollTimer;
     QTimer *pollMnTimer;
