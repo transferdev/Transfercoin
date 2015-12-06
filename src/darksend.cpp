@@ -2257,11 +2257,11 @@ void CDarksendPool::RelayIn(const std::vector<CTxDSIn>& vin, const int64_t& nAmo
     }
 }
 
-void CDarksendPool::RelayStatus(const int sessionID, const int newState, const int newEntriesCount, const int newAccepted, const int errorID)
+void CDarksendPool::RelayStatus(const int sessionID, const int newState, const int newEntriesCount, const int newAccepted, const std::string error)
 {
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushMessage("dssu", sessionID, newState, newEntriesCount, newAccepted, errorID);
+        pnode->PushMessage("dssu", sessionID, newState, newEntriesCount, newAccepted, errorMessage);
 }
 
 void CDarksendPool::RelayCompletedTransaction(const int sessionID, const bool error, const std::string errorMessage)
