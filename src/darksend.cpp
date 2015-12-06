@@ -2261,7 +2261,7 @@ void CDarksendPool::RelayStatus(const int sessionID, const int newState, const i
 {
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushMessage("dssu", sessionID, newState, newEntriesCount, newAccepted, errorMessage);
+        pnode->PushMessage("dssu", sessionID, newState, newEntriesCount, newAccepted, error);
 }
 
 void CDarksendPool::RelayCompletedTransaction(const int sessionID, const bool error, const std::string errorMessage)
