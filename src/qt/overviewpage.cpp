@@ -102,7 +102,7 @@ OverviewPage::OverviewPage(QWidget *parent) :
     clientModel(0),
     walletModel(0),
     currentBalance(-1),
-    currentStake(0),
+    currentStake(-1),
     currentUnconfirmedBalance(-1),
     currentImmatureBalance(-1),
     txdelegate(new TxViewDelegate()),
@@ -131,8 +131,6 @@ OverviewPage::OverviewPage(QWidget *parent) :
     // init "out of sync" warning labels
     ui->labelWalletStatus->setText("(" + tr("out of sync") + ")");
     ui->labelTransactionsStatus->setText("(" + tr("out of sync") + ")");
-
-    lastNewBlock = 0;
 
     if(fLiteMode){
         ui->frameDarksend->setVisible(false);
@@ -183,18 +181,17 @@ OverviewPage::~OverviewPage()
 
 void OverviewPage::setBalance(const CAmount& balance, const CAmount& stake, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance)
 {
-    int unit = walletModel->getOptionsModel()->getDisplayUnit();
     currentBalance = balance;
     currentStake = stake;
     currentUnconfirmedBalance = unconfirmedBalance;
     currentImmatureBalance = immatureBalance;
     currentAnonymizedBalance = anonymizedBalance;
-    ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance));
-    ui->labelStake->setText(BitcoinUnits::formatWithUnit(unit, stake));
-    ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, unconfirmedBalance));
-    ui->labelImmature->setText(BitcoinUnits::formatWithUnit(unit, immatureBalance));
-    ui->labelTotal->setText(BitcoinUnits::formatWithUnit(unit, balance + stake + unconfirmedBalance + immatureBalance));
-    ui->labelAnonymized->setText(BitcoinUnits::formatWithUnit(unit, anonymizedBalance));
+    ui->labelBalance->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, balance));
+    ui->labelStake->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, stake));
+    ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, unconfirmedBalance));
+    ui->labelImmature->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, immatureBalance));
+    ui->labelTotal->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, balance + stake + unconfirmedBalance + immatureBalance));
+    ui->labelAnonymized->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, anonymizedBalance));
 
     // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
     // for the non-mining users
@@ -259,11 +256,13 @@ void OverviewPage::updateDisplayUnit()
 {
     if(walletModel && walletModel->getOptionsModel())
     {
+
+        nDisplayUnit = walletModel->getOptionsModel()->getDisplayUnit();
         if(currentBalance != -1)
-            setBalance(currentBalance, walletModel->getStake(), currentUnconfirmedBalance, currentImmatureBalance, currentAnonymizedBalance);
+            setBalance(currentBalance, currentStake, currentUnconfirmedBalance, currentImmatureBalance, currentAnonymizedBalance);
 
         // Update txdelegate->unit with the current unit
-        txdelegate->unit = walletModel->getOptionsModel()->getDisplayUnit();
+        txdelegate->unit = nDisplayUnit;
 
         ui->listTransactions->update();
     }
@@ -285,17 +284,14 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 
 void OverviewPage::updateDarksendProgress()
 {
-    if(darkSendPool.IsBlockchainSynced() || ShutdownRequested()) return;
+    if(!darkSendPool.IsBlockchainSynced() || ShutdownRequested()) return;
 
-    if(!pwalletMain || !walletModel || !walletModel->getOptionsModel()) return;
+    if(!pwalletMain) return;
 
-    int nDisplayUnit = walletModel->getOptionsModel()->getDisplayUnit();
     QString strAmountAndRounds;
     QString strAnonymizeTransferAmount = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, nAnonymizeTransferAmount * COIN, false, BitcoinUnits::separatorAlways);
 
-
-    int64_t nBalance = pwalletMain->GetBalance();
-    if(nBalance == 0)
+    if(currentBalance == 0)
     {
         ui->darksendProgress->setValue(0);
         ui->darksendProgress->setToolTip(tr("No inputs detected"));
@@ -467,23 +463,20 @@ void OverviewPage::darksendReset(){
 
 void OverviewPage::toggleDarksend(){
 
-/*    QSettings settings;
+    QSettings settings;
     // Popup some information on first mixing
     QString hasMixed = settings.value("hasMixed").toString();
     if(hasMixed.isEmpty()){
         QMessageBox::information(this, tr("Darksend"),
-                tr("If you don't want to see internal Darksend fees/transactions select \"Most Common\" as Type on the \"Transactions\" tab."),
+                tr("If you don't want to see internal Darksend fees/transactions select \"Received By\" as Type on the \"Transactions\" tab."),
                 QMessageBox::Ok, QMessageBox::Ok);
         settings.setValue("hasMixed", "hasMixed");
-    }*/
+    }
     if(!fEnableDarksend){
-        int64_t balance = pwalletMain->GetBalance();
+        int64_t balance = currentBalance;
         float minAmount = 1.49 * COIN;
         if(balance < minAmount){
-            QString strMinAmount(
-                BitcoinUnits::formatWithUnit(
-                    walletModel->getOptionsModel()->getDisplayUnit(),
-                    minAmount));
+            QString strMinAmount(BitcoinUnits::formatWithUnit(nDisplayUnit, minAmount));
             QMessageBox::warning(this, tr("Darksend"),
                 tr("Darksend requires at least %1 to use.").arg(strMinAmount),
                 QMessageBox::Ok, QMessageBox::Ok);

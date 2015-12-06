@@ -57,14 +57,14 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     connect(ui->checkBoxCoinControlChange, SIGNAL(stateChanged(int)), this, SLOT(coinControlChangeChecked(int)));
     connect(ui->lineEditCoinControlChange, SIGNAL(textEdited(const QString &)), this, SLOT(coinControlChangeEdited(const QString &)));
 
-    
+
     // Dash specific
     QSettings settings;
     if (!settings.contains("bUseDarkSend"))
         settings.setValue("bUseDarkSend", false);
     if (!settings.contains("bUseInstantX"))
         settings.setValue("bUseInstantX", false);
-        
+
     bool useDarkSend = settings.value("bUseDarkSend").toBool();
     bool useInstantX = settings.value("bUseInstantX").toBool();
 
@@ -158,7 +158,7 @@ void SendCoinsDialog::setModel(WalletModel *model)
     this->model = model;
     if(model && model->getOptionsModel())
     {
-    	for(int i = 0; i < ui->entries->count(); ++i)
+        for(int i = 0; i < ui->entries->count(); ++i)
         {
             SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
             if(entry)
@@ -382,7 +382,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients, QString strFee,
     questionString.append("<hr />");
     questionString.append(tr("<b>(%1 of %2 entries displayed)</b>").arg(displayedEntries).arg(messageEntries));
 
-    // Display message box    
+    // Display message box
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm send coins"),
         questionString.arg(formatted.join("<br />")),
         QMessageBox::Yes | QMessageBox::Cancel,
