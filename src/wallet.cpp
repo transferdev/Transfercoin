@@ -1304,12 +1304,13 @@ void CWalletTx::RelayWalletTransaction(CTxDB& txdb, std::string strCommand)
     {
         if (GetDepthInMainChain() == 0) {
         	uint256 hash = GetHash();
-            LogPrintf("Relaying wtx %s\n", hash.ToString());
             if(strCommand == "txlreq"){
+            	LogPrintf("Relaying txlreq %s\n", hash.ToString());
                 mapTxLockReq.insert(make_pair(hash, ((CTransaction)*this)));
                 CreateNewLock(((CTransaction)*this));
                 RelayTransactionLockReq(((CTransaction)*this), hash, true);
             } else {
+            	LogPrintf("Relaying wtx %s\n", hash.ToString());
                 RelayTransaction((CTransaction)*this, hash);
             }
         }
@@ -2567,8 +2568,6 @@ bool CWallet::ConvertList(std::vector<CTxIn> vCoins, std::vector<int64_t>& vecAm
 
 bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64_t& nFeeRet, int32_t& nChangePos, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool useIX)
 {
-	if(useIX && nFeePay < CENT) nFeePay = CENT;
-
     int64_t nValue = 0;
 
     BOOST_FOREACH (const PAIRTYPE(CScript, int64_t)& s, vecSend)
