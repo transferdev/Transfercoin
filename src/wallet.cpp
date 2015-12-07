@@ -2641,18 +2641,18 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                 if (!SelectCoins(nTotalValue, wtxNew.nTime, setCoins, nValueIn, coinControl, coin_type, useIX))
                 {
                     if(coin_type == ALL_COINS) {
-                        strFailReason = _("Insufficient funds.");
+                        strFailReason = _(" Insufficient funds.");
                     } else if (coin_type == ONLY_NOT10000IFMN) {
-                        strFailReason = _("Unable to locate enough Darksend non-denominated funds for this transaction.");
+                        strFailReason = _(" Unable to locate enough Darksend non-denominated funds for this transaction.");
                     } else if (coin_type == ONLY_NONDENOMINATED_NOT10000IFMN ) {
-                        strFailReason = _("Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 TX.");
+                        strFailReason = _(" Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 TX.");
                     } else {
-                        strFailReason = _("Unable to locate enough Darksend denominated funds for this transaction.");
-                        strFailReason += _("Darksend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.");
+                        strFailReason = _(" Unable to locate enough Darksend denominated funds for this transaction.");
+                        strFailReason += _(" Darksend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.");
                     }
 
                     if(useIX){
-                        strFailReason += _("InstantX requires inputs with at least 10 confirmations, you might need to wait a few minutes and try again.");
+                        strFailReason += _(" InstantX requires inputs with at least 10 confirmations, you might need to wait a few minutes and try again.");
                     }
                     return false;
                 }
@@ -2751,7 +2751,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
                     if (!SignSignature(*this, *coin.first, wtxNew, nIn++))
                     {
-                        strFailReason = _("Signing transaction failed");
+                        strFailReason = _(" Signing transaction failed");
                         return false;
                     }
 
@@ -2759,7 +2759,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                 unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtxNew, SER_NETWORK, PROTOCOL_VERSION);
                 if (nBytes >= MAX_STANDARD_TX_SIZE)
                 {
-                    strFailReason = _("Transaction too large");
+                    strFailReason = _(" Transaction too large");
                     return false;
                 }
                 dPriority = wtxNew.ComputePriority(dPriority, nBytes);

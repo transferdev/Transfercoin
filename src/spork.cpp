@@ -22,9 +22,10 @@ using namespace boost;
 class CSporkMessage;
 class CSporkManager;
 
+CSporkManager sporkManager;
+
 std::map<uint256, CSporkMessage> mapSporks;
 std::map<int, CSporkMessage> mapSporksActive;
-CSporkManager sporkManager;
 
 void ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
@@ -91,17 +92,17 @@ bool IsSporkActive(int nSporkID)
         if(nSporkID == SPORK_6_REPLAY_BLOCKS) r = SPORK_6_REPLAY_BLOCKS_DEFAULT;
         if(nSporkID == SPORK_7_MASTERNODE_SCANNING) r = SPORK_7_MASTERNODE_SCANNING;
 
-        if(r == 0) LogPrintf("GetSpork::Unknown Spork %d\n", nSporkID);
+        if(r == -1) LogPrintf("GetSpork::Unknown Spork %d\n", nSporkID);
     }
-    if(r == 0) r = 4070908800; //return 2099-1-1 by default
+    if(r == -1) r = 4070908800; //return 2099-1-1 by default
 
     return r < GetTime();
 }
 
 // grab the value of the spork on the network, or the default
-int GetSporkValue(int nSporkID)
+int64_t GetSporkValue(int nSporkID)
 {
-    int r = -1;
+    int64_t r = -1;
 
     if(mapSporksActive.count(nSporkID)){
         r = mapSporksActive[nSporkID].nValue;
@@ -113,7 +114,7 @@ int GetSporkValue(int nSporkID)
         if(nSporkID == SPORK_6_REPLAY_BLOCKS) r = SPORK_6_REPLAY_BLOCKS_DEFAULT;
         if(nSporkID == SPORK_7_MASTERNODE_SCANNING) r = SPORK_7_MASTERNODE_SCANNING;
 
-        if(r == 0) LogPrintf("GetSpork::Unknown Spork %d\n", nSporkID);
+        if(r == -1) LogPrintf("GetSpork::Unknown Spork %d\n", nSporkID);
     }
 
     return r;
@@ -123,6 +124,36 @@ void ExecuteSpork(int nSporkID, int nValue)
 {
 }
 
+/*void ReprocessBlocks(int nBlocks) 
+{   
+    std::map<uint256, int64_t>::iterator it = mapRejectedBlocks.begin();
+    while(it != mapRejectedBlocks.end()){
+        //use a window twice as large as is usual for the nBlocks we want to reset
+        if((*it).second  > GetTime() - (nBlocks*60*5)) {   
+            BlockMap::iterator mi = mapBlockIndex.find((*it).first);
+            if (mi != mapBlockIndex.end() && (*mi).second) {
+                LOCK(cs_main);
+                
+                CBlockIndex* pindex = (*mi).second;
+                LogPrintf("ReprocessBlocks - %s\n", (*it).first.ToString());
+
+                CValidationState state;
+                ReconsiderBlock(state, pindex);
+            }
+        }
+        ++it;
+    }
+
+    CValidationState state;
+    {
+        LOCK(cs_main);
+        DisconnectBlocksAndReprocess(nBlocks);
+    }
+
+    if (state.IsValid()) {
+        ActivateBestChain(state);
+    }
+}*/
 
 bool CSporkManager::CheckSignature(CSporkMessage& spork)
 {
@@ -188,12 +219,7 @@ void CSporkManager::Relay(CSporkMessage& msg)
 {
     CInv inv(MSG_SPORK, msg.GetHash());
 
-    vector<CInv> vInv;
-    vInv.push_back(inv);
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes){
-        pnode->PushMessage("inv", vInv);
-    }
+    RelayInventory(inv);
 }
 
 bool CSporkManager::SetPrivKey(std::string strPrivKey)
