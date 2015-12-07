@@ -788,7 +788,7 @@ inline void RelayInventory(const CInv& inv)
 class CTransaction;
 void RelayTransaction(const CTransaction& tx, const uint256& hash);
 void RelayTransaction(const CTransaction& tx, const uint256& hash, const CDataStream& ss);
-void RelayTransactionLockReq(const CTransaction& tx, const uint256& hash, bool relayToAll=false);
+void RelayTransactionLockReq(const CTransaction& tx, bool relayToAll=false);
 
 /** Access to the (IP) address database (peers.dat) */
 class CAddrDB

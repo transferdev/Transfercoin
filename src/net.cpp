@@ -1755,7 +1755,7 @@ void RelayTransaction(const CTransaction& tx, const uint256& hash, const CDataSt
     RelayInventory(inv);
 }
 
-void RelayTransactionLockReq(const CTransaction& tx, const uint256& hash, bool relayToAll)
+void RelayTransactionLockReq(const CTransaction& tx, bool relayToAll)
 {
     CInv inv(MSG_TXLOCK_REQUEST, tx.GetHash());
 
