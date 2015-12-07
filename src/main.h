@@ -29,13 +29,9 @@ static const int64_t TARGET_SPACING_FORK = 60;
 static const int64_t TARGET_SPACING = 69;
 static const signed int HARD_FORK_BLOCK = 90000;
 static const signed int HARD_FORK_BLOCK2 = 140000;
-/*
-    At 15 signatures, 1/2 of the masternode network can be owned by
-    one party without comprimising the security of InstantX
-    (1000/2150.0)**15 = 1.031e-05
-*/
-#define INSTANTX_SIGNATURES_REQUIRED           15
-#define INSTANTX_SIGNATURES_TOTAL              20
+
+#define INSTANTX_SIGNATURES_REQUIRED           6
+#define INSTANTX_SIGNATURES_TOTAL              10
 
 
 class CBlock;
@@ -180,6 +176,8 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
 bool FindTransactionsByDestination(const CTxDestination &dest, std::vector<uint256> &vtxhash);
 
 int GetInputAge(CTxIn& vin);
+int GetInputAgeIX(uint256 nTXHash, CTxIn& vin);
+int GetIXConfirmations(uint256 nTXHash);
 /** Abort with a message */
 bool AbortNode(const std::string &msg, const std::string &userMessage="");
 /** Increase a node's misbehavior score. */

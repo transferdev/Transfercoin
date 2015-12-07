@@ -1556,7 +1556,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                 if(protocolVersion < MIN_POOL_PEER_PROTO_VERSION) continue;
 
                 //non-denom's are incompatible
-                if((dsq.nDenom & (1 << 4))) continue;
+                if((dsq.nDenom & (1 << 5))) continue;
 
                 bool fUsed = false;
                 //don't reuse Masternodes
@@ -1943,35 +1943,25 @@ void CDarksendPool::GetDenominationsToString(int nDenom, std::string& strDenom){
 
     if(nDenom & (1 << 0)) {
         if(strDenom.size() > 0) strDenom += "+";
-        strDenom += "100000";
+        strDenom += "1000";
     }
 
     if(nDenom & (1 << 1)) {
         if(strDenom.size() > 0) strDenom += "+";
-        strDenom += "10000";
+        strDenom += "100";
     }
 
     if(nDenom & (1 << 2)) {
         if(strDenom.size() > 0) strDenom += "+";
-        strDenom += "1000";
+        strDenom += "10";
     }
 
     if(nDenom & (1 << 3)) {
         if(strDenom.size() > 0) strDenom += "+";
-        strDenom += "100";
-    }
-
-    if(nDenom & (1 << 4)) {
-        if(strDenom.size() > 0) strDenom += "+";
-        strDenom += "10";
-    }
-
-    if(nDenom & (1 << 5)) {
-        if(strDenom.size() > 0) strDenom += "+";
         strDenom += "1";
     }
 
-    if(nDenom & (1 << 6)) {
+    if(nDenom & (1 << 4)) {
         if(strDenom.size() > 0) strDenom += "+";
         strDenom += "0.1";
     }
@@ -2051,13 +2041,11 @@ int CDarksendPool::GetDenominationsByAmount(int64_t nAmount, int nDenomTarget){
     BOOST_REVERSE_FOREACH(int64_t v, darkSendDenominations){
         if(nDenomTarget != 0){
             bool fAccepted = false;
-            if((nDenomTarget & (1 << 0)) &&      v == ((100000*COIN) +100000000)) {fAccepted = true;}
-            else if((nDenomTarget & (1 << 1)) && v == ((10000*COIN) +10000000)) {fAccepted = true;}
-            else if((nDenomTarget & (1 << 2)) && v == ((1000*COIN) +1000000)) {fAccepted = true;}
-            else if((nDenomTarget & (1 << 3)) && v == ((100*COIN) +100000)) {fAccepted = true;}
-            else if((nDenomTarget & (1 << 4)) && v == ((10*COIN) +10000)) {fAccepted = true;}
-            else if((nDenomTarget & (1 << 5)) && v == ((1*COIN)  +1000)) {fAccepted = true;}
-            else if((nDenomTarget & (1 << 6)) && v == ((.1*COIN) +100)) {fAccepted = true;}
+            if((nDenomTarget & (1 << 0)) && v == ((1000*COIN) +1000000)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 1)) && v == ((100*COIN) +100000)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 2)) && v == ((10*COIN) +10000)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 3)) && v == ((1*COIN)  +1000)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 4)) && v == ((.1*COIN) +100)) {fAccepted = true;}
             if(!fAccepted) continue;
         }
 

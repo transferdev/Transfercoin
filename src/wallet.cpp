@@ -834,7 +834,7 @@ bool CWallet::IsMine(const CTxIn &txin) const
     return false;
 }
 
-int64_t CWallet::GetDebit(const CTxIn &txin) const
+CAmount CWallet::GetDebit(const CTxIn &txin) const
 {
     {
         LOCK(cs_wallet);
@@ -1035,7 +1035,7 @@ int CWalletTx::GetRequestCount() const
 }
 
 void CWalletTx::GetAmounts(list<pair<CTxDestination, int64_t> >& listReceived,
-                           list<pair<CTxDestination, int64_t> >& listSent, int64_t& nFee, string& strSentAccount) const
+                           list<pair<CTxDestination, int64_t> >& listSent, CAmount& nFee, string& strSentAccount) const
 {
     LOCK(pwallet->cs_wallet);
     nFee = 0;
@@ -1044,10 +1044,10 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64_t> >& listReceived,
     strSentAccount = strFromAccount;
 
     // Compute fee:
-    int64_t nDebit = GetDebit();
+    CAmount nDebit = GetDebit();
     if (nDebit > 0) // debit>0 means we signed/sent this transaction
     {
-        int64_t nValueOut = GetValueOut();
+        CAmount nValueOut = GetValueOut();
         nFee = nDebit - nValueOut;
     }
 
@@ -1093,13 +1093,13 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64_t> >& listReceived,
 
 }
 
-void CWalletTx::GetAccountAmounts(const string& strAccount, int64_t& nReceived,
-                                  int64_t& nSent, int64_t& nFee) const
+void CWalletTx::GetAccountAmounts(const string& strAccount, CAmount& nReceived,
+                                  CAmount& nSent, CAmount& nFee) const
 {
 
     nReceived = nSent = nFee = 0;
 
-    int64_t allFee;
+    CAmount allFee;
     string strSentAccount;
     list<pair<CTxDestination, int64_t> > listReceived;
     list<pair<CTxDestination, int64_t> > listSent;
@@ -1402,7 +1402,7 @@ void CWallet::ResendWalletTransactions(bool fForce)
 
 CAmount CWallet::GetBalance() const
 {
-    int64_t nTotal = 0;
+    CAmount nTotal = 0;
     {
         LOCK2(cs_main, cs_wallet);
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
@@ -1540,7 +1540,7 @@ CAmount CWallet::GetDenominatedBalance(bool unconfirmed) const
 }
 CAmount CWallet::GetUnconfirmedBalance() const
 {
-    int64_t nTotal = 0;
+    CAmount nTotal = 0;
     {
         LOCK2(cs_main, cs_wallet);
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
@@ -1657,7 +1657,7 @@ void CWallet::AvailableCoinsMN(vector<COutput>& vCoins, bool fOnlyConfirmed, con
                 (!coinControl || !coinControl->HasSelected() || coinControl->IsSelected((*it).first, i)))
                     vCoins.push_back(COutput(pcoin, i, nDepth));*/
             // do not use IX for inputs that have less then 6 blockchain confirmations
-            if (useIX && nDepth < 6)
+            if (useIX && nDepth < 10)
                 continue;
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
@@ -1665,7 +1665,7 @@ void CWallet::AvailableCoinsMN(vector<COutput>& vCoins, bool fOnlyConfirmed, con
                 if(coin_type == ONLY_DENOMINATED) {
                     found = IsDenominatedAmount(pcoin->vout[i].nValue);
                 } else if(coin_type == ONLY_NOT10000IFMN) {
-					found = !(fMasterNode && pcoin->vout[i].nValue == GetMNCollateral(pindexBest->nHeight)*COIN);
+                    found = !(fMasterNode && pcoin->vout[i].nValue == GetMNCollateral(pindexBest->nHeight)*COIN);
                 } else if (coin_type == ONLY_NONDENOMINATED_NOT10000IFMN){
                     if (IsCollateralAmount(pcoin->vout[i].nValue)) continue; // do not use collateral amounts
                     found = !IsDenominatedAmount(pcoin->vout[i].nValue);
@@ -1698,7 +1698,7 @@ void CWallet::AvailableCoinsForStaking(vector<COutput>& vCoins, unsigned int nSp
 
     {
         LOCK2(cs_main, cs_wallet);
-        int nStakeMinConfirmations = 0;
+        int nStakeMinConfirmations = 1440;
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
@@ -1706,12 +1706,6 @@ void CWallet::AvailableCoinsForStaking(vector<COutput>& vCoins, unsigned int nSp
             int nDepth = pcoin->GetDepthInMainChain();
             if (nDepth < 1)
                 continue;
-
-            if(pindexBest->nHeight >= HARD_FORK_BLOCK){
-                nStakeMinConfirmations = 1440;
-            } else {
-                nStakeMinConfirmations = 1000;
-            }
 
             if (nDepth < nStakeMinConfirmations)
             {
@@ -1727,9 +1721,23 @@ void CWallet::AvailableCoinsForStaking(vector<COutput>& vCoins, unsigned int nSp
             if (pcoin->GetBlocksToMaturity() > 0)
                 continue;
 
-            for (unsigned int i = 0; i < pcoin->vout.size(); i++)
+            bool found = false;
+            for (unsigned int i = 0; i < pcoin->vout.size(); i++){
+                if (IsDenominatedAmount(pcoin->vout[i].nValue) ||
+                    (fMasterNode && pcoin->vout[i].nValue == GetMNCollateral(pindexBest->nHeight)*COIN) ||
+                    IsCollateralAmount(pcoin->vout[i].nValue))
+                {
+                found = true;
+                return;
+                }
+            }
+
+            if(!found) continue;
+
+            for (unsigned int i = 0; i < pcoin->vout.size(); i++){
                 if (!(pcoin->IsSpent(i)) && IsMine(pcoin->vout[i]) && pcoin->vout[i].nValue >= nMinimumInputValue)
                     vCoins.push_back(COutput(pcoin, i, nDepth, true));
+            }
         }
     }
 }
@@ -2484,13 +2492,13 @@ int CWallet::CountInputsWithAmount(int64_t nInputAmount)
 bool CWallet::HasCollateralInputs(bool fOnlyConfirmed) const
 {
     vector<COutput> vCoins;
-    AvailableCoins(vCoins);
+    AvailableCoins(vCoins, fOnlyConfirmed);
 
     int nFound = 0;
     BOOST_FOREACH(const COutput& out, vCoins)
         if(IsCollateralAmount(out.tx->vout[out.i].nValue)) nFound++;
 
-    return nFound > 0; 
+    return nFound > 0;
 }
 
 bool CWallet::IsCollateralAmount(int64_t nInputAmount) const
@@ -2498,19 +2506,19 @@ bool CWallet::IsCollateralAmount(int64_t nInputAmount) const
     return  nInputAmount != 0 && nInputAmount % DARKSEND_COLLATERAL == 0 && nInputAmount < DARKSEND_COLLATERAL * 5  && nInputAmount > DARKSEND_COLLATERAL;
 }
 
-bool CWallet::CreateCollateralTransaction(CTransaction& txCollateral, std::string strReason)
+bool CWallet::CreateCollateralTransaction(CTransaction& txCollateral, std::string& strReason)
 {
     /*
         To doublespend a collateral transaction, it will require a fee higher than this. So there's
         still a significant cost.
     */
-    int64_t nFeeRet = 0.001*COIN;
+    CAmount nFeeRet = 0.001*COIN;
 
     txCollateral.vin.clear();
     txCollateral.vout.clear();
 
     CReserveKey reservekey(this);
-    int64_t nValueIn2 = 0;
+    CAmount nValueIn2 = 0;
     std::vector<CTxIn> vCoinsCollateral;
 
     if (!SelectCoinsCollateral(vCoinsCollateral, nValueIn2))
@@ -2652,7 +2660,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                     }
 
                     if(useIX){
-                        strFailReason += _("InstantX requires inputs with at least 6 confirmations, you might need to wait a few minutes and try again.");
+                        strFailReason += _("InstantX requires inputs with at least 10 confirmations, you might need to wait a few minutes and try again.");
                     }
                     return false;
                 }
@@ -3557,12 +3565,7 @@ uint64_t CWallet::GetStakeWeight() const
     CTxDB txdb("r");
 
     LOCK2(cs_main, cs_wallet);
-    int nStakeMinConfirmations = 0;
-    if(pindexBest->nHeight >= HARD_FORK_BLOCK){
-      nStakeMinConfirmations = 1440;
-    } else {
-      nStakeMinConfirmations = 1000;
-    }
+    int nStakeMinConfirmations = 1440;
 
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {

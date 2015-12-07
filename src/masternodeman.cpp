@@ -210,6 +210,23 @@ bool CMasternodeMan::Add(CMasternode &mn)
     return false;
 }
 
+void CMasternodeMan::AskForMN(CNode* pnode, CTxIn &vin)
+{
+    std::map<COutPoint, int64_t>::iterator i = mWeAskedForMasternodeListEntry.find(vin.prevout);
+    if (i != mWeAskedForMasternodeListEntry.end())
+    {
+        int64_t t = (*i).second;
+        if (GetTime() < t) return; // we've asked recently
+    }
+
+    // ask for the mnb info once from the node that sent mnp
+
+    LogPrintf("CMasternodeMan::AskForMN - Asking node for missing entry, vin: %s\n", vin.ToString());
+    pnode->PushMessage("dseg", vin);
+    int64_t askAgain = GetTime() + MASTERNODE_MIN_DSEEP_SECONDS;
+    mWeAskedForMasternodeListEntry[vin.prevout] = askAgain;
+}
+
 void CMasternodeMan::Check()
 {
     LOCK(cs);

@@ -805,7 +805,7 @@ void tradingDialog::CalculateCSReceiveLabel(){
     }
 }
 
-void tradingDialog::on_UpdateKeys_clicked()
+void tradingDialog::on_UpdateKeys_clicked(bool Save, bool Load)
 {
   this->ApiKey    = ui->ApiKeyInput->text();
   this->SecretKey = ui->SecretKeyInput->text();
@@ -816,8 +816,30 @@ void tradingDialog::on_UpdateKeys_clicked()
   if ( ResponseObject.value("success").toBool() == false){
        QMessageBox::information(this,"API Configuration Failed","Api configuration was unsuccesful.");
 
-  }else if ( ResponseObject.value("success").toBool() == true){
-         QMessageBox::information(this,"API Configuration Complete","Api connection has been successfully configured and tested.");
+  }else if ( ResponseObject.value("success").toBool() == true && Load){
+         QMessageBox::information(this,"API Configuration Complete","Your API keys have been loaded and the connection has been successfully configured and tested.");
+         ui->ApiKeyInput->setEchoMode(QLineEdit::Password);
+         ui->SecretKeyInput->setEchoMode(QLineEdit::Password);
+         ui->PasswordInput->setText("");
+         ui->TradingTabWidget->setTabEnabled(0,true);
+         ui->TradingTabWidget->setTabEnabled(1,true);
+         ui->TradingTabWidget->setTabEnabled(3,true);
+         ui->TradingTabWidget->setTabEnabled(4,true);
+         ui->TradingTabWidget->setTabEnabled(5,true);
+         ui->TradingTabWidget->setTabEnabled(6,true);
+  }else if ( ResponseObject.value("success").toBool() == true && Save){
+         QMessageBox::information(this,"API Configuration Complete","Your API keys have been saved and the connection has been successfully configured and tested.");
+         ui->ApiKeyInput->setEchoMode(QLineEdit::Password);
+         ui->SecretKeyInput->setEchoMode(QLineEdit::Password);
+         ui->PasswordInput->setText("");
+         ui->TradingTabWidget->setTabEnabled(0,true);
+         ui->TradingTabWidget->setTabEnabled(1,true);
+         ui->TradingTabWidget->setTabEnabled(3,true);
+         ui->TradingTabWidget->setTabEnabled(4,true);
+         ui->TradingTabWidget->setTabEnabled(5,true);
+         ui->TradingTabWidget->setTabEnabled(6,true);
+  }else{
+  	     QMessageBox::information(this,"API Configuration Complete","Api connection has been successfully configured and tested.");
          ui->ApiKeyInput->setEchoMode(QLineEdit::Password);
          ui->SecretKeyInput->setEchoMode(QLineEdit::Password);
          ui->PasswordInput->setText("");
@@ -874,8 +896,8 @@ void tradingDialog::on_SaveKeys_clicked()
         stream.close();
     }
     if (fSuccess) {
-        QMessageBox::information(this,"Success !","Saved keys successfully to APIcache.txt");
-        on_UpdateKeys_clicked();
+        bool Save = true;
+        on_UpdateKeys_clicked(Save);
     }
 
 }
@@ -915,8 +937,9 @@ void tradingDialog::on_LoadKeys_clicked()
         stream.close();
     }
     if (fSuccess) {
-        QMessageBox::information(this,"Success !","Loaded keys successfully from APIcache.txt");
-        on_UpdateKeys_clicked();
+        bool Save = false;
+        bool Load = true;
+        on_UpdateKeys_clicked(Save, Load);
     }
 
 }

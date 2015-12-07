@@ -45,7 +45,7 @@ private slots:
     void DisplayBalance(QLabel &BalanceLabel, QString Response);
     void ActionsOnSwitch(int index);
     void CancelOrderSlot(int row, int col);
-    void on_UpdateKeys_clicked();
+    void on_UpdateKeys_clicked(bool Save=false, bool Load=false);
     void on_LoadKeys_clicked();
     void on_SaveKeys_clicked();
     void on_GenDepositBTN_clicked();

@@ -48,10 +48,8 @@ private:
     CAmount currentUnconfirmedBalance;
     CAmount currentImmatureBalance;
     CAmount currentAnonymizedBalance;
-    CAmount cachedTxLocks;
-    CAmount lastNewBlock;
+    int nDisplayUnit
 
-    int cachedNumBlocks;
     TxViewDelegate *txdelegate;
     TransactionFilterProxy *filter;
 

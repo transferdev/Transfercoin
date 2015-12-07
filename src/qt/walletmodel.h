@@ -105,6 +105,8 @@ public:
         AmountWithFeeExceedsBalance,
         DuplicateAddress,
         TransactionCreationFailed, // Error returned when wallet is still locked
+        IXTransactionCreationFailed, // Error returned when InstantX fails in prepareTransaction
+        PrepareTransactionFailed, // Error returned when InstantX fails in prepareTransaction
         TransactionCommitFailed,
         NarrationTooLong,
         Aborted,

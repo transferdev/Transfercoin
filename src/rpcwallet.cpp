@@ -53,7 +53,7 @@ void EnsureWalletIsUnlocked()
 void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
 {
     int confirms = wtx.GetDepthInMainChain(false);
-    int confirmsTotal = wtx.GetDepthInMainChain();
+    int confirmsTotal = GetIXConfirmations(wtx.GetDepthInMainChain());
     entry.push_back(Pair("confirmations", confirmsTotal));
     entry.push_back(Pair("bcconfirmations", confirms));    
     if (wtx.IsCoinBase() || wtx.IsCoinStake())

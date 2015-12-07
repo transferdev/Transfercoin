@@ -628,9 +628,6 @@ int64_t GetMinFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree, 
 
     int64_t nMinFee = (1 + (int64_t)nBytes / 1000) * nBaseFee;
 
-    if (pindexBest->nHeight < HARD_FORK_BLOCK2) {
-        fAllowFree = false;
-    }
     if (fAllowFree)
     {
         // There is a free transaction area in blocks created by most miners,
@@ -842,6 +839,7 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
         *pfMissingInputs = false;
 
     CTransaction tx(txo);
+    string reason;
 
     if (!tx.CheckTransaction())
         return error("AcceptableInputs : CheckTransaction failed");
@@ -854,17 +852,20 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
     if (tx.IsCoinStake())
         return tx.DoS(100, error("AcceptableInputs : coinstake as individual tx"));
 
-    // Rather not work on nonstandard transactions (unless -testnet)
-    //string reason;
-    //if (!TestNet() && !IsStandardTx(tx, reason))
-    //    return error("AcceptableInputs : nonstandard transaction: %s",
-    //                 reason);
-
-
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();
     if (pool.exists(hash))
         return false;
+
+    // ----------- instantX transaction scanning -----------
+
+    BOOST_FOREACH(const CTxIn& in, tx.vin){
+        if(mapLockedInputs.count(in.prevout)){
+            if(mapLockedInputs[in.prevout] != tx.GetHash()){
+                return tx.DoS(0, error("AcceptableInputs : conflicts with existing transaction lock: %s", reason));
+            }
+        }
+    }
 
     // Check for conflicts with in-memory transactions
     {
@@ -1034,7 +1035,7 @@ int CMerkleTx::GetDepthInMainChain(CBlockIndex* &pindexRet, bool enableIX) const
         return -1; // Not in chain, not in mempool
 
     if(enableIX){
-        if (nResult < 6){
+        if (nResult < 10){
             int signatures = GetTransactionLockSignatures();
             if(signatures >= INSTANTX_SIGNATURES_REQUIRED){
                 return nInstantXDepth+nResult;
@@ -1102,6 +1103,41 @@ int GetInputAge(CTxIn& vin)
     }
     else
         return 0;
+}
+
+
+int GetInputAgeIX(uint256 nTXHash, CTxIn& vin)
+{
+    int sigs = 0;
+    int nResult = GetInputAge(vin);
+    if(nResult < 0) nResult = 0;
+
+    if (nResult < 6){
+        std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(nTXHash);
+        if (i != mapTxLocks.end()){
+            sigs = (*i).second.CountSignatures();
+        }
+        if(sigs >= INSTANTX_SIGNATURES_REQUIRED){
+            return nInstantXDepth+nResult;
+        }
+    }
+
+    return -1;
+}
+
+int GetIXConfirmations(uint256 nTXHash)
+{
+    int sigs = 0;
+
+    std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(nTXHash);
+    if (i != mapTxLocks.end()){
+        sigs = (*i).second.CountSignatures();
+    }
+    if(sigs >= INSTANTX_SIGNATURES_REQUIRED){
+        return nInstantXDepth;
+    }
+
+    return 0;
 }
 
 int CTxIndex::GetDepthInMainChain() const
@@ -1594,21 +1630,11 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
                 return DoS(100, error("ConnectInputs() : %s prevout.n out of range %d %u %u prev tx %s\n%s", GetHash().ToString(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString(), txPrev.ToString()));
 
             // If prev is coinbase or coinstake, check that it's matured
-            if(pindexBest->nHeight >= HARD_FORK_BLOCK){
-                if (txPrev.IsCoinBase() || txPrev.IsCoinStake())
-                {
-                    int nSpendDepth;
-                    if (IsConfirmedInNPrevBlocks(txindex, pindexBlock, nCoinbaseMaturity, nSpendDepth)){
-                        return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", nSpendDepth);
-                    }
-                }
-            } else {
-                if (txPrev.IsCoinBase() || txPrev.IsCoinStake()){
-                    for (const CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < nCoinbaseMaturity; pindex = pindex->pprev){
-                        if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile){
-                            return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", pindexBlock->nHeight - pindex->nHeight);
-                        }
-                    }
+            if (txPrev.IsCoinBase() || txPrev.IsCoinStake())
+            {
+                int nSpendDepth;
+                if (IsConfirmedInNPrevBlocks(txindex, pindexBlock, nCoinbaseMaturity, nSpendDepth)){
+                    return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", nSpendDepth);
                 }
             }
             // ppcoin: check transaction timestamp
@@ -2278,7 +2304,7 @@ bool CTransaction::GetCoinAge(CTxDB& txdb, const CBlockIndex* pindexPrev, uint64
 {
     CBigNum bnCentSecond = 0;  // coin age in the unit of cent-seconds
     nCoinAge = 0;
-    int nStakeMinConfirmations = 0;
+    int nStakeMinConfirmations = 1440;
 
     if (IsCoinBase())
         return true;
@@ -2294,11 +2320,6 @@ bool CTransaction::GetCoinAge(CTxDB& txdb, const CBlockIndex* pindexPrev, uint64
             return false;  // Transaction timestamp violation
 
         int nSpendDepth;
-        if(pindexBest->nHeight >= HARD_FORK_BLOCK) {
-            nStakeMinConfirmations = 1440;
-        } else {
-            nStakeMinConfirmations = 1000;
-        }
 
         if (IsConfirmedInNPrevBlocks(txindex, pindexPrev, nStakeMinConfirmations - 1, nSpendDepth))
         {

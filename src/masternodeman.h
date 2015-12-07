@@ -95,6 +95,9 @@ public:
     // Check all masternodes
     void Check();
 
+    /// Ask (source) node for mnb
+    void AskForMN(CNode *pnode, CTxIn &vin);
+
     // Check all masternodes and remove inactive
     void CheckAndRemove();
 

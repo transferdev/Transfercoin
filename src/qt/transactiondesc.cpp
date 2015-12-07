@@ -26,15 +26,54 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
     }
     else
     {
-        int nDepth = wtx.GetDepthInMainChain();
-        if (nDepth < 0)
-            return tr("conflicted");
-        else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
-            return tr("%1/offline").arg(nDepth);
-        else if (nDepth < 10)
-            return tr("%1/unconfirmed").arg(nDepth);
-        else
-            return tr("%1 confirmations").arg(nDepth);
+        int signatures = wtx.GetTransactionLockSignatures();
+        QString strUsingIX = "";
+        if(signatures >= 0){
+
+            if(signatures >= INSTANTX_SIGNATURES_REQUIRED){
+                int nDepth = wtx.GetDepthInMainChain();
+                if (nDepth < 0)
+                    return tr("conflicted");
+                else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+                    return tr("%1/offline (verified via instantx)").arg(nDepth);
+                else if (nDepth < 10)
+                    return tr("%1/confirmed (verified via instantx)").arg(nDepth);
+                else
+                    return tr("%1 confirmations (verified via instantx)").arg(nDepth);
+            } else {
+                if(!wtx.IsTransactionLockTimedOut()){
+                    int nDepth = wtx.GetDepthInMainChain();
+                    if (nDepth < 0)
+                        return tr("conflicted");
+                    else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+                        return tr("%1/offline (InstantX verification in progress - %2 of %3 signatures)").arg(nDepth).arg(signatures).arg(INSTANTX_SIGNATURES_TOTAL);
+                    else if (nDepth < 10)
+                        return tr("%1/confirmed (InstantX verification in progress - %2 of %3 signatures )").arg(nDepth).arg(signatures).arg(INSTANTX_SIGNATURES_TOTAL);
+                    else
+                        return tr("%1 confirmations (InstantX verification in progress - %2 of %3 signatures)").arg(nDepth).arg(signatures).arg(INSTANTX_SIGNATURES_TOTAL);
+                } else {
+                    int nDepth = wtx.GetDepthInMainChain();
+                    if (nDepth < 0)
+                        return tr("conflicted");
+                    else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+                        return tr("%1/offline (InstantX verification failed)").arg(nDepth);
+                    else if (nDepth < 10)
+                        return tr("%1/confirmed (InstantX verification failed)").arg(nDepth);
+                    else
+                        return tr("%1 confirmations").arg(nDepth);
+                }
+            }
+        } else {
+            int nDepth = wtx.GetDepthInMainChain();
+            if (nDepth < 0)
+                return tr("conflicted");
+            else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+                return tr("%1/offline").arg(nDepth);
+            else if (nDepth < 10)
+                return tr("%1/unconfirmed").arg(nDepth);
+            else
+                return tr("%1 confirmations").arg(nDepth);
+        }
     }
 }
 
@@ -47,9 +86,9 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     strHTML += "<html><font face='verdana, arial, helvetica, sans-serif'>";
 
     int64_t nTime = wtx.GetTxTime();
-    int64_t nCredit = wtx.GetCredit();
-    int64_t nDebit = wtx.GetDebit();
-    int64_t nNet = nCredit - nDebit;
+    CAmount nCredit = wtx.GetCredit();
+    CAmount nDebit = wtx.GetDebit();
+    CAmount nNet = nCredit - nDebit;
 
     strHTML += "<b>" + tr("Status") + ":</b> " + FormatTxStatus(wtx);
     int nRequests = wtx.GetRequestCount();
@@ -122,7 +161,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         //
         // Coinbase
         //
-        int64_t nUnmatured = 0;
+        CAmount nUnmatured = 0;
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
             nUnmatured += wallet->GetCredit(txout);
         strHTML += "<b>" + tr("Credit") + ":</b> ";
@@ -141,6 +180,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     }
     else
     {
+
         bool fAllFromMe = true;
         BOOST_FOREACH(const CTxIn& txin, wtx.vin)
             fAllFromMe = fAllFromMe && wallet->IsMine(txin);
@@ -173,19 +213,19 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                     }
                 }
 
-                strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatWithUnit(unit, -txout.nValue) + "<br>";
+                strHTML += "<b>" + tr("Total Debit") + ":</b> " + BitcoinUnits::formatWithUnit(unit, -txout.nValue) + "<br>";
             }
 
             if (fAllToMe)
             {
                 // Payment to self
-                int64_t nChange = wtx.GetChange();
-                int64_t nValue = nCredit - nChange;
+                CAmount nChange = wtx.GetChange();
+                CAmount nValue = nCredit - nChange;
                 strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatWithUnit(unit, -nValue) + "<br>";
                 strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatWithUnit(unit, nValue) + "<br>";
             }
 
-            int64_t nTxFee = nDebit - wtx.GetValueOut();
+            CAmount nTxFee = nDebit - wtx.GetValueOut();
             if (nTxFee > 0)
                 strHTML += "<b>" + tr("Transaction fee") + ":</b> " + BitcoinUnits::formatWithUnit(unit, -nTxFee) + "<br>";
         }
@@ -216,7 +256,10 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     strHTML += "<b>" + tr("Transaction ID") + ":</b> " + TransactionRecord::formatSubTxId(wtx.GetHash(), rec->idx) + "<br>";
 
     if (wtx.IsCoinBase() || wtx.IsCoinStake())
-        strHTML += "<br>" + tr("Generated coins must mature 188 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to \"not accepted\" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.") + "<br>";
+    {
+        strHTML += "<br>" + tr("Generated coins must mature 100 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to \"not accepted\" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.") + "<br>";
+    }
+
 
     //
     // Debug view

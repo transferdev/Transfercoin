@@ -26,7 +26,7 @@ int CMasternodePayments::GetMinMasternodePaymentsProto() {
 
 void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-    if(IsInitialBlockDownload()) return;
+    if(!darkSendPool.IsBlockchainSynced()) return;
 
     if (strCommand == "mnget") { //Masternode Payments Request Sync
         if(fLiteMode) return; //disable all Darksend/Masternode related functionality
@@ -213,7 +213,7 @@ void CMasternodePayments::CleanPaymentList()
 
     if(pindexBest == NULL) return;
 
-    int nLimit = std::max(((int)mnodeman.size())*2, 1000);
+    int nLimit = std::max(((int)mnodeman.size())*((int)1.25), 1000);
 
     vector<CMasternodePaymentWinner>::iterator it;
     for(it=vWinning.begin();it<vWinning.end();it++){
