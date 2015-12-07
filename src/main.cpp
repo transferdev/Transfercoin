@@ -3309,6 +3309,8 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
 {
     switch (inv.type)
     {
+    case MSG_DSTX:
+        return mapDarksendBroadcastTxes.count(inv.hash);
     case MSG_TX:
         {
         bool txInMap = false;
@@ -3394,28 +3396,14 @@ void static ProcessGetData(CNode* pfrom)
                     }
                 }*/
                 if (!pushed && inv.type == MSG_TX) {
-                    string txHash = inv.hash.ToString().c_str();
-                    if(fDebug) LogPrintf("ProcessGetData -- txHash %d \n", txHash);
-                    if(mapDarksendBroadcastTxes.count(inv.hash)){
+
+                    CTransaction tx;
+                    if (mempool.lookup(inv.hash, tx)) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss <<
-                            mapDarksendBroadcastTxes[inv.hash].tx <<
-                            mapDarksendBroadcastTxes[inv.hash].vin <<
-                            mapDarksendBroadcastTxes[inv.hash].vchSig <<
-                            mapDarksendBroadcastTxes[inv.hash].sigTime;
-
-                        pfrom->PushMessage("dstx", ss);
+                        ss << tx;
+                        pfrom->PushMessage("tx", ss);
                         pushed = true;
-                    } else {
-                        CTransaction tx;
-                        if (mempool.lookup(inv.hash, tx)) {
-                            CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                            ss.reserve(1000);
-                            ss << tx;
-                            pfrom->PushMessage("tx", ss);
-                            pushed = true;
-                        }
                     }
                 }
                 if (!pushed && inv.type == MSG_TXLOCK_VOTE) {
@@ -3460,6 +3448,20 @@ void static ProcessGetData(CNode* pfrom)
                         ss.reserve(1000);
                         ss << mapMasternodeScanningErrors[inv.hash];
                         pfrom->PushMessage("mnse", ss);
+                        pushed = true;
+                    }
+                }
+                if (!pushed && inv.type == MSG_DSTX) {       
+                    if(mapDarksendBroadcastTxes.count(inv.hash)){
+                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        ss.reserve(1000);
+                        ss <<
+                            mapDarksendBroadcastTxes[inv.hash].tx <<
+                            mapDarksendBroadcastTxes[inv.hash].vin <<
+                            mapDarksendBroadcastTxes[inv.hash].vchSig <<
+                            mapDarksendBroadcastTxes[inv.hash].sigTime;
+
+                        pfrom->PushMessage("dstx", ss);
                         pushed = true;
                     }
                 }
@@ -3939,6 +3941,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             if (nEvicted > 0)
                 LogPrint("mempool", "mapOrphan overflow, removed %u tx\n", nEvicted);
         }
+        if(strCommand == "dstx"){			
+	        CInv inv(MSG_DSTX, tx.GetHash());			
+	        RelayInventory(inv);			
+	    }
         if (tx.nDoS) pfrom->Misbehaving(tx.nDoS);
     }
 
