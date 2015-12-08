@@ -110,7 +110,8 @@ public:
         TransactionCommitFailed,
         NarrationTooLong,
         Aborted,
-        AnonymizeOnlyUnlocked
+        AnonymizeOnlyUnlocked,
+        InsaneFee
     };
 
     enum EncryptionStatus

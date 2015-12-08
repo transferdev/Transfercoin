@@ -916,13 +916,13 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
 
         int64_t nFees = tx.GetValueIn(mapInputs)-tx.GetValueOut();
         unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+        int64_t txMinFee = GetMinFee(tx, nSize, true, GMF_RELAY);
 
         // Don't accept it if it can't get into a block
         if(isDSTX) {
             // Normally we would PrioritiseTransaction But currently it is unimplemented
             // mempool.PrioritiseTransaction(hash, hash.ToString(), 1000, 0.1*COIN);
         } else { // same as !ignoreFees for AcceptToMemoryPool
-            int64_t txMinFee = GetMinFee(tx, nSize, true, GMF_RELAY);
             if (fLimitFree && nFees < txMinFee)
                 return error("AcceptableInputs : not enough fees %s, %d < %d",
                             hash.ToString(),
@@ -952,7 +952,7 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
             }
         }
 
-        if (fRejectInsaneFee && nFees > MIN_RELAY_TX_FEE * 10000)
+        if (fRejectInsaneFee && nFees > txMinFee * 10000)
             return error("AcceptableInputs: : insane fees %s, %d > %d",
                          hash.ToString(),
                          nFees, MIN_RELAY_TX_FEE * 10000);
@@ -2851,11 +2851,14 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
 
-    if(!fLiteMode && !IsInitialBlockDownload()){
-        if (!fImporting && !fReindex && pindexBest->nHeight > Checkpoints::GetTotalBlocksEstimate()){
+    if(!IsInitialBlockDownload()){
 
-            CScript payee;
-            CTxIn vin;
+    	CScript payee;
+        CTxIn vin;
+
+        // If we're in LiteMode disable darksend features without disabling masternodes
+        if (!fLiteMode && !fImporting && !fReindex && pindexBest->nHeight > Checkpoints::GetTotalBlocksEstimate()){
+
             if(masternodePayments.GetBlockPayee(pindexBest->nHeight, payee, vin)){
                 //UPDATE MASTERNODE LAST PAID TIME
                 CMasternode* pmn = mnodeman.Find(vin);
@@ -2870,7 +2873,23 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
             mnscan.DoMasternodePOSChecks();
+
+        } else if (fLiteMode && !fImporting && !fReindex && pindexBest->nHeight > Checkpoints::GetTotalBlocksEstimate())
+        {
+            if(masternodePayments.GetBlockPayee(pindexBest->nHeight, payee, vin)){
+                //UPDATE MASTERNODE LAST PAID TIME
+                CMasternode* pmn = mnodeman.Find(vin);
+                if(pmn != NULL) {
+                    pmn->nLastPaid = GetAdjustedTime();
+                }
+
+                LogPrintf("ProcessBlock() : Update Masternode Last Paid Time - %d\n", pindexBest->nHeight);
+            }
+
+            masternodePayments.ProcessBlock(GetHeight()+10);
+            mnscan.DoMasternodePOSChecks();
         }
+
     }
 
     LogPrintf("ProcessBlock: ACCEPTED\n");

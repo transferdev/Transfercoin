@@ -142,7 +142,7 @@ void WalletModel::checkBalanceChanged()
 void WalletModel::updateTransaction(const QString &hash, int status)
 {
     if(transactionTableModel){
-        if ((pindexBest->nHeight+100) < Checkpoints::GetTotalBlocksEstimate())
+        if (pindexBest->nHeight < Checkpoints::GetTotalBlocksEstimate())
             return;
         transactionTableModel->updateTransaction(hash, status, true);
     }
@@ -239,6 +239,10 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePos, strFailReason, coinControl, recipients[0].inputType, recipients[0].useInstantX);
         transaction.setTransactionFee(nFeeRequired);
 
+        if(recipients[0].useInstantX && newTx->GetValueOut() > GetSporkValue(SPORK_5_MAX_VALUE)*COIN){
+            return IXTransactionCreationFailed;
+        }
+
         if(!fCreated)
         {
             if((total + nFeeRequired) > nBalance)
@@ -249,6 +253,9 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
                          CClientUIInterface::MSG_ERROR);
             return PrepareTransactionFailed;
         }
+        // reject insane fee
+        if (nFeeRequired > (MIN_RELAY_TX_FEE *(transaction.getTransactionSize() / 1024)) * 10000)
+            return InsaneFee;
     }
 
     return SendCoinsReturn(OK);

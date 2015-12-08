@@ -20,7 +20,7 @@
 using namespace json_spirit;
 using namespace std;
 
-void SendMoney(const CTxDestination &address, CAmount nValue, CWalletTx& wtxNew, AvailableCoinsType coin_type)
+void SendMoney(const CTxDestination &address, CAmount nValue, CWalletTx& wtxNew, AvailableCoinsType coin_type=ALL_COINS)
 {
     // Check amount
     if (nValue <= 0)
@@ -71,13 +71,11 @@ Value darksend(const Array& params, bool fHelp)
         if(fMasterNode)
             return "DarkSend is not supported from masternodes";
 
-        darkSendPool.DoAutomaticDenominating();
-        return "DoAutomaticDenominating";
+        return "DoAutomaticDenominating " + (darkSendPool.DoAutomaticDenominating() ? "successful" : ("failed: " + darkSendPool.GetStatus()));
     }
 
     if(params[0].get_str() == "reset"){
-        darkSendPool.SetNull();
-        darkSendPool.UnlockCoins();
+        darkSendPool.Reset();
         return "successfully reset darksend";
     }
 
@@ -85,7 +83,7 @@ Value darksend(const Array& params, bool fHelp)
         throw runtime_error(
             "darksend <transferaddress> <amount>\n"
             "transferaddress, denominate, or auto (AutoDenominate)"
-            "<amount> is a real and is rounded to the nearest 0.00000001"
+            "<amount> is type \"real\" and will be rounded to the nearest 0.1"
             + HelpRequiringPassphrase());
 
     CBitcoinAddress address(params[0].get_str());
@@ -104,9 +102,10 @@ Value darksend(const Array& params, bool fHelp)
     if (sNarr.length() > 24)
         throw runtime_error("Narration must be 24 characters or less.");
     
-    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, sNarr, wtx, ONLY_DENOMINATED);
-    if (strError != "")
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    //string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, sNarr, wtx, ONLY_DENOMINATED);
+    SendMoney(address.Get(), nAmount, wtx, ONLY_DENOMINATED);
+    //if (strError != "")
+        //throw JSONRPCError(RPC_WALLET_ERROR, strError);
    
     return wtx.GetHash().GetHex();
 }
@@ -153,11 +152,11 @@ Value masternode(const Array& params, bool fHelp)
                 "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
                 "  list-conf    - Print masternode.conf in JSON format\n"
                 "  outputs      - Print masternode compatible outputs\n"
-                "  start        - Start masternode configured in darkcoin.conf\n"
+                "  start        - Start masternode configured in transfer.conf\n"
                 "  start-alias  - Start single masternode by assigned alias configured in masternode.conf\n"
                 "  start-many   - Start all masternodes configured in masternode.conf\n"
                 "  status       - Print masternode status information\n"
-                "  stop         - Stop masternode configured in darkcoin.conf\n"
+                "  stop         - Stop masternode configured in transfer.conf\n"
                 "  stop-alias   - Stop single masternode by assigned alias configured in masternode.conf\n"
                 "  stop-many    - Stop all masternodes configured in masternode.conf\n"
                 "  winners      - Print list of masternode winners\n"
@@ -786,7 +785,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 "  rank           - Print rank of a masternode based on current block\n"
                 "  status         - Print masternode status: ENABLED / EXPIRED / VIN_SPENT / REMOVE / POS_ERROR (can be additionally filtered, partial match)\n"
                 "  addr            - Print ip address associated with a masternode (can be additionally filtered, partial match)\n"
-                "  votes          - Print all masternode votes for a Dash initiative (can be additionally filtered, partial match)\n"
+                "  votes          - Print all masternode votes for a Transfer initiative (can be additionally filtered, partial match)\n"
                 "  lastpaid       - The last time a node was paid on the network\n"
                 );
     }

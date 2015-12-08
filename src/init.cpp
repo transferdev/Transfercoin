@@ -1048,8 +1048,6 @@ bool AppInit2(boost::thread_group& threadGroup)
        1TX+1000 == (.1TX+100)*10
        10TX+10000 == (1TX+1000)*10
     */
-    darkSendDenominations.push_back( (100000      * COIN)+100000000 );    
-    darkSendDenominations.push_back( (10000       * COIN)+10000000 );
     darkSendDenominations.push_back( (1000        * COIN)+1000000 );
     darkSendDenominations.push_back( (100         * COIN)+100000 );
     darkSendDenominations.push_back( (10          * COIN)+10000 );

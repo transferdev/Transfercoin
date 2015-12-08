@@ -54,8 +54,8 @@ void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
 {
     int confirms = wtx.GetDepthInMainChain(false);
     int confirmsTotal = GetIXConfirmations(wtx.GetDepthInMainChain());
-    entry.push_back(Pair("confirmations", confirmsTotal));
-    entry.push_back(Pair("bcconfirmations", confirms));    
+    entry.push_back(Pair("confirmations", confirms));
+    entry.push_back(Pair("ixconfirmations", confirmsTotal));
     if (wtx.IsCoinBase() || wtx.IsCoinStake())
         entry.push_back(Pair("generated", true));
     if (confirms > 0)
@@ -1040,13 +1040,13 @@ struct tallyitem
 {
     CAmount nAmount;
     int nConf;
-    int nBCConf;
+    int nIXConf;
     vector<uint256> txids;
     tallyitem()
     {
         nAmount = 0;
         nConf = std::numeric_limits<int>::max();
-        nBCConf = std::numeric_limits<int>::max();
+        nIXConf = std::numeric_limits<int>::max();
     }
 };
 
@@ -1085,7 +1085,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
             tallyitem& item = mapTally[address];
             item.nAmount += txout.nValue;
             item.nConf = min(item.nConf, nDepth);
-            item.nBCConf = min(item.nBCConf, nBCDepth);
+            item.nIXConf = min(item.nIXConf, nBCDepth);
         }
     }
 
@@ -1102,12 +1102,12 @@ Value ListReceived(const Array& params, bool fByAccounts)
 
         CAmount nAmount = 0;
         int nConf = std::numeric_limits<int>::max();
-        int nBCConf = std::numeric_limits<int>::max();
+        int nIXConf = std::numeric_limits<int>::max();
         if (it != mapTally.end())
         {
             nAmount = (*it).second.nAmount;
             nConf = (*it).second.nConf;
-            nBCConf = (*it).second.nBCConf;
+            nIXConf = (*it).second.nIXConf;
         }
 
         if (fByAccounts)
@@ -1115,7 +1115,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
             tallyitem& item = mapAccountTally[strAccount];
             item.nAmount += nAmount;
             item.nConf = min(item.nConf, nConf);
-            item.nBCConf = min(item.nBCConf, nBCConf);
+            item.nIXConf = min(item.nIXConf, nIXConf);
         }
         else
         {
@@ -1124,7 +1124,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
             obj.push_back(Pair("account",       strAccount));
             obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
             obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
-            obj.push_back(Pair("bcconfirmations", (nBCConf == std::numeric_limits<int>::max() ? 0 : nBCConf)));
+            obj.push_back(Pair("ixconfirmations", (nIXConf == std::numeric_limits<int>::max() ? 0 : nIXConf)));
             ret.push_back(obj);
             Array transactions;
             if (it != mapTally.end())
@@ -1145,12 +1145,12 @@ Value ListReceived(const Array& params, bool fByAccounts)
         {
             CAmount nAmount = (*it).second.nAmount;
             int nConf = (*it).second.nConf;
-            int nBCConf = (*it).second.nBCConf;
+            int nIXConf = (*it).second.nIXConf;
             Object obj;
             obj.push_back(Pair("account",       (*it).first));
             obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
             obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
-            obj.push_back(Pair("bcconfirmations", (nBCConf == std::numeric_limits<int>::max() ? 0 : nBCConf)));
+            obj.push_back(Pair("ixconfirmations", (nIXConf == std::numeric_limits<int>::max() ? 0 : nIXConf)));
             ret.push_back(obj);
         }
     }
@@ -1175,7 +1175,7 @@ Value listreceivedbyaddress(const Array& params, bool fHelp)
             "    \"account\" : \"accountname\",       (string) The account of the receiving address. The default account is \"\".\n"
             "    \"amount\" : x.xxx,                  (numeric) The total amount in TX received by the address\n"
             "    \"confirmations\" : n                (numeric) The number of confirmations of the most recent transaction included\n"
-            "    \"bcconfirmations\" : n              (numeric) The number of blockchain confirmations of the most recent transaction included\n"
+            "    \"ixconfirmations\" : n              (numeric) The number of InstantX confirmations of the most recent transaction included\n"
             "  }\n"
             "  ,...\n"
             "]\n"
@@ -1346,7 +1346,7 @@ Value listtransactions(const Array& params, bool fHelp)
             "                                         'send' category of transactions.\n"
             "    \"confirmations\": n,       (numeric) The number of confirmations for the transaction. Available for 'send' and \n"
             "                                         'receive' category of transactions.\n"
-            "    \"bcconfirmations\": n,     (numeric) The number of blockchain confirmations for the transaction. Available for 'send'\n"
+            "    \"ixconfirmations\": n,     (numeric) The number of InstantX confirmations for the transaction. Available for 'send'\n"
             "                                          and 'receive' category of transactions.\n"
             "    \"blockhash\": \"hashvalue\", (string) The block hash containing the transaction. Available for 'send' and 'receive'\n"
             "                                          category of transactions.\n"
@@ -1516,7 +1516,7 @@ Value listsinceblock(const Array& params, bool fHelp)
             "                                          outbound. It is positive for the 'receive' category, and for the 'move' category for inbound funds.\n"
             "    \"fee\": x.xxx,             (numeric) The amount of the fee in btc. This is negative and only available for the 'send' category of transactions.\n"
             "    \"confirmations\": n,       (numeric) The number of confirmations for the transaction. Available for 'send' and 'receive' category of transactions.\n"
-            "    \"bcconfirmations\" : n,    (numeric) The number of blockchain confirmations for the transaction. Available for 'send' and 'receive' category of transactions.\n"
+            "    \"ixconfirmations\" : n,    (numeric) The number of InstantX confirmations for the transaction. Available for 'send' and 'receive' category of transactions.\n"
             "    \"blockhash\": \"hashvalue\",     (string) The block hash containing the transaction. Available for 'send' and 'receive' category of transactions.\n"
             "    \"blockindex\": n,          (numeric) The block index containing the transaction. Available for 'send' and 'receive' category of transactions.\n"
             "    \"blocktime\": xxx,         (numeric) The block time in seconds since epoch (1 Jan 1970 GMT).\n"
@@ -1602,7 +1602,7 @@ Value gettransaction(const Array& params, bool fHelp)
             "{\n"
             "  \"amount\" : x.xxx,        (numeric) The transaction amount in btc\n"
             "  \"confirmations\" : n,     (numeric) The number of confirmations\n"
-            "  \"bcconfirmations\" : n,   (numeric) The number of blockchain confirmations\n"
+            "  \"ixconfirmations\" : n,   (numeric) The number of InstantX confirmations\n"
             "  \"blockhash\" : \"hash\",  (string) The block hash\n"
             "  \"blockindex\" : xx,       (numeric) The block index\n"
             "  \"blocktime\" : ttt,       (numeric) The time in seconds since epoch (1 Jan 1970 GMT)\n"

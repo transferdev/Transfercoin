@@ -1714,16 +1714,27 @@ void CWallet::AvailableCoinsForStaking(vector<COutput>& vCoins, unsigned int nSp
 
             bool found = false;
             for (unsigned int i = 0; i < pcoin->vout.size(); i++){
-                if (IsDenominatedAmount(pcoin->vout[i].nValue) ||
-                    (fMasterNode && pcoin->vout[i].nValue == GetMNCollateral(pindexBest->nHeight)*COIN) ||
-                    IsCollateralAmount(pcoin->vout[i].nValue))
-                {
-                found = true;
-                return;
+                if (IsDenominatedAmount(pcoin->vout[i].nValue)){
+
+                    //LogPrintf("CWallet::AvailableCoinsForStaking - Found denominated amounts.\n");
+                    found = true;
+                    break;
+                }
+                if (pcoin->vout[i].nValue == GetMNCollateral(pindexBest->nHeight)*COIN){
+
+                    //LogPrintf("CWallet::AvailableCoinsForStaking - Found Masternode collateral.\n");
+                    found = true;
+                    break;
+                }
+                if (IsCollateralAmount(pcoin->vout[i].nValue)){
+
+                    //LogPrintf("CWallet::AvailableCoinsForStaking - Found Collateral amount.\n");
+                    found = true;
+                    break;
                 }
             }
 
-            if(!found) continue;
+            if(found) continue;
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++){
                 if (!(pcoin->IsSpent(i)) && IsMine(pcoin->vout[i]) && pcoin->vout[i].nValue >= nMinimumInputValue)
@@ -2322,10 +2333,11 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
 
             // Function returns as follows:
             //
-            // bit 0 - 100DRK+1 ( bit on if present )
-            // bit 1 - 10DRK+1
-            // bit 2 - 1DRK+1
-            // bit 3 - .1DRK+1
+            // bit 0 - 1000TX+1 ( bit on if present )
+            // bit 1 - 100TX+1
+            // bit 2 - 10TX+1
+            // bit 3 - 1TX+1
+            // bit 4 - .1TX+1
 
             CTxIn vin = CTxIn(out.tx->GetHash(),out.i);
 
@@ -2343,18 +2355,18 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
                     if((int)vCoinsRet.size() > r) return true;
                 }
                 //Denomination criterion has been met, we can take any matching denominations
-                if((nDenom & (1 << 0)) && out.tx->vout[out.i].nValue == ((1000*COIN)        +1000000)) {fAccepted = true;}
-                else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((100*COIN)        +100000)) {fAccepted = true;}
-                else if((nDenom & (1 << 2)) && out.tx->vout[out.i].nValue == ((10*COIN)        +10000)) {fAccepted = true;}
-                else if((nDenom & (1 << 3)) && out.tx->vout[out.i].nValue == ((1*COIN)         +1000)) {fAccepted = true;}
-                else if((nDenom & (1 << 4)) && out.tx->vout[out.i].nValue == ((.1*COIN)        +100)) {fAccepted = true;}
+                if((nDenom & (1 << 0)) && out.tx->vout[out.i].nValue == ((1000*COIN)    +1000000)) {fAccepted = true;}
+                else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((100*COIN)     +100000)) {fAccepted = true;}
+                else if((nDenom & (1 << 2)) && out.tx->vout[out.i].nValue == ((10*COIN)      +10000)) {fAccepted = true;}
+                else if((nDenom & (1 << 3)) && out.tx->vout[out.i].nValue == ((1*COIN)       +1000)) {fAccepted = true;}
+                else if((nDenom & (1 << 4)) && out.tx->vout[out.i].nValue == ((.1*COIN)      +100)) {fAccepted = true;}
             } else {
                 //Criterion has not been satisfied, we will only take 1 of each until it is.
-                if((nDenom & (1 << 0)) && out.tx->vout[out.i].nValue == ((1000*COIN)        +1000000)) {fAccepted = true; fFound1000 = true;}
-                else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((100*COIN)        +100000)) {fAccepted = true; fFound100 = true;}
-                else if((nDenom & (1 << 2)) && out.tx->vout[out.i].nValue == ((10*COIN)        +10000)) {fAccepted = true; fFound10 = true;}
-                else if((nDenom & (1 << 3)) && out.tx->vout[out.i].nValue == ((1*COIN)         +1000)) {fAccepted = true; fFound1 = true;}
-                else if((nDenom & (1 << 4)) && out.tx->vout[out.i].nValue == ((.1*COIN)        +100)) {fAccepted = true; fFoundDot1 = true;}
+                if((nDenom & (1 << 0)) && out.tx->vout[out.i].nValue == ((1000*COIN)    +1000000)) {fAccepted = true; fFound1000 = true;}
+                else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((100*COIN)     +100000)) {fAccepted = true; fFound100 = true;}
+                else if((nDenom & (1 << 2)) && out.tx->vout[out.i].nValue == ((10*COIN)      +10000)) {fAccepted = true; fFound10 = true;}
+                else if((nDenom & (1 << 3)) && out.tx->vout[out.i].nValue == ((1*COIN)       +1000)) {fAccepted = true; fFound1 = true;}
+                else if((nDenom & (1 << 4)) && out.tx->vout[out.i].nValue == ((.1*COIN)      +100)) {fAccepted = true; fFoundDot1 = true;}
             }
             if(!fAccepted) continue;
 
@@ -2499,6 +2511,7 @@ bool CWallet::CreateCollateralTransaction(CTransaction& txCollateral, std::strin
 
     txCollateral.vin.clear();
     txCollateral.vout.clear();
+    txCollateral.nTime = GetAdjustedTime();
 
     CReserveKey reservekey(this);
     CAmount nValueIn2 = 0;
@@ -2558,8 +2571,11 @@ bool CWallet::ConvertList(std::vector<CTxIn> vCoins, std::vector<int64_t>& vecAm
 }
 
 
-bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64_t& nFeeRet, int32_t& nChangePos, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool useIX)
+bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, 
+                                int64_t& nFeeRet, int32_t& nChangePos, std::string& strFailReason, const CCoinControl* coinControl,
+                                AvailableCoinsType coin_type, bool useIX)
 {
+
     int64_t nValue = 0;
 
     BOOST_FOREACH (const PAIRTYPE(CScript, int64_t)& s, vecSend)
@@ -2577,6 +2593,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
         return false;
     }
 
+    wtxNew.fTimeReceivedIsTxTime = true;
     wtxNew.BindWallet(this);
 
     {
@@ -2663,17 +2680,6 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
 
                 int64_t nChange = nValueIn - nValue - nFeeRet;
 
-                // The following if statement should be removed once enough miners
-                // have upgraded to the 0.9 GetMinFee() rules. Until then, this avoids
-                // creating free transactions that have change outputs less than
-                // CENT TX.
-                if (nFeeRet < nTransactionFee && nChange > 0 && nChange < CENT)
-                {
-                    int64_t nMoveToFee = min(nChange, nTransactionFee - nFeeRet);
-                    nChange -= nMoveToFee;
-                    nFeeRet += nMoveToFee;
-                }
-
                 //over pay for denominated transactions
                 if(coin_type == ONLY_DENOMINATED) 
                 {
@@ -2719,6 +2725,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                     if (newTxOut.IsDust(MIN_RELAY_TX_FEE))
                     {
                         nFeeRet += nChange;
+                        nChange = 0;
                         reservekey.ReturnKey();
                     }
                     else
@@ -3998,7 +4005,7 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
         BOOST_FOREACH(int64_t v, darkSendDenominations){
             // only use the ones that are approved
             bool fAccepted = false;
-            if((darkSendPool.sessionDenom & (1 << 0))      && v == ((1000*COIN) +1000000)) {fAccepted = true;}
+            if((darkSendPool.sessionDenom & (1 << 0)) && v == ((1000*COIN) +1000000)) {fAccepted = true;}
             else if((darkSendPool.sessionDenom & (1 << 1)) && v == ((100*COIN) +100000)) {fAccepted = true;}
             else if((darkSendPool.sessionDenom & (1 << 2)) && v == ((10*COIN)  +10000)) {fAccepted = true;}
             else if((darkSendPool.sessionDenom & (1 << 3)) && v == ((1*COIN)   +1000)) {fAccepted = true;}

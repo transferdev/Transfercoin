@@ -50,6 +50,8 @@ tradingDialog::tradingDialog(QWidget *parent) :
     ui->TradingTabWidget->setTabEnabled(4,false);
     ui->TradingTabWidget->setTabEnabled(5,false);
     ui->TradingTabWidget->setTabEnabled(6,false);
+    // Listen for keypress
+    connect(ui->PasswordInput, SIGNAL(returnPressed()),ui->LoadKeys,SIGNAL(clicked()));
 
 
     /*OrderBook Table Init*/

@@ -630,6 +630,9 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
     case WalletModel::NarrationTooLong:
         msgParams.first = tr("Error: Narration is too long.");
         break;
+    case WalletModel::InsaneFee:
+        msgParams.first = tr("A fee %1 times higher than %2 per kB is considered an insanely high fee.").arg(10000).arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), MIN_RELAY_TX_FEE));
+        break;
     case WalletModel::PrepareTransactionFailed:
         return;
     case WalletModel::OK:
@@ -845,7 +848,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
         }
         else if (!addr.IsValid()) // Invalid address
         {
-            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Dash address"));
+            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Transfer address"));
         }
         else // Valid address
         {
