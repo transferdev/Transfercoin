@@ -4176,7 +4176,14 @@ bool CWallet::NewKeyPool()
         if (IsLocked())
             return false;
 
-        int64_t nKeys = max(GetArg("-keypool", 1000), (int64_t)0);
+        fLiteMode = GetBoolArg("-litemode", false);
+        int64_t nKeys;
+
+        if (fLiteMode)
+            nKeys = max(GetArg("-keypool", 100), (int64_t)0);
+        else
+            nKeys = max(GetArg("-keypool", 1000), (int64_t)0);
+
         for (int i = 0; i < nKeys; i++)
         {
             int64_t nIndex = i+1;
@@ -4200,8 +4207,12 @@ bool CWallet::TopUpKeyPool(unsigned int nSize)
 
         // Top up key pool
         unsigned int nTargetSize;
+        fLiteMode = GetBoolArg("-litemode", false);
+
         if (nSize > 0)
             nTargetSize = nSize;
+        else if (fLiteMode)
+            nTargetSize = max(GetArg("-keypool", 100), (int64_t)0);
         else
             nTargetSize = max(GetArg("-keypool", 1000), (int64_t)0);
 

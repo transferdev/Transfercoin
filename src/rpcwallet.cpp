@@ -1712,13 +1712,20 @@ Value keypoolrefill(const Array& params, bool fHelp)
             "\nFills the keypool."
             + HelpRequiringPassphrase() + "\n"
             "\nArguments\n"
-            "1. newsize     (numeric, optional, default=100) The new keypool size\n"
+            "1. newsize     (numeric, optional, default=1000) The new keypool size\n"
             "\nExamples:\n"
             + HelpExampleCli("keypoolrefill", "")
             + HelpExampleRpc("keypoolrefill", "")
         );
 
-    unsigned int nSize = max(GetArg("-keypool", 100), (int64_t)0);
+    fLiteMode = GetBoolArg("-litemode", false);
+    unsigned int nSize;
+
+    if (fLiteMode)
+        nSize = max(GetArg("-keypool", 1000), (int64_t)0);
+    else
+        nSize = max(GetArg("-keypool", 100), (int64_t)0);
+
     if (params.size() > 0) {
         if (params[0].get_int() < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected valid size");
