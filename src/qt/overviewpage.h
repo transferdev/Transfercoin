@@ -48,7 +48,7 @@ private:
     CAmount currentUnconfirmedBalance;
     CAmount currentImmatureBalance;
     CAmount currentAnonymizedBalance;
-    int nDisplayUnit
+    int nDisplayUnit;
 
     TxViewDelegate *txdelegate;
     TransactionFilterProxy *filter;

@@ -816,7 +816,7 @@ public:
         return nCredit;
     }
 
-    CAmount GetAnonymizableCredit(bool fUseCache=true) const
+    CAmount GetAnonymizableCredit(bool fUseCache=false) const
     {
         if (pwallet == 0)
             return 0;
@@ -886,7 +886,7 @@ public:
     }
 
 
-    CAmount GetDenominatedCredit(bool unconfirmed, bool fUseCache=true) const
+    CAmount GetDenominatedCredit(bool unconfirmed, bool fUseCache=false) const
     {
         if (pwallet == 0)
             return 0;

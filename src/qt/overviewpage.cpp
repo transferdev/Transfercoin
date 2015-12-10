@@ -455,6 +455,7 @@ void OverviewPage::darksendAuto(){
 
 void OverviewPage::darksendReset(){
     darkSendPool.Reset();
+    darkSendStatus();
 
     QMessageBox::warning(this, tr("Darksend"),
         tr("Darksend was successfully reset."),

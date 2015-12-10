@@ -314,16 +314,9 @@ public:
         MSG_ENTRIES_ADDED
     };
 
-    std::vector<CDarkSendEntry> myEntries; // clients entries
-
-    int64_t lastAutoDenomination; // TODO; not used - Delete?
-
     // where collateral should be made out to
     CScript collateralPubKey;
 
-    uint256 masterNodeBlockHash;
-
-    bool completedTransaction;
     CMasternode* pSubmittedToMasternode;
 
     int sessionDenom; //Users must submit an denom matching this
@@ -378,7 +371,7 @@ public:
 
     bool IsNull() const
     {
-        return state == POOL_STATUS_ACCEPTING_ENTRIES && myEntries.empty();
+        return state == POOL_STATUS_ACCEPTING_ENTRIES && entries.empty();
     }
 
     int GetState() const
@@ -403,12 +396,6 @@ public:
     int GetCountEntriesAccepted() const
     {
         return countEntriesAccepted;
-    }
-
-    /// Get the client's transaction count
-    int GetMyTransactionCount() const
-    {
-        return myEntries.size();
     }
 
     // Set the 'state' value, with some logging and capturing when the state changed

@@ -1290,8 +1290,6 @@ bool SecureMsgDisable()
 
 bool SecureMsgReceiveData(CNode* pfrom, std::string strCommand, CDataStream& vRecv)
 {
-
-	if (fLiteMode) return false;
     /*
         Called from ProcessMessage
         Runs in ThreadMessageHandler2

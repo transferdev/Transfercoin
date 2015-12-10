@@ -593,7 +593,7 @@ void CDarksendPool::CheckFinalTransaction()
         LogPrint("darksend", "Transaction 2: %s\n", txNew.ToString());
 
         // See if the transaction is valid
-        if (!txNew.AcceptToMemoryPool(false, true))
+        if (!txNew.AcceptToMemoryPool(false, true, true))
         {
             LogPrintf("CDarksendPool::Check() - CommitTransaction : Error: Transaction not valid\n");
             SetNull();
