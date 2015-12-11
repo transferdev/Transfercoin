@@ -57,16 +57,6 @@ enum AvailableCoinsType
     ONLY_NONDENOMINATED_NOT10000IFMN = 4
 };
 
-/** IsMine() return codes */
-enum isminetype
-{
-    ISMINE_NO = 0,
-    ISMINE_WATCH_ONLY = 1,
-    ISMINE_SPENDABLE = 2,
-    ISMINE_ALL = ISMINE_WATCH_ONLY | ISMINE_SPENDABLE
-};
-
-
 /** A key pool entry */
 class CKeyPool
 {
@@ -238,6 +228,11 @@ public:
     bool AddCScript(const CScript& redeemScript);
     bool LoadCScript(const CScript& redeemScript);
 
+    // Adds a watch-only address to the store, and saves it to disk.
+    bool AddWatchOnly(const CScript &dest);
+    // Adds a watch-only address to the store, without saving it to disk (used by LoadWallet)
+    bool LoadWatchOnly(const CScript &dest);
+
     bool Lock();
     bool Unlock(const SecureString& strWalletPassphrase, bool anonimizeOnly = false);
     bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
@@ -277,6 +272,9 @@ public:
     CAmount GetImmatureBalance() const;
     CAmount GetAnonymizableBalance() const; 
     CAmount GetAnonymizedBalance() const;
+    CAmount GetWatchOnlyBalance() const;
+    CAmount GetUnconfirmedWatchOnlyBalance() const;
+    CAmount GetImmatureWatchOnlyBalance() const;
     double GetAverageAnonymizedRounds() const;
     CAmount GetNormalizedAnonymizedBalance() const;
     CAmount GetDenominatedBalance(bool unconfirmed=false) const;
@@ -331,17 +329,17 @@ public:
     bool IsDenominatedAmount(int64_t nInputAmount) const;
 
 
-    bool IsMine(const CTxIn& txin) const;
-    CAmount GetDebit(const CTxIn& txin) const;
-    bool IsMine(const CTxOut& txout) const
+    isminetype IsMine(const CTxIn& txin) const;
+    CAmount GetDebit(const CTxIn& txin, const isminefilter& filter) const;
+    isminetype IsMine(const CTxOut& txout) const
     {
         return ::IsMine(*this, txout.scriptPubKey);
     }
-    CAmount GetCredit(const CTxOut& txout) const
+    CAmount GetCredit(const CTxOut& txout, const isminefilter& filter) const
     {
         if (!MoneyRange(txout.nValue))
             throw std::runtime_error("CWallet::GetCredit() : value out of range");
-        return (IsMine(txout) ? txout.nValue : 0);
+        return ((IsMine(txout) & filter) ? txout.nValue : 0);
     }
     bool IsChange(const CTxOut& txout) const;
     CAmount GetChange(const CTxOut& txout) const
@@ -357,27 +355,28 @@ public:
                 return true;
         return false;
     }
+    /** should probably be renamed to IsRelevantToMe */
     bool IsFromMe(const CTransaction& tx) const
     {
-        return (GetDebit(tx) > 0);
+        return (GetDebit(tx, ISMINE_ALL) > 0);
     }
-    CAmount GetDebit(const CTransaction& tx) const
+    CAmount GetDebit(const CTransaction& tx, const isminefilter& filter) const
     {
         CAmount nDebit = 0;
         BOOST_FOREACH(const CTxIn& txin, tx.vin)
         {
-            nDebit += GetDebit(txin);
+            nDebit += GetDebit(txin, filter);
             if (!MoneyRange(nDebit))
                 throw std::runtime_error("CWallet::GetDebit() : value out of range");
         }
         return nDebit;
     }
-    CAmount GetCredit(const CTransaction& tx) const
+    CAmount GetCredit(const CTransaction& tx, const isminefilter& filter) const
     {
         CAmount nCredit = 0;
         BOOST_FOREACH(const CTxOut& txout, tx.vout)
         {
-            nCredit += GetCredit(txout);
+            nCredit += GetCredit(txout, filter);
             if (!MoneyRange(nCredit))
                 throw std::runtime_error("CWallet::GetCredit() : value out of range");
         }
@@ -440,12 +439,20 @@ public:
     /** Address book entry changed.
      * @note called with lock cs_wallet held.
      */
-    boost::signals2::signal<void (CWallet *wallet, const CTxDestination &address, const std::string &label, bool isMine, ChangeType status)> NotifyAddressBookChanged;
+    boost::signals2::signal<void (CWallet *wallet, const CTxDestination
+        &address, const std::string &label, bool isMine,
+        ChangeType status)> NotifyAddressBookChanged;
 
     /** Wallet transaction added, removed or updated.
      * @note called with lock cs_wallet held.
      */
     boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx, ChangeType status)> NotifyTransactionChanged;
+
+    /** Show progress e.g. for rescan */
+    boost::signals2::signal<void (const std::string &title, int nProgress)> ShowProgress;
+
+    /** Watch-only address added */
+    boost::signals2::signal<void (bool fHaveWatchOnly)> NotifyWatchonlyChanged;
 };
 
 /** A key allocated from the key pool. */
@@ -520,14 +527,14 @@ public:
     mutable bool fCreditCached;
     mutable bool fImmatureCreditCached;
     mutable bool fAvailableCreditCached;
-    mutable bool fAnonymizableCreditCached;
-    mutable bool fAnonymizedCreditCached;
-    mutable bool fDenomUnconfCreditCached;
-    mutable bool fDenomConfCreditCached;
     mutable bool fWatchDebitCached;
     mutable bool fWatchCreditCached;
     mutable bool fImmatureWatchCreditCached;
     mutable bool fAvailableWatchCreditCached;
+    mutable bool fAnonymizableCreditCached;
+    mutable bool fAnonymizedCreditCached;
+    mutable bool fDenomUnconfCreditCached;
+    mutable bool fDenomConfCreditCached;
     mutable bool fChangeCached;
 
     mutable int64_t nDebitCached;
@@ -538,10 +545,10 @@ public:
     mutable CAmount nAnonymizedCreditCached;
     mutable CAmount nDenomUnconfCreditCached;
     mutable CAmount nDenomConfCreditCached;
-    //mutable CAmount nWatchDebitCached;
-    //mutable CAmount nWatchCreditCached;
-    //mutable CAmount nImmatureWatchCreditCached;
-    //mutable CAmount nAvailableWatchCreditCached;
+    mutable CAmount nWatchDebitCached;
+    mutable CAmount nWatchCreditCached;
+    mutable CAmount nImmatureWatchCreditCached;
+    mutable CAmount nAvailableWatchCreditCached;
     mutable int64_t nChangeCached;
 
     CWalletTx()
@@ -584,10 +591,10 @@ public:
         fAnonymizedCreditCached = false;
         fDenomUnconfCreditCached = false;
         fDenomConfCreditCached = false;
-        //fWatchDebitCached = false;
-        //fWatchCreditCached = false;
-        //fImmatureWatchCreditCached = false;
-        //fAvailableWatchCreditCached = false;
+        fWatchDebitCached = false;
+        fWatchCreditCached = false;
+        fImmatureWatchCreditCached = false;
+        fAvailableWatchCreditCached = false;
         fChangeCached = false;
         nDebitCached = 0;
         nCreditCached = 0;
@@ -596,8 +603,10 @@ public:
         nAnonymizedCreditCached = 0;
         nDenomUnconfCreditCached = 0;
         nDenomConfCreditCached = 0;
-        //nWatchDebitCached = 0;
-        //nWatchCreditCached = 0;
+        nWatchDebitCached = 0;
+        nWatchCreditCached = 0;
+        nAvailableWatchCreditCached = 0;
+        nImmatureWatchCreditCached = 0;
         nChangeCached = 0;
         nOrderPos = -1;
     }
@@ -688,10 +697,10 @@ public:
         fAnonymizedCreditCached = false;
         fDenomUnconfCreditCached = false;
         fDenomConfCreditCached = false;
-        //fWatchDebitCached = false;
-        //fWatchCreditCached = false;
-        //fAvailableWatchCreditCached = false;
-        //fImmatureWatchCreditCached = false;
+        fWatchDebitCached = false;
+        fWatchCreditCached = false;
+        fAvailableWatchCreditCached = false;
+        fImmatureWatchCreditCached = false;
         fDebitCached = false;
         fChangeCached = false;
     }
@@ -735,40 +744,66 @@ public:
         return (!!vfSpent[nOut]);
     }
 
-    CAmount GetDebit() const
+    CAmount GetDebit(const isminefilter& filter) const
     {
         if (vin.empty())
             return 0;
 
         CAmount debit = 0;
-
-        if (fDebitCached)
-            debit += nDebitCached;
-        else
+        if(filter & ISMINE_SPENDABLE)
         {
-            nDebitCached = pwallet->GetDebit(*this);
-            fDebitCached = true;
-            debit += nDebitCached;
+            if (fDebitCached)
+                debit += nDebitCached;
+            else
+            {
+                nDebitCached = pwallet->GetDebit(*this, ISMINE_SPENDABLE);
+                fDebitCached = true;
+                debit += nDebitCached;
+            }
+        }
+        if(filter & ISMINE_WATCH_ONLY)
+        {
+            if(fWatchDebitCached)
+                debit += nWatchDebitCached;
+            else
+            {
+                nWatchDebitCached = pwallet->GetDebit(*this, ISMINE_WATCH_ONLY);
+                fWatchDebitCached = true;
+                debit += nWatchDebitCached;
+            }
         }
         return debit;
     }
 
-    CAmount GetCredit() const
+    CAmount GetCredit(const isminefilter& filter) const
     {
         // Must wait until coinbase is safely deep enough in the chain before valuing it
         if ((IsCoinBase() || IsCoinStake()) && GetBlocksToMaturity() > 0)
             return 0;
 
-        CAmount credit = 0;
-
-        // GetBalance can assume transactions in mapWallet won't change
-        if (fCreditCached)
-            credit += nCreditCached;
-        else
+        int64_t credit = 0;
+        if (filter & ISMINE_SPENDABLE)
         {
-            nCreditCached = pwallet->GetCredit(*this);
-            fCreditCached = true;
-            credit += nCreditCached;
+            // GetBalance can assume transactions in mapWallet won't change
+            if (fCreditCached)
+                credit += nCreditCached;
+            else
+            {
+                nCreditCached = pwallet->GetCredit(*this, ISMINE_SPENDABLE);
+                fCreditCached = true;
+                credit += nCreditCached;
+            }
+        }
+        if (filter & ISMINE_WATCH_ONLY)
+        {
+            if (fWatchCreditCached)
+                credit += nWatchCreditCached;
+            else
+            {
+                nWatchCreditCached = pwallet->GetCredit(*this, ISMINE_WATCH_ONLY);
+                fWatchCreditCached = true;
+                credit += nWatchCreditCached;
+            }
         }
         return credit;
     }
@@ -779,7 +814,7 @@ public:
         {
             if (fUseCache && fImmatureCreditCached)
                 return nImmatureCreditCached;
-            nImmatureCreditCached = pwallet->GetCredit(*this);
+            nImmatureCreditCached = pwallet->GetCredit(*this, ISMINE_SPENDABLE);
             fImmatureCreditCached = true;
             return nImmatureCreditCached;
         }
@@ -805,7 +840,7 @@ public:
             if (!IsSpent(i))
             {
                 const CTxOut &txout = vout[i];
-                nCredit += pwallet->GetCredit(txout);
+                nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
                 if (!MoneyRange(nCredit))
                     throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
             }
@@ -840,7 +875,7 @@ public:
 
             const int rounds = pwallet->GetInputDarksendRounds(vin);
             if(rounds >=-2 && rounds < nDarksendRounds) {
-                nCredit += pwallet->GetCredit(txout);
+                nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
                 if (!MoneyRange(nCredit))
                     throw std::runtime_error("CWalletTx::GetAnonamizableCredit() : value out of range");
             }
@@ -874,7 +909,7 @@ public:
 
             const int rounds = pwallet->GetInputDarksendRounds(vin);
             if(rounds >= nDarksendRounds){
-                nCredit += pwallet->GetCredit(txout);
+                nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
                 if (!MoneyRange(nCredit))
                     throw std::runtime_error("CWalletTx::GetAnonymizedCredit() : value out of range");
             }
@@ -916,7 +951,7 @@ public:
 
             if(pwallet->IsSpent(hashTx, i) || !pwallet->IsDenominatedAmount(vout[i].nValue)) continue;
 
-            nCredit += pwallet->GetCredit(txout);
+            nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
             if (!MoneyRange(nCredit))
                 throw std::runtime_error("CWalletTx::GetDenominatedCredit() : value out of range");
         }
@@ -931,6 +966,50 @@ public:
         return nCredit;
     }
 
+
+    CAmount GetImmatureWatchOnlyCredit(const bool& fUseCache=true) const
+    {
+        if ((IsCoinBase() || IsCoinStake()) && GetBlocksToMaturity() > 0 && IsInMainChain())
+        {
+            if (fUseCache && fImmatureWatchCreditCached)
+                return nImmatureWatchCreditCached;
+            nImmatureWatchCreditCached = pwallet->GetCredit(*this, ISMINE_WATCH_ONLY);
+            fImmatureWatchCreditCached = true;
+            return nImmatureWatchCreditCached;
+        }
+
+        return 0;
+    }
+
+    CAmount GetAvailableWatchOnlyCredit(const bool& fUseCache=true) const
+    {
+        if (pwallet == 0)
+            return 0;
+
+        // Must wait until coinbase is safely deep enough in the chain before valuing it
+        if ((IsCoinBase() || IsCoinStake()) && GetBlocksToMaturity() > 0)
+            return 0;
+
+        if (fUseCache && fAvailableWatchCreditCached)
+            return nAvailableWatchCreditCached;
+
+        CAmount nCredit = 0;
+        for (unsigned int i = 0; i < vout.size(); i++)
+        {
+            if (!pwallet->IsSpent(GetHash(), i))
+            {
+                const CTxOut &txout = vout[i];
+                nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY);
+                if (!MoneyRange(nCredit))
+                    throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
+            }
+        }
+
+        nAvailableWatchCreditCached = nCredit;
+        fAvailableWatchCreditCached = true;
+        return nCredit;
+    }
+
     CAmount GetChange() const
     {
         if (fChangeCached)
@@ -941,14 +1020,14 @@ public:
     }
 
     void GetAmounts(std::list<std::pair<CTxDestination, int64_t> >& listReceived,
-                    std::list<std::pair<CTxDestination, int64_t> >& listSent, CAmount& nFee, std::string& strSentAccount) const;
+                    std::list<std::pair<CTxDestination, int64_t> >& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const;
 
     void GetAccountAmounts(const std::string& strAccount, CAmount& nReceived,
-                           CAmount& nSent, CAmount& nFee) const;
+                           CAmount& nSent, CAmount& nFee, const isminefilter& filter) const;
 
-    bool IsFromMe() const
+    bool IsFromMe(const isminefilter& filter) const
     {
-        return (GetDebit() > 0);
+        return (GetDebit(filter) > 0);
     }
 
     bool IsTrusted() const
@@ -961,7 +1040,7 @@ public:
             return true;
         if (nDepth < 0)
             return false;
-        if (fConfChange || !IsFromMe()) // using wtx's cached debit
+        if (fConfChange || !IsFromMe(ISMINE_ALL)) // using wtx's cached debit
             return false;
 
         // If no confirmations but it's from us, we can still

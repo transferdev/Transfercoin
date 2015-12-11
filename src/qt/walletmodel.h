@@ -36,7 +36,7 @@ QT_END_NAMESPACE
 class SendCoinsRecipient
 {
 public:
-	explicit SendCoinsRecipient() : amount(0), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
+    explicit SendCoinsRecipient() : amount(0), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
     explicit SendCoinsRecipient(const QString &addr, const QString &label, const CAmount& amount, const QString &message):
         address(addr), label(label), amount(amount), message(message), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
 
@@ -119,7 +119,7 @@ public:
         Unencrypted,  // !wallet->IsCrypted()
         Locked,       // wallet->IsCrypted() && wallet->IsLocked()
         Unlocked,      // wallet->IsCrypted() && !wallet->IsLocked()
-        UnlockedForAnonymizationOnly
+        UnlockedForAnonymizationOnly    // wallet->IsCrypted() && !wallet->IsLocked() && wallet->fWalletUnlockAnonymizeOnly
     };
 
     OptionsModel *getOptionsModel();
@@ -131,6 +131,10 @@ public:
     CAmount getUnconfirmedBalance() const;
     CAmount getImmatureBalance() const;
     CAmount getAnonymizedBalance() const;
+    bool haveWatchOnly() const;
+    CAmount getWatchBalance() const;
+    CAmount getWatchUnconfirmedBalance() const;
+    CAmount getWatchImmatureBalance() const;
     EncryptionStatus getEncryptionStatus() const;
 
     // Check address for validity
@@ -139,13 +143,9 @@ public:
     // Return status record for SendCoins, contains error id + information
     struct SendCoinsReturn
     {
-        SendCoinsReturn(StatusCode status=Aborted,
-                         CAmount fee=0,
-                         QString hex=QString()):
-            status(status), fee(fee), hex(hex) {}
+        SendCoinsReturn(StatusCode status = OK):
+            status(status) {}
         StatusCode status;
-        CAmount fee; // is used in case status is "AmountWithFeeExceedsBalance"
-        QString hex; // is filled with the transaction hash if status is "OK"
     };
 
     // prepare transaction for getting txfee before sending coins
@@ -188,6 +188,7 @@ public:
 
     bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
     void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs);
+    bool isSpent(const COutPoint& outpoint) const;
     void listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const;
     bool isLockedCoin(uint256 hash, unsigned int n) const;
     void lockCoin(COutPoint& output);
@@ -196,6 +197,8 @@ public:
 
 private:
     CWallet *wallet;
+    bool fHaveWatchOnly;
+    bool fForceCheckBalanceChanged;
 
     // Wallet has an options model for wallet-specific options
     // (transaction fee, for example)
@@ -210,11 +213,14 @@ private:
     CAmount cachedUnconfirmedBalance;
     CAmount cachedImmatureBalance;
     CAmount cachedAnonymizedBalance;
+    CAmount cachedWatchOnlyBalance;
+    CAmount cachedWatchUnconfBalance;
+    CAmount cachedWatchImmatureBalance;
     CAmount cachedNumTransactions;
-    int cachedTxLocks;
-    int cachedDarksendRounds;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
+    int cachedTxLocks;
+    int cachedDarksendRounds;
 
     QTimer *pollTimer;
 
@@ -224,7 +230,8 @@ private:
 
 signals:
     // Signal that balance in wallet changed
-    void balanceChanged(CAmount balance, CAmount stake, CAmount unconfirmedBalance, CAmount immatureBalance, CAmount anonymizedBalance);
+    void balanceChanged(const CAmount& balance, const CAmount& stake, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance,
+        const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
     // Encryption status of wallet changed
     void encryptionStatusChanged(int status);
@@ -250,9 +257,11 @@ public slots:
     /* Wallet status might have changed */
     void updateStatus();
     /* New transaction, or transaction changed status */
-    void updateTransaction(const QString &hash, int status);
+    void updateTransaction();
     /* New, updated or removed address book entry */
     void updateAddressBook(const QString &address, const QString &label, bool isMine, int status);
+    /* Watch-only added */
+    void updateWatchOnlyFlag(bool fHaveWatchonly);
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
 

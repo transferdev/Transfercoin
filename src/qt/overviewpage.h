@@ -1,17 +1,19 @@
 #ifndef OVERVIEWPAGE_H
 #define OVERVIEWPAGE_H
 
-#include <QWidget>
-#include <QTimer>
 #include "util.h"
 
-namespace Ui {
-    class OverviewPage;
-}
+#include <QTimer>
+#include <QWidget>
+
 class ClientModel;
 class WalletModel;
 class TxViewDelegate;
 class TransactionFilterProxy;
+
+namespace Ui {
+    class OverviewPage;
+}
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
@@ -33,7 +35,7 @@ public:
 
 public slots:
     void darkSendStatus();
-    void setBalance(const CAmount& balance, const CAmount& stake, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance);
+    void setBalance(const CAmount& balance, const CAmount& stake, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance, const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
 signals:
     void transactionClicked(const QModelIndex &index);
@@ -48,6 +50,9 @@ private:
     CAmount currentUnconfirmedBalance;
     CAmount currentImmatureBalance;
     CAmount currentAnonymizedBalance;
+    CAmount currentWatchOnlyBalance;
+    CAmount currentWatchUnconfBalance;
+    CAmount currentWatchImmatureBalance;
     int nDisplayUnit;
 
     TxViewDelegate *txdelegate;
@@ -60,6 +65,7 @@ private slots:
     void updateDisplayUnit();
     void handleTransactionClicked(const QModelIndex &index);
     void updateAlerts(const QString &warnings);
+    void updateWatchOnlyLabels(bool showWatchOnly);
 };
 
 #endif // OVERVIEWPAGE_H

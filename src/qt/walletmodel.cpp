@@ -23,9 +23,11 @@
 
 #include <stdint.h>
 
+#include <QDebug>
 #include <QSet>
 #include <QTimer>
-#include <QDebug>
+
+using namespace std;
 
 WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
     QObject(parent), wallet(wallet), optionsModel(optionsModel), addressTableModel(0),
@@ -34,6 +36,9 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
     cachedEncryptionStatus(Unencrypted),
     cachedNumBlocks(0)
 {
+    fHaveWatchOnly = wallet->HaveWatchOnly();
+    fForceCheckBalanceChanged = false;
+
     addressTableModel = new AddressTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(wallet, this);
 
@@ -67,14 +72,20 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
     return wallet->GetBalance();
 }
 
-CAmount WalletModel::getUnconfirmedBalance() const
-{
-    return wallet->GetUnconfirmedBalance();
-}
-
 CAmount WalletModel::getStake() const
 {
     return wallet->GetStake();
+}
+
+CAmount WalletModel::getAnonymizedBalance() const
+{
+
+    return wallet->GetAnonymizedBalance();
+}
+
+CAmount WalletModel::getUnconfirmedBalance() const
+{
+    return wallet->GetUnconfirmedBalance();
 }
 
 CAmount WalletModel::getImmatureBalance() const
@@ -82,10 +93,24 @@ CAmount WalletModel::getImmatureBalance() const
     return wallet->GetImmatureBalance();
 }
 
-CAmount WalletModel::getAnonymizedBalance() const
+bool WalletModel::haveWatchOnly() const
 {
+    return fHaveWatchOnly;
+}
 
-    return wallet->GetAnonymizedBalance();;
+CAmount WalletModel::getWatchBalance() const
+{
+    return wallet->GetWatchOnlyBalance();
+}
+
+CAmount WalletModel::getWatchUnconfirmedBalance() const
+{
+    return wallet->GetUnconfirmedWatchOnlyBalance();
+}
+
+CAmount WalletModel::getWatchImmatureBalance() const
+{
+    return wallet->GetImmatureWatchOnlyBalance();
 }
 
 void WalletModel::updateStatus()
@@ -108,10 +133,13 @@ void WalletModel::pollBalanceChanged()
     if(!lockWallet)
         return;
 
-    if(nBestHeight != cachedNumBlocks)
+    if(fForceCheckBalanceChanged || nBestHeight != cachedNumBlocks || nDarksendRounds != cachedDarksendRounds || cachedTxLocks != nCompleteTXLocks)
     {
+        fForceCheckBalanceChanged = false;
+
         // Balance and number of transactions might have changed
         cachedNumBlocks = nBestHeight;
+        cachedDarksendRounds = nDarksendRounds;
 
         checkBalanceChanged();
         if(transactionTableModel)
@@ -121,13 +149,26 @@ void WalletModel::pollBalanceChanged()
 
 void WalletModel::checkBalanceChanged()
 {
+    TRY_LOCK(cs_main, lockMain);
+    if(!lockMain) return;
+
     CAmount newBalance = getBalance();
     CAmount newStake = getStake();
     CAmount newUnconfirmedBalance = getUnconfirmedBalance();
     CAmount newImmatureBalance = getImmatureBalance();
     CAmount newAnonymizedBalance = getAnonymizedBalance();
+    CAmount newWatchOnlyBalance = 0;
+    CAmount newWatchUnconfBalance = 0;
+    CAmount newWatchImmatureBalance = 0;
+    if (haveWatchOnly())
+    {
+        newWatchOnlyBalance = getWatchBalance();
+        newWatchUnconfBalance = getWatchUnconfirmedBalance();
+        newWatchImmatureBalance = getWatchImmatureBalance();
+    }
 
-    if(cachedBalance != newBalance || cachedStake != newStake || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance || cachedAnonymizedBalance != newAnonymizedBalance || cachedTxLocks != nCompleteTXLocks)
+    if(cachedBalance != newBalance || cachedStake != newStake || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance || cachedAnonymizedBalance != newAnonymizedBalance ||
+        cachedTxLocks != nCompleteTXLocks || cachedWatchOnlyBalance != newWatchOnlyBalance || cachedWatchUnconfBalance != newWatchUnconfBalance || cachedWatchImmatureBalance != newWatchImmatureBalance)
     {
         cachedBalance = newBalance;
         cachedStake = newStake;
@@ -135,26 +176,30 @@ void WalletModel::checkBalanceChanged()
         cachedImmatureBalance = newImmatureBalance;
         cachedAnonymizedBalance = newAnonymizedBalance;
         cachedTxLocks = nCompleteTXLocks;
-        emit balanceChanged(newBalance, newStake, newUnconfirmedBalance, newImmatureBalance, newAnonymizedBalance);
+        cachedWatchOnlyBalance = newWatchOnlyBalance;
+        cachedWatchUnconfBalance = newWatchUnconfBalance;
+        cachedWatchImmatureBalance = newWatchImmatureBalance;
+        emit balanceChanged(newBalance, newStake, newUnconfirmedBalance, newImmatureBalance, newAnonymizedBalance,
+            newWatchOnlyBalance, newWatchUnconfBalance, newWatchImmatureBalance);
     }
 }
 
-void WalletModel::updateTransaction(const QString &hash, int status)
+void WalletModel::updateTransaction()
 {
-    if(transactionTableModel){
-        if (pindexBest->nHeight < Checkpoints::GetTotalBlocksEstimate())
-            return;
-        transactionTableModel->updateTransaction(hash, status, true);
-    }
-
     // Balance and number of transactions might have changed
-    checkBalanceChanged();
+    fForceCheckBalanceChanged = true;
 }
 
 void WalletModel::updateAddressBook(const QString &address, const QString &label, bool isMine, int status)
 {
     if(addressTableModel)
         addressTableModel->updateEntry(address, label, isMine, status);
+}
+
+void WalletModel::updateWatchOnlyFlag(bool fHaveWatchonly)
+{
+    fHaveWatchOnly = fHaveWatchonly;
+    emit notifyWatchonlyChanged(fHaveWatchonly);
 }
 
 bool WalletModel::validateAddress(const QString &address)
@@ -446,7 +491,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
             }
             if((total + nFeeRequired) > nBalance) // FIXME: could cause collisions in the future
             {
-                return SendCoinsReturn(AmountWithFeeExceedsBalance, nFeeRequired);
+                return SendCoinsReturn(AmountWithFeeExceedsBalance);
             }
             return TransactionCreationFailed;
         }
@@ -617,7 +662,6 @@ static bool fQueueNotifications = false;
 static std::vector<std::pair<uint256, ChangeType> > vQueueNotifications;
 static void NotifyTransactionChanged(WalletModel *walletmodel, CWallet *wallet, const uint256 &hash, ChangeType status)
 {
-
     if (fQueueNotifications)
     {
         vQueueNotifications.push_back(make_pair(hash, status));
@@ -627,9 +671,9 @@ static void NotifyTransactionChanged(WalletModel *walletmodel, CWallet *wallet, 
     QString strHash = QString::fromStdString(hash.GetHex());
 
     qDebug() << "NotifyTransactionChanged : " + strHash + " status= " + QString::number(status);
-    QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection/*,
                               Q_ARG(QString, strHash),
-                              Q_ARG(int, status));
+                              Q_ARG(int, status)*/);
 }
 
 static void ShowProgress(WalletModel *walletmodel, const std::string &title, int nProgress)
@@ -652,6 +696,8 @@ void WalletModel::subscribeToCoreSignals()
     wallet->NotifyStatusChanged.connect(boost::bind(&NotifyKeyStoreStatusChanged, this, _1));
     wallet->NotifyAddressBookChanged.connect(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4, _5));
     wallet->NotifyTransactionChanged.connect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
+    wallet->ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
+    wallet->NotifyWatchonlyChanged.disconnect(boost::bind(NotifyWatchonlyChanged, this, _1));
 }
 
 void WalletModel::unsubscribeFromCoreSignals()
@@ -660,6 +706,8 @@ void WalletModel::unsubscribeFromCoreSignals()
     wallet->NotifyStatusChanged.disconnect(boost::bind(&NotifyKeyStoreStatusChanged, this, _1));
     wallet->NotifyAddressBookChanged.disconnect(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4, _5));
     wallet->NotifyTransactionChanged.disconnect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
+    wallet->ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
+    wallet->NotifyWatchonlyChanged.disconnect(boost::bind(NotifyWatchonlyChanged, this, _1));
 }
 
 // WalletModel::UnlockContext implementation
