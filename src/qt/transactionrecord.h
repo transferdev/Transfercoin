@@ -2,6 +2,7 @@
 #define TRANSACTIONRECORD_H
 
 #include "uint256.h"
+#include "util.h"
 
 #include <QList>
 #include <QString>

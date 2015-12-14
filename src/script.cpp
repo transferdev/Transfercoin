@@ -2544,6 +2544,7 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
     case TX_SCRIPTHASH:
     {
         CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
+        CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
             isminetype ret = IsMine(keystore, subscript);
             if (ret == ISMINE_SPENDABLE)
