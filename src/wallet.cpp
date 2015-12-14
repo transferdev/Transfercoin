@@ -99,6 +99,13 @@ bool CWallet::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey)
     AssertLockHeld(cs_wallet); // mapKeyMetadata
     if (!CCryptoKeyStore::AddKeyPubKey(secret, pubkey))
         return false;
+
+        // check if we need to remove from watch-only
+    CScript script;
+    script = GetScriptForDestination(pubkey.GetID());
+    if (HaveWatchOnly(script))
+        RemoveWatchOnly(script);
+
     if (!fFileBacked)
         return true;
     if (!IsCrypted()) {
@@ -176,6 +183,20 @@ bool CWallet::AddWatchOnly(const CScript &dest)
     if (!fFileBacked)
         return true;
     return CWalletDB(strWalletFile).WriteWatchOnly(dest);
+}
+
+bool CWallet::RemoveWatchOnly(const CScript &dest)
+{
+    AssertLockHeld(cs_wallet);
+    if (!CCryptoKeyStore::RemoveWatchOnly(dest))
+        return false;
+    if (!HaveWatchOnly())
+        NotifyWatchonlyChanged(false);
+    if (fFileBacked)
+        if (!CWalletDB(strWalletFile).EraseWatchOnly(dest))
+            return false;
+
+    return true;
 }
 
 bool CWallet::LoadWatchOnly(const CScript &dest)
@@ -1422,6 +1443,33 @@ CAmount CWallet::GetBalance() const
     return nTotal;
 }
 
+// ppcoin: total coins staked (non-spendable until maturity)
+CAmount CWallet::GetStake() const
+{
+    CAmount nTotal = 0;
+    LOCK2(cs_main, cs_wallet);
+    for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+    {
+        const CWalletTx* pcoin = &(*it).second;
+        if (pcoin->IsCoinStake() && pcoin->GetBlocksToMaturity() > 0 && pcoin->GetDepthInMainChain() > 0)
+            nTotal += CWallet::GetCredit(*pcoin, ISMINE_ALL);
+    }
+    return nTotal;
+}
+
+CAmount CWallet::GetNewMint() const
+{
+    CAmount nTotal = 0;
+    LOCK2(cs_main, cs_wallet);
+    for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+    {
+        const CWalletTx* pcoin = &(*it).second;
+        if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0 && pcoin->GetDepthInMainChain() > 0)
+            nTotal += CWallet::GetCredit(*pcoin, ISMINE_ALL);
+    }
+    return nTotal;
+}
+
 CAmount CWallet::GetAnonymizableBalance() const
 {
     if(fLiteMode) return 0;
@@ -1586,6 +1634,19 @@ CAmount CWallet::GetWatchOnlyBalance() const
         }
     }
 
+    return nTotal;
+}
+
+CAmount CWallet::GetWatchOnlyStake() const
+{
+    CAmount nTotal = 0;
+    LOCK2(cs_main, cs_wallet);
+    for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+    {
+        const CWalletTx* pcoin = &(*it).second;
+        if (pcoin->IsCoinStake() && pcoin->GetBlocksToMaturity() > 0 && pcoin->GetDepthInMainChain() > 0)
+            nTotal += CWallet::GetCredit(*pcoin, ISMINE_WATCH_ONLY);
+    }
     return nTotal;
 }
 
@@ -1849,33 +1910,6 @@ static void ApproximateBestSubset(vector<pair<int64_t, pair<const CWalletTx*,uns
     }
 }
 
-// ppcoin: total coins staked (non-spendable until maturity)
-int64_t CWallet::GetStake() const
-{
-    int64_t nTotal = 0;
-    LOCK2(cs_main, cs_wallet);
-    for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
-    {
-        const CWalletTx* pcoin = &(*it).second;
-        if (pcoin->IsCoinStake() && pcoin->GetBlocksToMaturity() > 0 && pcoin->GetDepthInMainChain() > 0)
-            nTotal += CWallet::GetCredit(*pcoin, ISMINE_ALL);
-    }
-    return nTotal;
-}
-
-int64_t CWallet::GetNewMint() const
-{
-    int64_t nTotal = 0;
-    LOCK2(cs_main, cs_wallet);
-    for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
-    {
-        const CWalletTx* pcoin = &(*it).second;
-        if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0 && pcoin->GetDepthInMainChain() > 0)
-            nTotal += CWallet::GetCredit(*pcoin, ISMINE_ALL);
-    }
-    return nTotal;
-}
-
 struct LargerOrEqualThanThreshold
 {
     int64_t threshold;
@@ -1891,6 +1925,8 @@ bool CWallet::SelectCoinsMinConfByCoinAge(int64_t nTargetValue, unsigned int nSp
     vector<pair<COutput, uint64_t> > mCoins;
     BOOST_FOREACH(const COutput& out, vCoins)
     {
+        if (!out.fSpendable)
+            continue;
         mCoins.push_back(std::make_pair(out, CoinWeightCost(out)));
     }
 
@@ -2323,6 +2359,9 @@ bool CWallet::SelectCoinsForStaking(int64_t nTargetValue, unsigned int nSpendTim
 
     BOOST_FOREACH(COutput output, vCoins)
     {
+        if(!output.fSpendable)
+            continue;
+
         const CWalletTx *pcoin = output.tx;
         int i = output.i;
 

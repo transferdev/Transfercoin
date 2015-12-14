@@ -133,6 +133,7 @@ public:
     CAmount getAnonymizedBalance() const;
     bool haveWatchOnly() const;
     CAmount getWatchBalance() const;
+    CAmount getWatchStake() const;
     CAmount getWatchUnconfirmedBalance() const;
     CAmount getWatchImmatureBalance() const;
     EncryptionStatus getEncryptionStatus() const;
@@ -214,6 +215,7 @@ private:
     CAmount cachedImmatureBalance;
     CAmount cachedAnonymizedBalance;
     CAmount cachedWatchOnlyBalance;
+    CAmount cachedWatchOnlyStake;
     CAmount cachedWatchUnconfBalance;
     CAmount cachedWatchImmatureBalance;
     CAmount cachedNumTransactions;

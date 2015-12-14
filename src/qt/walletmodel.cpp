@@ -103,6 +103,11 @@ CAmount WalletModel::getWatchBalance() const
     return wallet->GetWatchOnlyBalance();
 }
 
+CAmount WalletModel::getWatchStake() const
+{
+    return wallet->GetWatchOnlyStake();
+}
+
 CAmount WalletModel::getWatchUnconfirmedBalance() const
 {
     return wallet->GetUnconfirmedWatchOnlyBalance();
@@ -299,8 +304,12 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             return PrepareTransactionFailed;
         }
         // reject insane fee
-        if (nFeeRequired > (MIN_RELAY_TX_FEE *(transaction.getTransactionSize() / 1024)) * 10000)
+        unsigned int insanefee = (transaction.getTransactionSize() == 0 ? nAddresses : transaction.getTransactionSize());
+        insanefee = ((MIN_RELAY_TX_FEE * insanefee) * 10000);
+        if (nFeeRequired > insanefee){
+            LogPrintf("nFeeRequired: %d -- InsaneFee: %d\n", nFeeRequired, insanefee);
             return InsaneFee;
+        }
     }
 
     return SendCoinsReturn(OK);

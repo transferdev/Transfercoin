@@ -167,8 +167,8 @@ void SendCoinsDialog::setModel(WalletModel *model)
             }
         }
         setBalance(model->getBalance(), model->getStake(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance(),
-        	model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
-        connect(model, SIGNAL(balanceChanged(CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount)), this, SLOT(setBalance(CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount)));
+        	model->getWatchBalance(), model->getWatchStake(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
+        connect(model, SIGNAL(balanceChanged(CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount)), this, SLOT(setBalance(CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount)));
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
         updateDisplayUnit();
 
@@ -548,13 +548,14 @@ bool SendCoinsDialog::handleURI(const QString &uri)
 }
 
 void SendCoinsDialog::setBalance(const CAmount& balance, const CAmount& stake, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance,
-	const CAmount& watchBalance, const CAmount& watchUnconfirmedBalance, const CAmount& watchImmatureBalance)
+	const CAmount& watchBalance, const CAmount& watchStake, const CAmount& watchUnconfirmedBalance, const CAmount& watchImmatureBalance)
 {
     Q_UNUSED(stake);
     Q_UNUSED(unconfirmedBalance);
     Q_UNUSED(immatureBalance);
     Q_UNUSED(anonymizedBalance);
     Q_UNUSED(watchBalance);
+    Q_UNUSED(watchStake);
     Q_UNUSED(watchUnconfirmedBalance);
     Q_UNUSED(watchImmatureBalance);
 
@@ -578,7 +579,7 @@ void SendCoinsDialog::updateDisplayUnit()
     TRY_LOCK(cs_main, lockMain);
     if(!lockMain) return;
     setBalance(model->getBalance(), model->getStake(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance(),
-    	model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
+    	model->getWatchBalance(), model->getWatchStake(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
     CoinControlDialog::coinControl->useDarkSend = ui->checkUseDarksend->isChecked();
     coinControlUpdateLabels();
 }
@@ -637,7 +638,7 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
         msgParams.first = tr("Error: Narration is too long.");
         break;
     case WalletModel::InsaneFee:
-        msgParams.first = tr("A fee %1 times higher than %2 per kB is considered an insanely high fee.").arg(10000).arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), MIN_RELAY_TX_FEE));
+        msgParams.first = tr("A fee %1 times higher than %2 per recipient is considered an insanely high fee.").arg(10000).arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), MIN_RELAY_TX_FEE));
         break;
     case WalletModel::PrepareTransactionFailed:
         return;

@@ -85,7 +85,7 @@ private:
     isminetype mine;
 
 public:
-	DescribeAddressVisitor(isminetype mineIn) : mine(mineIn) {}
+    DescribeAddressVisitor(isminetype mineIn) : mine(mineIn) {}
 
     Object operator()(const CNoDestination &dest) const { return Object(); }
 

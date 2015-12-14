@@ -150,7 +150,12 @@ bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
 
 QString HtmlEscape(const QString& str, bool fMultiLine)
 {
+#if QT_VERSION < 0x050000
     QString escaped = Qt::escape(str);
+#else
+    QString escaped = str.toHtmlEscaped();
+#endif
+    escaped = escaped.replace(" ", "&nbsp;");
     if(fMultiLine)
     {
         escaped = escaped.replace("\n", "<br>\n");
@@ -172,7 +177,7 @@ void copyEntryData(QAbstractItemView *view, int column, int role)
     if(!selection.isEmpty())
     {
         // Copy first item
-        QApplication::clipboard()->setText(selection.at(0).data(role).toString());
+        setClipboard(selection.at(0).data(role).toString());
     }
 }
 
@@ -185,13 +190,17 @@ QString getSaveFileName(QWidget *parent, const QString &caption,
     QString myDir;
     if(dir.isEmpty()) // Default to user documents location
     {
+#if QT_VERSION < 0x050000
         myDir = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
+#else
+        myDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+#endif
     }
     else
     {
         myDir = dir;
     }
-    QString result = QFileDialog::getSaveFileName(parent, caption, myDir, filter, &selectedFilter);
+    QString result = QDir::toNativeSeparators(QFileDialog::getSaveFileName(parent, caption, myDir, filter, &selectedFilter));
 
     /* Extract first suffix from filter pattern "Description (*.foo)" or "Description (*.foo *.bar ...) */
     QRegExp filter_re(".* \\(\\*\\.(.*)[ \\)]");
@@ -224,7 +233,7 @@ QString getSaveFileName(QWidget *parent, const QString &caption,
 
 Qt::ConnectionType blockingGUIThreadConnection()
 {
-    if(QThread::currentThread() != QCoreApplication::instance()->thread())
+    if(QThread::currentThread() != qApp->thread())
     {
         return Qt::BlockingQueuedConnection;
     }
@@ -236,7 +245,7 @@ Qt::ConnectionType blockingGUIThreadConnection()
 
 bool checkPoint(const QPoint &p, const QWidget *w)
 {
-    QWidget *atW = qApp->widgetAt(w->mapToGlobal(p));
+    QWidget *atW = QApplication::widgetAt(w->mapToGlobal(p));
     if (!atW) return false;
     return atW->topLevelWidget() == w;
 }
@@ -290,6 +299,123 @@ bool ToolTipToRichTextFilter::eventFilter(QObject *obj, QEvent *evt)
         }
     }
     return QObject::eventFilter(obj, evt);
+}
+
+void TableViewLastColumnResizingFixer::connectViewHeadersSignals()
+{
+    connect(tableView->horizontalHeader(), SIGNAL(sectionResized(int,int,int)), this, SLOT(on_sectionResized(int,int,int)));
+    connect(tableView->horizontalHeader(), SIGNAL(geometriesChanged()), this, SLOT(on_geometriesChanged()));
+}
+
+// We need to disconnect these while handling the resize events, otherwise we can enter infinite loops.
+void TableViewLastColumnResizingFixer::disconnectViewHeadersSignals()
+{
+    disconnect(tableView->horizontalHeader(), SIGNAL(sectionResized(int,int,int)), this, SLOT(on_sectionResized(int,int,int)));
+    disconnect(tableView->horizontalHeader(), SIGNAL(geometriesChanged()), this, SLOT(on_geometriesChanged()));
+}
+
+// Setup the resize mode, handles compatibility for Qt5 and below as the method signatures changed.
+// Refactored here for readability.
+void TableViewLastColumnResizingFixer::setViewHeaderResizeMode(int logicalIndex, QHeaderView::ResizeMode resizeMode)
+{
+#if QT_VERSION < 0x050000
+    tableView->horizontalHeader()->setResizeMode(logicalIndex, resizeMode);
+#else
+    tableView->horizontalHeader()->setSectionResizeMode(logicalIndex, resizeMode);
+#endif
+}
+
+void TableViewLastColumnResizingFixer::resizeColumn(int nColumnIndex, int width)
+{
+    tableView->setColumnWidth(nColumnIndex, width);
+    tableView->horizontalHeader()->resizeSection(nColumnIndex, width);
+}
+
+int TableViewLastColumnResizingFixer::getColumnsWidth()
+{
+    int nColumnsWidthSum = 0;
+    for (int i = 0; i < columnCount; i++)
+    {
+        nColumnsWidthSum += tableView->horizontalHeader()->sectionSize(i);
+    }
+    return nColumnsWidthSum;
+}
+
+int TableViewLastColumnResizingFixer::getAvailableWidthForColumn(int column)
+{
+    int nResult = lastColumnMinimumWidth;
+    int nTableWidth = tableView->horizontalHeader()->width();
+
+    if (nTableWidth > 0)
+    {
+        int nOtherColsWidth = getColumnsWidth() - tableView->horizontalHeader()->sectionSize(column);
+        nResult = std::max(nResult, nTableWidth - nOtherColsWidth);
+    }
+
+    return nResult;
+}
+
+// Make sure we don't make the columns wider than the tables viewport width.
+void TableViewLastColumnResizingFixer::adjustTableColumnsWidth()
+{
+    disconnectViewHeadersSignals();
+    resizeColumn(lastColumnIndex, getAvailableWidthForColumn(lastColumnIndex));
+    connectViewHeadersSignals();
+
+    int nTableWidth = tableView->horizontalHeader()->width();
+    int nColsWidth = getColumnsWidth();
+    if (nColsWidth > nTableWidth)
+    {
+        resizeColumn(secondToLastColumnIndex,getAvailableWidthForColumn(secondToLastColumnIndex));
+    }
+}
+
+// Make column use all the space available, useful during window resizing.
+void TableViewLastColumnResizingFixer::stretchColumnWidth(int column)
+{
+    disconnectViewHeadersSignals();
+    resizeColumn(column, getAvailableWidthForColumn(column));
+    connectViewHeadersSignals();
+}
+
+// When a section is resized this is a slot-proxy for ajustAmountColumnWidth().
+void TableViewLastColumnResizingFixer::on_sectionResized(int logicalIndex, int oldSize, int newSize)
+{
+    adjustTableColumnsWidth();
+    int remainingWidth = getAvailableWidthForColumn(logicalIndex);
+    if (newSize > remainingWidth)
+    {
+       resizeColumn(logicalIndex, remainingWidth);
+    }
+}
+
+// When the tabless geometry is ready, we manually perform the stretch of the "Message" column,
+// as the "Stretch" resize mode does not allow for interactive resizing.
+void TableViewLastColumnResizingFixer::on_geometriesChanged()
+{
+    if ((getColumnsWidth() - this->tableView->horizontalHeader()->width()) != 0)
+    {
+        disconnectViewHeadersSignals();
+        resizeColumn(secondToLastColumnIndex, getAvailableWidthForColumn(secondToLastColumnIndex));
+        connectViewHeadersSignals();
+    }
+}
+
+/**
+ * Initializes all internal variables and prepares the
+ * the resize modes of the last 2 columns of the table and
+ */
+TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* table, int lastColMinimumWidth, int allColsMinimumWidth) :
+    tableView(table),
+    lastColumnMinimumWidth(lastColMinimumWidth),
+    allColumnsMinimumWidth(allColsMinimumWidth)
+{
+    columnCount = tableView->horizontalHeader()->count();
+    lastColumnIndex = columnCount - 1;
+    secondToLastColumnIndex = columnCount - 2;
+    tableView->horizontalHeader()->setMinimumSectionSize(allColumnsMinimumWidth);
+    setViewHeaderResizeMode(secondToLastColumnIndex, QHeaderView::Interactive);
+    setViewHeaderResizeMode(lastColumnIndex, QHeaderView::Interactive);
 }
 
 #ifdef WIN32

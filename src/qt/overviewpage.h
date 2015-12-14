@@ -35,7 +35,7 @@ public:
 
 public slots:
     void darkSendStatus();
-    void setBalance(const CAmount& balance, const CAmount& stake, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance, const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
+    void setBalance(const CAmount& balance, const CAmount& stake, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance, const CAmount& watchOnlyBalance, const CAmount& watchOnlyStake, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
 signals:
     void transactionClicked(const QModelIndex &index);
@@ -51,6 +51,7 @@ private:
     CAmount currentImmatureBalance;
     CAmount currentAnonymizedBalance;
     CAmount currentWatchOnlyBalance;
+    CAmount currentWatchOnlyStake;
     CAmount currentWatchUnconfBalance;
     CAmount currentWatchImmatureBalance;
     int nDisplayUnit;

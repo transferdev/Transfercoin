@@ -230,6 +230,7 @@ public:
 
     // Adds a watch-only address to the store, and saves it to disk.
     bool AddWatchOnly(const CScript &dest);
+    bool RemoveWatchOnly(const CScript &dest);
     // Adds a watch-only address to the store, without saving it to disk (used by LoadWallet)
     bool LoadWatchOnly(const CScript &dest);
 
@@ -264,15 +265,16 @@ public:
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
     void ResendWalletTransactions(bool fForce = false);
-    int64_t GetStake() const;
-    int64_t GetNewMint() const;
 
     CAmount GetBalance() const;
+    CAmount GetStake() const;
+    CAmount GetNewMint() const;
     CAmount GetUnconfirmedBalance() const;
     CAmount GetImmatureBalance() const;
     CAmount GetAnonymizableBalance() const; 
     CAmount GetAnonymizedBalance() const;
     CAmount GetWatchOnlyBalance() const;
+    CAmount GetWatchOnlyStake() const;
     CAmount GetUnconfirmedWatchOnlyBalance() const;
     CAmount GetImmatureWatchOnlyBalance() const;
     double GetAverageAnonymizedRounds() const;
@@ -994,15 +996,16 @@ public:
             return nAvailableWatchCreditCached;
 
         CAmount nCredit = 0;
+        uint256 hashTx = GetHash();
         for (unsigned int i = 0; i < vout.size(); i++)
         {
-            if (!pwallet->IsSpent(GetHash(), i))
-            {
-                const CTxOut &txout = vout[i];
-                nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY);
-                if (!MoneyRange(nCredit))
-                    throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
-            }
+        	const CTxOut &txout = vout[i];
+
+            if (pwallet->IsSpent(hashTx, i)) continue;
+
+            nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY);
+            if (!MoneyRange(nCredit))
+                throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
         }
 
         nAvailableWatchCreditCached = nCredit;
