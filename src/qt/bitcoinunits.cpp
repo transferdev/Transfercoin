@@ -196,7 +196,7 @@ bool BitcoinUnits::parse(int unit, const QString &value, CAmount *val_out)
     {
         return false; // Longer numbers will exceed 63 bits
     }
-    qint64 retvalue = str.toLongLong(&ok);
+    CAmount retvalue = str.toLongLong(&ok);
     if(val_out)
     {
         *val_out = retvalue;
