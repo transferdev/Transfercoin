@@ -63,7 +63,7 @@ OBJS= \
     obj/addrman.o \
     obj/crypter.o \
     obj/key.o \
-    obj/eckey.o \
+    obj/ecwrapper.o \
     obj/init.o \
     obj/bitcoind.o \
     obj/keystore.o \

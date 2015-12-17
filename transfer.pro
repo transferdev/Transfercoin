@@ -200,7 +200,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/miner.h \
     src/net.h \
     src/key.h \
-    src/eckey.h \
+    src/ecwrapper.h \
     src/db.h \
     src/txdb.h \
     src/txmempool.h \
@@ -326,7 +326,7 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/hash.cpp \
     src/netbase.cpp \
     src/key.cpp \
-    src/eckey.cpp \
+    src/ecwrapper.cpp \
     src/script.cpp \
     src/scrypt.cpp \
     src/core.cpp \

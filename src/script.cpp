@@ -2371,7 +2371,8 @@ bool Sign1(const CKeyID& address, const CKeyStore& keystore, uint256 hash, int n
         return false;
 
     vector<unsigned char> vchSig;
-    if (!key.Sign(hash, vchSig))
+    bool test = -1;
+    if (!key.Sign(hash, vchSig, test))
         return false;
     vchSig.push_back((unsigned char)nHashType);
     scriptSigRet << vchSig;

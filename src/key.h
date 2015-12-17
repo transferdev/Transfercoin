@@ -165,9 +165,9 @@ public:
 
     // Raw for stealth address
     std::vector<unsigned char> Raw() const {
-	std::vector<unsigned char> r;
+    std::vector<unsigned char> r;
         r.insert(r.end(), vch, vch+size());
-	return r;
+    return r;
     }
 };
 
@@ -258,7 +258,7 @@ public:
     CPubKey GetPubKey() const;
 
     // Create a DER-serialized signature.
-    bool Sign(const uint256 &hash, std::vector<unsigned char>& vchSig) const;
+    bool Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, bool lowS) const;
 
     // Create a compact signature (65 bytes), which allows reconstructing the used public key.
     // The format is one header byte, followed by two times 32 bytes for the serialized r and s values.
@@ -275,9 +275,6 @@ public:
 
     // Check whether an element of a signature (r or s) is valid.
     static bool CheckSignatureElement(const unsigned char *vch, int len, bool half);
-
-    // Ensure that signature is DER-encoded
-    static bool ReserealizeSignature(std::vector<unsigned char>& vchSig);
 };
 
 struct CExtPubKey {

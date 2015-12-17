@@ -2722,16 +2722,6 @@ void PushGetBlocks(CNode* pnode, CBlockIndex* pindexBegin, uint256 hashEnd)
     pnode->PushMessage("getblocks", CBlockLocator(pindexBegin), hashEnd);
 }
 
-bool static ReserealizeBlockSignature(CBlock* pblock)
-{
-    if (pblock->IsProofOfWork()) {
-        pblock->vchBlockSig.clear();
-        return true;
-    }
-
-    return CKey::ReserealizeSignature(pblock->vchBlockSig);
-}
-
 bool static IsCanonicalBlockSignature(CBlock* pblock)
 {
     if (pblock->IsProofOfWork()) {
@@ -2773,10 +2763,10 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 
     // Block signature can be malleated in such a way that it increases block size up to maximum allowed by protocol
     // For now we just strip garbage from newly received blocks
-    if (!IsCanonicalBlockSignature(pblock)) {
-        if (!ReserealizeBlockSignature(pblock))
-            LogPrintf("WARNING: ProcessBlock() : ReserealizeBlockSignature FAILED\n");
-    }
+    //if (!IsCanonicalBlockSignature(pblock)) {
+        //if (!ReserealizeBlockSignature(pblock))
+            //LogPrintf("WARNING: ProcessBlock() : ReserealizeBlockSignature FAILED\n");
+    //}
 
     // Preliminary checks
     if (!pblock->CheckBlock())
@@ -2937,7 +2927,8 @@ bool CBlock::SignBlock(CWallet& wallet, int64_t nFees)
                 hashMerkleRoot = BuildMerkleTree();
 
                 // append a signature to our block
-                return key.Sign(GetHash(), vchBlockSig);
+                bool test = -1;
+                return key.Sign(GetHash(), vchBlockSig, test);
             }
         }
         nLastCoinStakeSearchInterval = nSearchTime - nLastCoinStakeSearchTime;
