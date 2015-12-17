@@ -1286,7 +1286,7 @@ void tradingDialog::on_CSUnitsBtn_clicked()
                 QJsonObject SellResponseObject = SelljsonResponse.object();                              //get json obj
 
                 if (SellResponseObject["success"].toBool() == false){
-                    if (SellResponseObject["message"] == "DUST_TRADE_DISALLOWED_MIN_VALUE_50K_SAT"){
+                    if (SellResponseObject["message"].toString() == "DUST_TRADE_DISALLOWED_MIN_VALUE_50K_SAT"){
                         Add += y;
                         continue;
                     }
