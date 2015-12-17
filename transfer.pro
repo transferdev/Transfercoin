@@ -551,7 +551,7 @@ isEmpty(OPENSSL_INCLUDE_PATH) {
 }
 
 isEmpty(OPENSSL_LIB_PATH) {
-    macx:OPENSSL_INCLUDE_PATH = /usr/local/openssl-1.0.1p/lib
+    macx:OPENSSL_LIB_PATH = /usr/local/openssl-1.0.1p/lib
     windows:OPENSSL_LIB_PATH=C:/dev/coindeps32/openssl-1.0.1p/lib
 }
 
