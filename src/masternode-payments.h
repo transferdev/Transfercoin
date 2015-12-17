@@ -13,7 +13,6 @@
 #include "base58.h"
 #include "main.h"
 #include "masternode.h"
-#include "masternode-pos.h"
 #include "timedata.h"
 
 using namespace std;

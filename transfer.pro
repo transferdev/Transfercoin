@@ -265,7 +265,6 @@ HEADERS += src/qt/bitcoingui.h \
     src/masternodeconfig.h \
     src/masternodeman.h \
     src/masternode-payments.h \
-    src/masternode-pos.h \
     src/spork.h \
     src/crypto/common.h \
     src/crypto/hmac_sha256.h \
@@ -392,7 +391,6 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/activemasternode.cpp \
     src/masternodeman.cpp \
     src/masternode-payments.cpp \
-    src/masternode-pos.cpp \
     src/spork.cpp \
     src/masternodeconfig.cpp \
     src/crypto/hmac_sha256.cpp \

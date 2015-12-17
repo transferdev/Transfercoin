@@ -233,7 +233,7 @@ private:
 signals:
     // Signal that balance in wallet changed
     void balanceChanged(const CAmount& balance, const CAmount& stake, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance,
-        const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
+        const CAmount& watchOnlyBalance, const CAmount& watchOnlyStake, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
     // Encryption status of wallet changed
     void encryptionStatusChanged(int status);

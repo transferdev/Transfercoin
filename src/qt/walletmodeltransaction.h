@@ -6,6 +6,7 @@
 #define BITCOIN_QT_WALLETMODELTRANSACTION_H
 
 #include "walletmodel.h"
+#include "util.h"
 
 #include <QObject>
 
@@ -27,10 +28,10 @@ public:
     CWalletTx *getTransaction();
     unsigned int getTransactionSize();
 
-    void setTransactionFee(const qint64& newFee);
-    qint64 getTransactionFee();
+    void setTransactionFee(const CAmount& newFee);
+    CAmount getTransactionFee();
 
-    qint64 getTotalTransactionAmount();
+    CAmount getTotalTransactionAmount();
 
     void newPossibleKeyChange(CWallet *wallet);
     CReserveKey *getPossibleKeyChange();
@@ -39,7 +40,7 @@ private:
     const QList<SendCoinsRecipient> recipients;
     CWalletTx *walletTransaction;
     CReserveKey *keyChange;
-    qint64 fee;
+    CAmount fee;
 };
 
 #endif // BITCOIN_QT_WALLETMODELTRANSACTION_H

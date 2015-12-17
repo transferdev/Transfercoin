@@ -2872,7 +2872,6 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
             darkSendPool.CheckTimeout();
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
-            mnscan.DoMasternodePOSChecks();
 
         } else if (fLiteMode && !fImporting && !fReindex && pindexBest->nHeight > Checkpoints::GetTotalBlocksEstimate())
         {
@@ -2887,7 +2886,6 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
             }
 
             masternodePayments.ProcessBlock(GetHeight()+10);
-            mnscan.DoMasternodePOSChecks();
         }
 
     }
@@ -3458,15 +3456,6 @@ void static ProcessGetData(CNode* pfrom)
                         ss.reserve(1000);
                         ss << mapSeenMasternodeVotes[inv.hash];
                         pfrom->PushMessage("mnw", ss);
-                        pushed = true;
-                    }
-                }
-                if (!pushed && inv.type == MSG_MASTERNODE_SCANNING_ERROR) {
-                    if(mapMasternodeScanningErrors.count(inv.hash)){
-                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                        ss.reserve(1000);
-                        ss << mapMasternodeScanningErrors[inv.hash];
-                        pfrom->PushMessage("mnse", ss);
                         pushed = true;
                     }
                 }
@@ -4143,7 +4132,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         ProcessMessageMasternodePayments(pfrom, strCommand, vRecv);
         ProcessMessageInstantX(pfrom, strCommand, vRecv);
         ProcessSpork(pfrom, strCommand, vRecv);
-        ProcessMessageMasternodePOS(pfrom, strCommand, vRecv);
 
         // Ignore unknown commands for extensibility
     }

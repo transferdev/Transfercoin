@@ -30,8 +30,8 @@ static const int64_t TARGET_SPACING = 69;
 static const signed int HARD_FORK_BLOCK = 90000;
 static const signed int HARD_FORK_BLOCK2 = 140000;
 
-#define INSTANTX_SIGNATURES_REQUIRED           6
-#define INSTANTX_SIGNATURES_TOTAL              10
+#define INSTANTX_SIGNATURES_REQUIRED           10
+#define INSTANTX_SIGNATURES_TOTAL              15
 
 
 class CBlock;

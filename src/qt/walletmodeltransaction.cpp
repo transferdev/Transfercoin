@@ -36,19 +36,19 @@ unsigned int WalletModelTransaction::getTransactionSize()
     return (!walletTransaction ? 0 : (::GetSerializeSize(*(CTransaction*)walletTransaction, SER_NETWORK, PROTOCOL_VERSION)));
 }
 
-qint64 WalletModelTransaction::getTransactionFee()
+CAmount WalletModelTransaction::getTransactionFee()
 {
     return fee;
 }
 
-void WalletModelTransaction::setTransactionFee(const qint64& newFee)
+void WalletModelTransaction::setTransactionFee(const CAmount& newFee)
 {
     fee = newFee;
 }
 
-qint64 WalletModelTransaction::getTotalTransactionAmount()
+CAmount WalletModelTransaction::getTotalTransactionAmount()
 {
-    qint64 totalTransactionAmount = 0;
+    CAmount totalTransactionAmount = 0;
     foreach(const SendCoinsRecipient &rcp, recipients)
     {
         totalTransactionAmount += rcp.amount;

@@ -240,7 +240,7 @@ int64_t CreateNewLock(CTransaction tx)
 
         CTransactionLock newLock;
         newLock.nBlockHeight = nBlockHeight;
-        newLock.nExpiration = GetTime()+(15*60); //locks expire after 20 minutes (20 confirmations)
+        newLock.nExpiration = GetTime()+(20*60); //locks expire after 20 minutes (20 confirmations)
         newLock.nTimeout = GetTime()+(60*5);
         newLock.txHash = tx.GetHash();
         mapTxLocks.insert(make_pair(tx.GetHash(), newLock));
@@ -334,7 +334,7 @@ bool ProcessConsensusVote(CNode* pnode, CConsensusVote& ctx)
 
         CTransactionLock newLock;
         newLock.nBlockHeight = 0;
-        newLock.nExpiration = GetTime()+(15*60);
+        newLock.nExpiration = GetTime()+(20*60);
         newLock.nTimeout = GetTime()+(60*5);
         newLock.txHash = ctx.txHash;
         mapTxLocks.insert(make_pair(ctx.txHash, newLock));

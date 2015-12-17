@@ -163,17 +163,19 @@ void WalletModel::checkBalanceChanged()
     CAmount newImmatureBalance = getImmatureBalance();
     CAmount newAnonymizedBalance = getAnonymizedBalance();
     CAmount newWatchOnlyBalance = 0;
+    CAmount newWatchOnlyStake = 0;
     CAmount newWatchUnconfBalance = 0;
     CAmount newWatchImmatureBalance = 0;
     if (haveWatchOnly())
     {
         newWatchOnlyBalance = getWatchBalance();
+        newWatchOnlyStake = getWatchStake();
         newWatchUnconfBalance = getWatchUnconfirmedBalance();
         newWatchImmatureBalance = getWatchImmatureBalance();
     }
 
     if(cachedBalance != newBalance || cachedStake != newStake || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance || cachedAnonymizedBalance != newAnonymizedBalance ||
-        cachedTxLocks != nCompleteTXLocks || cachedWatchOnlyBalance != newWatchOnlyBalance || cachedWatchUnconfBalance != newWatchUnconfBalance || cachedWatchImmatureBalance != newWatchImmatureBalance)
+        cachedTxLocks != nCompleteTXLocks || cachedWatchOnlyBalance != newWatchOnlyBalance || cachedWatchOnlyStake != newWatchOnlyStake || cachedWatchUnconfBalance != newWatchUnconfBalance || cachedWatchImmatureBalance != newWatchImmatureBalance)
     {
         cachedBalance = newBalance;
         cachedStake = newStake;
@@ -185,7 +187,7 @@ void WalletModel::checkBalanceChanged()
         cachedWatchUnconfBalance = newWatchUnconfBalance;
         cachedWatchImmatureBalance = newWatchImmatureBalance;
         emit balanceChanged(newBalance, newStake, newUnconfirmedBalance, newImmatureBalance, newAnonymizedBalance,
-            newWatchOnlyBalance, newWatchUnconfBalance, newWatchImmatureBalance);
+            newWatchOnlyBalance, newWatchOnlyStake, newWatchUnconfBalance, newWatchImmatureBalance);
     }
 }
 
@@ -472,7 +474,8 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
         int nChangePos = -1;
         std::string strFailReason;
 
-        bool fCreated = wallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePos, strFailReason, coinControl);
+        bool fCreated = wallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePos, strFailReason, coinControl, recipients[0].inputType, recipients[0].useInstantX);
+        transaction.setTransactionFee(nFeeRequired);
 
         std::map<int, std::string>::iterator it;
         for (it = mapStealthNarr.begin(); it != mapStealthNarr.end(); ++it)

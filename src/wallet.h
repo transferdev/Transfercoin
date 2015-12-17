@@ -139,9 +139,9 @@ public:
 
     std::set<CStealthAddress> stealthAddresses;
     StealthKeyMetaMap mapStealthKeyMeta;
-        
+
     int nLastFilteredHeight;
-    
+
     uint32_t nStealth, nFoundStealth; // for reporting, zero before use
 
 
@@ -163,7 +163,7 @@ public:
         strWalletFile = strWalletFileIn;
         fFileBacked = true;
     }
-    
+
     void SetNull()
     {
         nWalletVersion = FEATURE_BASE;
@@ -271,7 +271,7 @@ public:
     CAmount GetNewMint() const;
     CAmount GetUnconfirmedBalance() const;
     CAmount GetImmatureBalance() const;
-    CAmount GetAnonymizableBalance() const; 
+    CAmount GetAnonymizableBalance() const;
     CAmount GetAnonymizedBalance() const;
     CAmount GetWatchOnlyBalance() const;
     CAmount GetWatchOnlyStake() const;
@@ -295,7 +295,7 @@ public:
     bool AddStealthAddress(CStealthAddress& sxAddr);
     bool UnlockStealthAddresses(const CKeyingMaterial& vMasterKeyIn);
     bool UpdateStealthAddress(std::string &addr, std::string &label, bool addIfNotExist);
-    
+
     bool CreateStealthTransaction(CScript scriptPubKey, int64_t nValue, std::vector<uint8_t>& P, std::vector<uint8_t>& narr, std::string& sNarr, CWalletTx& wtxNew, CReserveKey& reservekey, int64_t& nFeeRet, const CCoinControl* coinControl=NULL);
     std::string SendStealthMoney(CScript scriptPubKey, int64_t nValue, std::vector<uint8_t>& P, std::vector<uint8_t>& narr, std::string& sNarr, CWalletTx& wtxNew, bool fAskFee=false);
     bool SendStealthMoneyToDestination(CStealthAddress& sxAddress, int64_t nValue, std::string& sNarr, CWalletTx& wtxNew, std::string& sError, bool fAskFee=false);
@@ -853,7 +853,7 @@ public:
         return nCredit;
     }
 
-    CAmount GetAnonymizableCredit(bool fUseCache=false) const
+    CAmount GetAnonymizableCredit(bool fUseCache=true) const
     {
         if (pwallet == 0)
             return 0;
@@ -888,7 +888,7 @@ public:
         return nCredit;
     }
 
-    CAmount GetAnonymizedCredit(bool fUseCache=false) const
+    CAmount GetAnonymizedCredit(bool fUseCache=true) const
     {
         if (pwallet == 0)
             return 0;
@@ -923,7 +923,7 @@ public:
     }
 
 
-    CAmount GetDenominatedCredit(bool unconfirmed, bool fUseCache=false) const
+    CAmount GetDenominatedCredit(bool unconfirmed, bool fUseCache=true) const
     {
         if (pwallet == 0)
             return 0;
@@ -999,13 +999,13 @@ public:
         uint256 hashTx = GetHash();
         for (unsigned int i = 0; i < vout.size(); i++)
         {
-        	const CTxOut &txout = vout[i];
-
-            if (pwallet->IsSpent(hashTx, i)) continue;
-
-            nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY);
-            if (!MoneyRange(nCredit))
-                throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
+            if (!pwallet->IsSpent(hashTx, i))
+            {
+                const CTxOut &txout = vout[i];
+                nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY);
+                if (!MoneyRange(nCredit))
+                    throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
+            }
         }
 
         nAvailableWatchCreditCached = nCredit;

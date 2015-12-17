@@ -2872,6 +2872,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                 if (nFeeRet < max(nPayFee, nMinFee))
                 {
                     nFeeRet = max(nPayFee, nMinFee);
+                    if(useIX) nFeeRet = max(CENT, nFeeRet);
                     continue;
                 }
                 // Fill vtxPrev by copying from previous transactions vtxPrev
