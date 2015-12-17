@@ -13,7 +13,7 @@ using namespace boost;
 #include "script.h"
 #include "keystore.h"
 #include "bignum.h"
-#include "key.h"
+#include "pubkey.h"
 #include "main.h"
 #include "sync.h"
 #include "util.h"
@@ -411,7 +411,7 @@ bool static IsLowDERSignature(const valtype &vchSig) {
     // If the S value is above the order of the curve divided by two, its
     // complement modulo the order could have been used instead, which is
     // one byte shorter when encoded correctly.
-    if (!CKey::CheckSignatureElement(S, nLenS, true))
+    if (!eccrypto::CheckSignatureElement(S, nLenS, true))
         return error("Non-canonical signature: S value is unnecessarily high");
 
     return true;

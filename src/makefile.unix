@@ -113,6 +113,7 @@ OBJS= \
     obj/base58.o \
     obj/crypter.o \
     obj/key.o \
+    obj/pubkey.o \
     obj/ecwrapper.o \
     obj/init.o \
     obj/bitcoind.o \
