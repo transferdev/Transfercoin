@@ -118,7 +118,7 @@ public:
     }
 
     //! Return maximum number of base units (Satoshis)
-    static qint64 maxMoney();
+    static CAmount maxMoney();
 
 private:
     QList<BitcoinUnits::Unit> unitlist;
