@@ -5,6 +5,7 @@
 #include "key.h"
 
 #include "crypto/hmac_sha512.h"
+#include "crypto/rfc6979_hmac_sha256.h"
 #include "eccryptoverify.h"
 #include "pubkey.h"
 
@@ -49,7 +50,7 @@ bool CKey::SetPrivKey(const CPrivKey &privkey, bool fCompressedIn) {
     return true;
 }
 
- CPrivKey CKey::GetPrivKey() const {
+CPrivKey CKey::GetPrivKey() const {
     assert(fValid);
     CPrivKey privkey;
     int privkeylen, ret;
@@ -59,9 +60,9 @@ bool CKey::SetPrivKey(const CPrivKey &privkey, bool fCompressedIn) {
     assert(ret);
     privkey.resize(privkeylen);
     return privkey;
- }
+}
 
- CPubKey CKey::GetPubKey() const {
+CPubKey CKey::GetPubKey() const {
     assert(fValid);
     CPubKey result;
     int clen = 65;
@@ -70,22 +71,26 @@ bool CKey::SetPrivKey(const CPrivKey &privkey, bool fCompressedIn) {
     assert(ret);
     assert(result.IsValid());
     return result;
- }
+}
 
- bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig) const {
+bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_t test_case) const {
     if (!fValid)
         return false;
     vchSig.resize(72);
-    int nSigLen = 72;
-    CKey nonce;
+    RFC6979_HMAC_SHA256 prng(begin(), 32, (unsigned char*)&hash, 32);
     do {
-        nonce.MakeNewKey(true);
-        if (secp256k1_ecdsa_sign(instance_of_csecp256k1.ctx, hash.begin(), (unsigned char*)&vchSig[0], &nSigLen, begin(), secp256k1_nonce_function_rfc6979, NULL))
-            break;
+        uint256 nonce;
+        prng.Generate((unsigned char*)&nonce, 32);
+        nonce += test_case;
+        int nSigLen = 72;
+        int ret = secp256k1_ecdsa_sign(instance_of_csecp256k1.ctx, hash.begin(), (unsigned char*)&vchSig[0], &nSigLen, begin(), secp256k1_nonce_function_rfc6979, (unsigned char*)&nonce);
+        nonce = 0;
+        if (ret) {
+            vchSig.resize(nSigLen);
+            return true;
+        }
     } while(true);
-    vchSig.resize(nSigLen);
-    return true;
- }
+}
 
 bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
     if (pubkey.IsCompressed() != fCompressed) {
@@ -101,23 +106,26 @@ bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
     return pubkey.Verify(hash, vchSig);
 }
 
- bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) const {
+bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) const {
     if (!fValid)
         return false;
     vchSig.resize(65);
     int rec = -1;
-    CKey nonce;
+    RFC6979_HMAC_SHA256 prng(begin(), 32, (unsigned char*)&hash, 32);
     do {
-        nonce.MakeNewKey(true);
-        if (int ret = secp256k1_ecdsa_sign_compact(instance_of_csecp256k1.ctx, hash.begin(), &vchSig[1], begin(), secp256k1_nonce_function_rfc6979, NULL, &rec))
+        uint256 nonce;
+        prng.Generate((unsigned char*)&nonce, 32);
+        int ret = secp256k1_ecdsa_sign_compact(instance_of_csecp256k1.ctx, hash.begin(), &vchSig[1], begin(), secp256k1_nonce_function_rfc6979, (unsigned char*)&nonce, &rec);
+        nonce = 0;
+        if (ret)
             break;
     } while(true);
     assert(rec != -1);
     vchSig[0] = 27 + rec + (fCompressed ? 4 : 0);
     return true;
- }
+}
 
- bool CKey::Load(CPrivKey &privkey, CPubKey &vchPubKey, bool fSkipCheck=false) {
+bool CKey::Load(CPrivKey &privkey, CPubKey &vchPubKey, bool fSkipCheck=false) {
     if (!secp256k1_ec_privkey_import(instance_of_csecp256k1.ctx, (unsigned char*)begin(), &privkey[0], privkey.size()))
         return false;
     fCompressed = vchPubKey.IsCompressed();
@@ -127,9 +135,9 @@ bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
         return true;
  
     return VerifyPubKey(vchPubKey);
- }
+}
 
- bool CKey::Derive(CKey& keyChild, unsigned char ccChild[32], unsigned int nChild, const unsigned char cc[32]) const {
+bool CKey::Derive(CKey& keyChild, unsigned char ccChild[32], unsigned int nChild, const unsigned char cc[32]) const {
     assert(IsValid());
     assert(IsCompressed());
     unsigned char out[64];
@@ -149,7 +157,7 @@ bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
     keyChild.fCompressed = true;
     keyChild.fValid = ret;
     return ret;
- }
+}
 
 bool CExtKey::Derive(CExtKey &out, unsigned int nChild) const {
     out.nDepth = nDepth + 1;
@@ -205,5 +213,13 @@ void CExtKey::Decode(const unsigned char code[74]) {
 }
 
 bool ECC_InitSanityCheck() {
-    return CECKey::SanityCheck();
+#if !defined(USE_SECP256K1)
+    if (!CECKey::SanityCheck()) {
+        return false;
+    }
+#endif
+    CKey key;
+    key.MakeNewKey(true);
+    CPubKey pubkey = key.GetPubKey();
+    return key.VerifyPubKey(pubkey);
 }
