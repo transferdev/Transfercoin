@@ -7,6 +7,7 @@
 #include "darksend.h"
 #include "util.h"
 #include "sync.h"
+#include "spork.h"
 #include "addrman.h"
 #include <boost/lexical_cast.hpp>
 
@@ -17,12 +18,17 @@ CMasternodePayments masternodePayments;
 // keep track of Masternode votes I've seen
 map<uint256, CMasternodePaymentWinner> mapSeenMasternodeVotes;
 
+int CMasternodePayments::GetMinMasternodePaymentsProto() {
+    return IsSporkActive(SPORK_10_MASTERNODE_PAY_UPDATED_NODES)
+            ? MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2
+            : MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1;
+}
+
 void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-    if(IsInitialBlockDownload()) return;
+    if(!darkSendPool.IsBlockchainSynced()) return;
 
     if (strCommand == "mnget") { //Masternode Payments Request Sync
-        if(fLiteMode) return; //disable all Darksend/Masternode related functionality
 
         if(pfrom->HasFulfilledRequest("mnget")) {
             LogPrintf("mnget - peer already asked me for the list\n");
@@ -206,7 +212,7 @@ void CMasternodePayments::CleanPaymentList()
 
     if(pindexBest == NULL) return;
 
-    int nLimit = std::max(((int)mnodeman.size())*2, 1000);
+    int nLimit = std::max(((int)mnodeman.size())*((int)1.25), 1000);
 
     vector<CMasternodePaymentWinner>::iterator it;
     for(it=vWinning.begin();it<vWinning.end();it++){
@@ -233,7 +239,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     unsigned int nHash;
     memcpy(&nHash, &hash, 2);
 
-    LogPrintf(" ProcessBlock Start nHeight %d. \n", nBlockHeight);
+    LogPrintf(" ProcessBlock Start nHeight %d - vin %s. \n", nBlockHeight, activeMasternode.vin.ToString().c_str());
 
     std::vector<CTxIn> vecLastPayments;
     BOOST_REVERSE_FOREACH(CMasternodePaymentWinner& winner, vWinning)

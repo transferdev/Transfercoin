@@ -294,6 +294,7 @@ static const CRPCCommand vRPCCommands[] =
     { "dumpwallet",             &dumpwallet,             true,      false,     true },
     { "importprivkey",          &importprivkey,          false,     false,     true },
     { "importwallet",           &importwallet,           false,     false,     true },
+    { "importaddress",          &importaddress,          false,     false,      true },
     { "listunspent",            &listunspent,            false,     false,     true },
     { "settxfee",               &settxfee,               false,     false,     true },
     { "getsubsidy",             &getsubsidy,             true,      true,      false },
@@ -866,7 +867,7 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
 }
 
 std::string HelpExampleCli(string methodname, string args){
-    return "> dash-cli " + methodname + " " + args + "\n";
+    return "> transferd " + methodname + " " + args + "\n";
 }
 
 std::string HelpExampleRpc(string methodname, string args){

@@ -20,7 +20,7 @@
 using namespace json_spirit;
 using namespace std;
 
-void SendMoney(const CTxDestination &address, CAmount nValue, CWalletTx& wtxNew, AvailableCoinsType coin_type)
+void SendMoney(const CTxDestination &address, CAmount nValue, CWalletTx& wtxNew, AvailableCoinsType coin_type=ALL_COINS)
 {
     // Check amount
     if (nValue <= 0)
@@ -71,13 +71,11 @@ Value darksend(const Array& params, bool fHelp)
         if(fMasterNode)
             return "DarkSend is not supported from masternodes";
 
-        darkSendPool.DoAutomaticDenominating();
-        return "DoAutomaticDenominating";
+        return "DoAutomaticDenominating " + (darkSendPool.DoAutomaticDenominating() ? "successful" : ("failed: " + darkSendPool.GetStatus()));
     }
 
     if(params[0].get_str() == "reset"){
-        darkSendPool.SetNull(true);
-        darkSendPool.UnlockCoins();
+        darkSendPool.Reset();
         return "successfully reset darksend";
     }
 
@@ -85,7 +83,7 @@ Value darksend(const Array& params, bool fHelp)
         throw runtime_error(
             "darksend <transferaddress> <amount>\n"
             "transferaddress, denominate, or auto (AutoDenominate)"
-            "<amount> is a real and is rounded to the nearest 0.00000001"
+            "<amount> is type \"real\" and will be rounded to the nearest 0.1"
             + HelpRequiringPassphrase());
 
     CBitcoinAddress address(params[0].get_str());
@@ -104,9 +102,10 @@ Value darksend(const Array& params, bool fHelp)
     if (sNarr.length() > 24)
         throw runtime_error("Narration must be 24 characters or less.");
     
-    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, sNarr, wtx, ONLY_DENOMINATED);
-    if (strError != "")
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    //string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, sNarr, wtx, ONLY_DENOMINATED);
+    SendMoney(address.Get(), nAmount, wtx, ONLY_DENOMINATED);
+    //if (strError != "")
+        //throw JSONRPCError(RPC_WALLET_ERROR, strError);
    
     return wtx.GetHash().GetHex();
 }
@@ -135,8 +134,9 @@ Value masternode(const Array& params, bool fHelp)
         strCommand = params[0].get_str();
 
     if (fHelp  ||
-        (strCommand != "start" && strCommand != "start-alias" && strCommand != "start-many" && strCommand != "stop" && strCommand != "stop-alias" && strCommand != "stop-many" && strCommand != "list" && strCommand != "list-conf" && strCommand != "count"  && strCommand != "enforce"
-            && strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" && strCommand != "outputs" && strCommand != "vote-many" && strCommand != "vote"))
+        (strCommand != "count" && strCommand != "current" && strCommand != "debug" && strCommand != "genkey" && strCommand != "enforce" && strCommand != "list" && strCommand != "list-conf"
+        	&& strCommand != "start" && strCommand != "start-alias" && strCommand != "start-many" && strCommand != "status" && strCommand != "stop" && strCommand != "stop-alias"
+                && strCommand != "stop-many" && strCommand != "winners" && strCommand != "connect" && strCommand != "outputs" && strCommand != "vote-many" && strCommand != "vote"))
         throw runtime_error(
                 "masternode \"command\"... ( \"passphrase\" )\n"
                 "Set of commands to execute masternode related actions\n"
@@ -149,15 +149,16 @@ Value masternode(const Array& params, bool fHelp)
                 "  debug        - Print masternode status\n"
                 "  genkey       - Generate new masternodeprivkey\n"
                 "  enforce      - Enforce masternode payments\n"
-                "  outputs      - Print masternode compatible outputs\n"
-                "  start        - Start masternode configured in darkcoin.conf\n"
-                "  start-alias  - Start single masternode by assigned alias configured in masternode.conf\n"
-                "  start-many   - Start all masternodes configured in masternode.conf\n"
-                "  stop         - Stop masternode configured in darkcoin.conf\n"
-                "  stop-alias   - Stop single masternode by assigned alias configured in masternode.conf\n"
-                "  stop-many    - Stop all masternodes configured in masternode.conf\n"
                 "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
                 "  list-conf    - Print masternode.conf in JSON format\n"
+                "  outputs      - Print masternode compatible outputs\n"
+                "  start        - Start masternode configured in transfer.conf\n"
+                "  start-alias  - Start single masternode by assigned alias configured in masternode.conf\n"
+                "  start-many   - Start all masternodes configured in masternode.conf\n"
+                "  status       - Print masternode status information\n"
+                "  stop         - Stop masternode configured in transfer.conf\n"
+                "  stop-alias   - Stop single masternode by assigned alias configured in masternode.conf\n"
+                "  stop-many    - Stop all masternodes configured in masternode.conf\n"
                 "  winners      - Print list of masternode winners\n"
                 "  vote-many    - Vote on a Transfer initiative\n"
                 "  vote         - Vote on a Transfer initiative\n"
@@ -732,6 +733,26 @@ Value masternode(const Array& params, bool fHelp)
 
     }
 
+    if(strCommand == "status")
+    {
+        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
+        mnEntries = masternodeConfig.getEntries();
+
+        CScript pubkey;
+        pubkey = GetScriptForDestination(activeMasternode.pubKeyMasternode.GetID());
+        CTxDestination address1;
+        ExtractDestination(pubkey, address1);
+        CBitcoinAddress address2(address1);
+
+        Object mnObj;
+        mnObj.push_back(Pair("vin", activeMasternode.vin.ToString().c_str()));
+        mnObj.push_back(Pair("service", activeMasternode.service.ToString().c_str()));
+        mnObj.push_back(Pair("status", activeMasternode.status));
+        mnObj.push_back(Pair("pubKeyMasternode", address2.ToString().c_str()));
+        mnObj.push_back(Pair("notCapableReason", activeMasternode.notCapableReason.c_str()));
+        return mnObj;
+    }
+
     return Value::null;
 }
 
@@ -744,8 +765,8 @@ Value masternodelist(const Array& params, bool fHelp)
     if (params.size() == 2) strFilter = params[1].get_str();
 
     if (fHelp ||
-            (strMode != "status" && strMode != "vin" && strMode != "pubkey" && strMode != "lastseen" && strMode != "activeseconds" && strMode != "rank"
-                && strMode != "protocol" && strMode != "full" && strMode != "votes" && strMode != "donation" && strMode != "pose" && strMode != "lastpaid"))
+            (strMode != "activeseconds" && strMode != "donation" && strMode != "full" && strMode != "lastseen" && strMode != "protocol" 
+                && strMode != "pubkey" && strMode != "rank" && strMode != "status" && strMode != "addr" && strMode != "votes" && strMode != "lastpaid"))
     {
         throw runtime_error(
                 "masternodelist ( \"mode\" \"filter\" )\n"
@@ -758,13 +779,12 @@ Value masternodelist(const Array& params, bool fHelp)
                 "  donation       - Show donation settings\n"
                 "  full           - Print info in format 'status protocol pubkey vin lastseen activeseconds' (can be additionally filtered, partial match)\n"
                 "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
-                "  pose           - Print Proof-of-Service score\n"
                 "  protocol       - Print protocol of a masternode (can be additionally filtered, exact match)\n"
                 "  pubkey         - Print public key associated with a masternode (can be additionally filtered, partial match)\n"
                 "  rank           - Print rank of a masternode based on current block\n"
                 "  status         - Print masternode status: ENABLED / EXPIRED / VIN_SPENT / REMOVE / POS_ERROR (can be additionally filtered, partial match)\n"
                 "  addr            - Print ip address associated with a masternode (can be additionally filtered, partial match)\n"
-                "  votes          - Print all masternode votes for a Dash initiative (can be additionally filtered, partial match)\n"
+                "  votes          - Print all masternode votes for a Transfer initiative (can be additionally filtered, partial match)\n"
                 "  lastpaid       - The last time a node was paid on the network\n"
                 );
     }
@@ -841,10 +861,6 @@ Value masternodelist(const Array& params, bool fHelp)
                 if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
                     strVin.find(strFilter) == string::npos) continue;
                 obj.push_back(Pair(strVin,       address2.ToString().c_str()));
-            } else if (strMode == "pose") {
-                if(strFilter !="" && strVin.find(strFilter) == string::npos) continue;
-                std::string strOut = boost::lexical_cast<std::string>(mn.nScanningErrorCount);
-                obj.push_back(Pair(strVin,       strOut.c_str()));
             } else if(strMode == "status") {
                 std::string strStatus = mn.Status();
                 if(strFilter !="" && strVin.find(strFilter) == string::npos && strStatus.find(strFilter) == string::npos) continue;

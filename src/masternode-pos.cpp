@@ -52,7 +52,6 @@ CMasternodeScanning mnscan;
 
 void ProcessMessageMasternodePOS(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-    if(fLiteMode) return; //disable all darksend/masternode related functionality
     if(!IsSporkActive(SPORK_7_MASTERNODE_SCANNING)) return;
     if(IsInitialBlockDownload()) return;
 
@@ -146,7 +145,6 @@ void CMasternodeScanning::CleanMasternodeScanningErrors()
 void CMasternodeScanning::DoMasternodePOSChecks()
 {
     if(!fMasterNode) return;
-    if(fLiteMode) return; //disable all darksend/masternode related functionality
     if(!IsSporkActive(SPORK_7_MASTERNODE_SCANNING)) return;
     if(IsInitialBlockDownload()) return;
 

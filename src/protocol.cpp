@@ -13,8 +13,9 @@
 
 static const char* ppszTypeName[] =
 {
-    "ERROR",	
-    "tx",			
+    "ERROR",
+    "tx",
+    "dstx",
     "block",
     "filtered block",
     "tx lock request",

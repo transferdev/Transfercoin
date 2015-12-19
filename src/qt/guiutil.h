@@ -1,9 +1,13 @@
 #ifndef GUIUTIL_H
 #define GUIUTIL_H
 
-#include <QString>
-#include <QObject>
+#include <QEvent>
+#include <QHeaderView>
 #include <QMessageBox>
+#include <QObject>
+#include <QProgressBar>
+#include <QString>
+#include <QTableView>
 
 #include <boost/filesystem.hpp>
 
@@ -50,6 +54,8 @@ namespace GUIUtil
      */
     void copyEntryData(QAbstractItemView *view, int column, int role=Qt::EditRole);
 
+    void setClipboard(const QString& str);
+
     /** Get save filename, mimics QFileDialog::getSaveFileName, except that it appends a default suffix
         when no suffix is provided by the user.
 
@@ -80,6 +86,9 @@ namespace GUIUtil
     // Browse backup folder
     void showBackups();
 
+    // Replace invalid default fonts with known good ones
+    void SubstituteFonts(const QString& language);
+
     /** Qt event filter that intercepts ToolTipChange events, and replaces the tooltip with a rich text
       representation if needed. This assures that Qt can word-wrap long tooltip messages.
       Tooltips longer than the provided size threshold (in characters) are wrapped.
@@ -96,6 +105,45 @@ namespace GUIUtil
 
     private:
         int size_threshold;
+    };
+
+    /**
+     * Makes a QTableView last column feel as if it was being resized from its left border.
+     * Also makes sure the column widths are never larger than the table's viewport.
+     * In Qt, all columns are resizable from the right, but it's not intuitive resizing the last column from the right.
+     * Usually our second to last columns behave as if stretched, and when on strech mode, columns aren't resizable
+     * interactively or programatically.
+     *
+     * This helper object takes care of this issue.
+     *
+     */
+    class TableViewLastColumnResizingFixer: public QObject
+    {
+        Q_OBJECT
+
+        public:
+            TableViewLastColumnResizingFixer(QTableView* table, int lastColMinimumWidth, int allColsMinimumWidth);
+            void stretchColumnWidth(int column);
+
+        private:
+            QTableView* tableView;
+            int lastColumnMinimumWidth;
+            int allColumnsMinimumWidth;
+            int lastColumnIndex;
+            int columnCount;
+            int secondToLastColumnIndex;
+
+            void adjustTableColumnsWidth();
+            int getAvailableWidthForColumn(int column);
+            int getColumnsWidth();
+            void connectViewHeadersSignals();
+            void disconnectViewHeadersSignals();
+            void setViewHeaderResizeMode(int logicalIndex, QHeaderView::ResizeMode resizeMode);
+            void resizeColumn(int nColumnIndex, int width);
+
+        private slots:
+            void on_sectionResized(int logicalIndex, int oldSize, int newSize);
+            void on_geometriesChanged();
     };
 
     bool GetStartOnSystemStartup();
@@ -128,6 +176,20 @@ namespace GUIUtil
     };
 
     void SetBlackThemeQSS(QApplication& app);
+
+#if defined(Q_OS_MAC) && QT_VERSION >= 0x050000
+    // workaround for Qt OSX Bug:
+    // https://bugreports.qt-project.org/browse/QTBUG-15631
+    // QProgressBar uses around 10% CPU even when app is in background
+    class ProgressBar : public QProgressBar
+    {
+        bool event(QEvent *e) {
+            return (e->type() != QEvent::StyleAnimationUpdate) ? QProgressBar::event(e) : false;
+        }
+    };
+#else
+    typedef QProgressBar ProgressBar;
+#endif
 
 } // namespace GUIUtil
 

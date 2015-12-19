@@ -15,7 +15,6 @@
 #include "timedata.h"
 #include "script.h"
 #include "masternode.h"
-#include "masternode-pos.h"
 
 class uint256;
 
@@ -224,22 +223,6 @@ public:
         }
 
         return cacheInputAge+(pindexBest->nHeight-cacheInputAgeBlock);
-    }
-    
-    void ApplyScanningError(CMasternodeScanningError& mnse)
-    {
-        if(!mnse.IsValid()) return;
-
-        if(mnse.nBlockHeight == nLastScanningErrorBlockHeight) return;
-        nLastScanningErrorBlockHeight = mnse.nBlockHeight;
-
-        if(mnse.nErrorType == SCANNING_SUCCESS){
-            nScanningErrorCount--;
-            if(nScanningErrorCount < 0) nScanningErrorCount = 0;
-        } else { //all other codes are equally as bad
-            nScanningErrorCount++;
-            if(nScanningErrorCount > MASTERNODE_SCANNING_ERROR_THESHOLD*2) nScanningErrorCount = MASTERNODE_SCANNING_ERROR_THESHOLD*2;
-        }
     }
 
     std::string Status() {
