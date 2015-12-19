@@ -158,7 +158,11 @@ contains(USE_O3, 1) {
     QMAKE_CFLAGS += -msse2
 }
 
-QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter -Wstack-protector -Wno-deprecated-declarations -Wno-unused-function -Wno-unused-variable -fpermissive
+QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter -Wstack-protector -Wno-unused-function -fpermissive -Wconversion-null -Wno-unused-variable
+
+windows:QMAKE_CXXFLAGS_WARN_ON += -Wno-cpp -Wno-maybe-uninitialized
+!macx:QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-local-typedefs
+macx:QMAKE_CXXFLAGS_WARN_ON += -Wno-deprecated-declarations
 
 # Input
 DEPENDPATH += src src/json src/qt
@@ -229,6 +233,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/transactionfilterproxy.h \
     src/qt/transactionview.h \
     src/qt/walletmodel.h \
+    src/qt/walletmodeltransaction.h \
     src/rpcclient.h \
     src/rpcprotocol.h \
     src/rpcserver.h \
@@ -263,7 +268,6 @@ HEADERS += src/qt/bitcoingui.h \
     src/masternodeconfig.h \
     src/masternodeman.h \
     src/masternode-payments.h \
-    src/masternode-pos.h \
     src/spork.h \
     src/crypto/common.h \
     src/crypto/hmac_sha256.h \
@@ -349,6 +353,7 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactionfilterproxy.cpp \
     src/qt/transactionview.cpp \
     src/qt/walletmodel.cpp \
+    src/qt/walletmodeltransaction.cpp \
     src/rpcclient.cpp \
     src/rpcprotocol.cpp \
     src/rpcserver.cpp \
@@ -390,7 +395,6 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/activemasternode.cpp \
     src/masternodeman.cpp \
     src/masternode-payments.cpp \
-    src/masternode-pos.cpp \
     src/spork.cpp \
     src/masternodeconfig.cpp \
     src/crypto/hmac_sha256.cpp \
@@ -542,12 +546,12 @@ isEmpty(MINIUPNPC_LIB_PATH) {
 }
 
 isEmpty(OPENSSL_INCLUDE_PATH) {
-    macx:OPENSSL_INCLUDE_PATH = /usr/local/Cellar/openssl/1.0.2d/include
+    macx:OPENSSL_INCLUDE_PATH = /usr/local/openssl-1.0.1p/include
     windows:OPENSSL_INCLUDE_PATH=C:/dev/coindeps32/openssl-1.0.1p/include
 }
 
 isEmpty(OPENSSL_LIB_PATH) {
-    macx:OPENSSL_LIB_PATH = /usr/local/Cellar/openssl/1.0.2d/lib
+    macx:OPENSSL_LIB_PATH = /usr/local/openssl-1.0.1p/lib
     windows:OPENSSL_LIB_PATH=C:/dev/coindeps32/openssl-1.0.1p/lib
 }
 
