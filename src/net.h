@@ -97,7 +97,8 @@ enum {
     MSG_TXLOCK_VOTE,
     MSG_SPORK,
     MSG_MASTERNODE_WINNER,
-    MSG_MASTERNODE_SCANNING_ERROR
+    MSG_MASTERNODE_SCANNING_ERROR,
+    MSG_DSTX
 };
 
 extern bool fDiscover;
@@ -788,7 +789,7 @@ inline void RelayInventory(const CInv& inv)
 class CTransaction;
 void RelayTransaction(const CTransaction& tx, const uint256& hash);
 void RelayTransaction(const CTransaction& tx, const uint256& hash, const CDataStream& ss);
-void RelayTransactionLockReq(const CTransaction& tx, const uint256& hash, bool relayToAll=false);
+void RelayTransactionLockReq(const CTransaction& tx, bool relayToAll=false);
 
 /** Access to the (IP) address database (peers.dat) */
 class CAddrDB

@@ -9,6 +9,9 @@
 #include "clientmodel.h"
 #include "walletmodel.h"
 
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+
 #include <QJsonObject>
 #include <QJsonArray>
 
@@ -38,9 +41,13 @@ private slots:
     void UpdaterFunction();
     void CreateOrderBookTables(QTableWidget& Table,QStringList TableHeader);
     void DisplayBalance(QLabel &BalanceLabel,QLabel &Available, QLabel &Pending, QString Currency,QString Response);
+    void DisplayBalance(QLabel &BalanceLabel, QLabel &BalanceLabel2, QString Response, QString Response2);
+    void DisplayBalance(QLabel &BalanceLabel, QString Response);
     void ActionsOnSwitch(int index);
     void CancelOrderSlot(int row, int col);
-    void on_UpdateKeys_clicked();
+    void on_UpdateKeys_clicked(bool Save=false, bool Load=false);
+    void on_LoadKeys_clicked();
+    void on_SaveKeys_clicked();
     void on_GenDepositBTN_clicked();
 
     void CalculateBuyCostLabel();
@@ -83,6 +90,7 @@ private slots:
     QString GetDepositAddress();
     QString HMAC_SHA512_SIGNER(QString UrlToSign,QString Secretkey);
     QString sendRequest(QString url);
+    string encryptDecrypt(string toEncrypt, string password);
     QJsonObject GetResultObjectFromJSONObject(QString response);
     QJsonObject GetResultObjectFromJSONArray(QString response);
     QJsonArray  GetResultArrayFromJSONObject(QString response);

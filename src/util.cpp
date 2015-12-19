@@ -75,9 +75,9 @@ string strMasterNodePrivKey = "";
 string strMasterNodeAddr = "";
 bool fLiteMode = false;
 bool fEnableInstantX = true;
-int nInstantXDepth = 5;
+int nInstantXDepth = 10;
 int nDarksendRounds = 2;
-int nAnonymizeTransferAmount = 500;
+int nAnonymizeTransferAmount = 1000;
 int nLiquidityProvider = 0;
 /** Spork enforcement enabled time */
 int64_t enforceMasternodePaymentsTime = 4085657524;
@@ -1395,5 +1395,3 @@ std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime)
     ss << boost::posix_time::from_time_t(nTime);
     return ss.str();
 }
-
-

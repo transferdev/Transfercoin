@@ -169,15 +169,11 @@ uint256 CMasternode::CalculateScore(int mod, int64_t nBlockHeight)
 
 void CMasternode::Check()
 {
+    if(ShutdownRequested()) return;
+
     //TODO: Random segfault with this line removed
     TRY_LOCK(cs_main, lockRecv);
     if(!lockRecv) return;
-
-    if(nScanningErrorCount >= MASTERNODE_SCANNING_ERROR_THESHOLD) 
-    {
-        activeState = MASTERNODE_POS_ERROR;
-        return;
-    }
 
     //once spent, stop doing the checks
     if(activeState == MASTERNODE_VIN_SPENT) return;
@@ -200,7 +196,7 @@ void CMasternode::Check()
         tx.vin.push_back(vin);
         tx.vout.push_back(vout);
 
-	if(!AcceptableInputs(mempool, tx, false)){
+	if(!AcceptableInputs(mempool, tx, false, NULL)){
             activeState = MASTERNODE_VIN_SPENT;
             return;
         }

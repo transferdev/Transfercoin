@@ -61,7 +61,7 @@ public:
         pchMessageStart[1] = 0x2e;
         pchMessageStart[2] = 0x1e;
         pchMessageStart[3] = 0xe6;
-        vAlertPubKey = ParseHex("042d13c076ed97528247bcff222989769437eb10cdb679228c9ae26e26900eb9fd053cd9f46a9a2894ad5ebbd551beda4bd23bd55023679be77f0bd3a16e6fbeba");
+        vAlertPubKey = ParseHex("04cc24ab003c828cdd9cf4db2ebbde8e1cecb3bbfa8b3127fcb9dd9b84d44112080827ed7c49a648af9fe788ff42e316aee665879c553f099e55299d6b54edd7e0");
         nDefaultPort = 17170;
         nRPCPort = 17171;
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 16);
@@ -106,6 +106,10 @@ public:
         vSeeds.push_back(CDNSSeedData("First",  "txdns.infernopool.com"));
         convertSeeds(vFixedSeeds, pnSeed, ARRAYLEN(pnSeed), nDefaultPort);
 
+        nPoolMaxTransactions = 3;
+        //strSporkKey = "046f78dcf911fbd61910136f7f0f8d90578f68d0b3ac973b5040fb7afb501b5939f39b108b0569dca71488f5bbf498d92e4d1194f6f941307ffd95f75e76869f0e";
+        //strMasternodePaymentsPubKey = "046f78dcf911fbd61910136f7f0f8d90578f68d0b3ac973b5040fb7afb501b5939f39b108b0569dca71488f5bbf498d92e4d1194f6f941307ffd95f75e76869f0e";
+        strDarksendPoolDummyAddress = "TcYM6qFTC9i1CHb4GoHTQchF7Z2Qru73gv";
         nLastPOWBlock = 15000;
         nPOSStartBlock = 1000;
     }
@@ -138,7 +142,7 @@ public:
         pchMessageStart[2] = 0x4d;
         pchMessageStart[3] = 0x3e;
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 16);
-        vAlertPubKey = ParseHex("042d13c076ed97528247bcff222989769437eb10cdb679228c9ae26e26900eb9fd053cd9f46a9a2894ad5ebbd551beda4bd23bd55023679be77f0bd3a16e6fbeba");
+        vAlertPubKey = ParseHex("04cc24ab003c828cdd9cf4db2ebbde8e1cecb3bbfa8b3127fcb9dd9b84d44112080827ed7c49a648af9fe788ff42e316aee665879c553f099e55299d6b54edd7e0");
         nDefaultPort = 27170;
         nRPCPort = 27171;
         strDataDir = "testnet";

@@ -60,6 +60,7 @@ int64_t nTimeBestReceived = 0;
 bool fImporting = false;
 bool fReindex = false;
 bool fAddrIndex = false;
+bool fHaveGUI = false;
 
 struct COrphanBlock {
     uint256 hashBlock;
@@ -627,9 +628,6 @@ int64_t GetMinFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree, 
 
     int64_t nMinFee = (1 + (int64_t)nBytes / 1000) * nBaseFee;
 
-    if (pindexBest->nHeight < HARD_FORK_BLOCK2) {
-        fAllowFree = false;
-    }
     if (fAllowFree)
     {
         // There is a free transaction area in blocks created by most miners,
@@ -658,16 +656,12 @@ int64_t GetMinFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree, 
 }
 
 
-bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, bool* pfMissingInputs, bool ignoreFees)
+bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree,
+                        bool* pfMissingInputs, bool fRejectInsaneFee, bool ignoreFees)
 {
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
         *pfMissingInputs = false;
-
-    // Hard fork to ignore fees
-    if (pindexBest->nHeight < HARD_FORK_BLOCK2) {
-        ignoreFees = false;
-   	}
 
     if (!tx.CheckTransaction())
         return error("AcceptToMemoryPool : CheckTransaction failed");
@@ -721,7 +715,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, boo
         // do we already have it?
         if (txdb.ContainsTx(hash))
             return false;
-        
+
         // do all inputs exist?
         // Note that this does not check for the presence of actual outputs (see the next check for that),
         // only helps filling in pfMissingInputs (to determine missing vs spent).
@@ -762,7 +756,11 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, boo
         unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 
         // Don't accept it if it can't get into a block
-        if(!ignoreFees){
+        // but prioritise dstx and don't check fees for it
+        if(mapDarksendBroadcastTxes.count(hash)) {
+            // Normally we would PrioritiseTransaction But currently it is unimplemented
+            // mempool.PrioritiseTransaction(hash, hash.ToString(), 1000, 0.1*COIN);
+        } else if(!ignoreFees){
             int64_t txMinFee = GetMinFee(tx, nSize, true, GMF_RELAY);
             if (fLimitFree && nFees < txMinFee)
                 return error("AcceptToMemoryPool : not enough fees %s, %d < %d",
@@ -792,6 +790,11 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, boo
                 dFreeCount += nSize;
             }
         }
+
+        if (fRejectInsaneFee && nFees > MIN_RELAY_TX_FEE * 10000)
+            return error("AcceptableInputs: : insane fees %s, %d > %d",
+                         hash.ToString(),
+                         nFees, MIN_RELAY_TX_FEE * 10000);
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
@@ -828,16 +831,15 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree, boo
     return true;
 }
 
-bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree, bool ignoreFees)
+bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree,
+                         bool* pfMissingInputs, bool fRejectInsaneFee, bool isDSTX)
 {
     AssertLockHeld(cs_main);
+    if (pfMissingInputs)
+        *pfMissingInputs = false;
 
     CTransaction tx(txo);
-
-    // Hard fork to ignore fees
-    if (pindexBest->nHeight < HARD_FORK_BLOCK2) {
-        ignoreFees = false;
-   	}
+    string reason;
 
     if (!tx.CheckTransaction())
         return error("AcceptableInputs : CheckTransaction failed");
@@ -850,17 +852,20 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
     if (tx.IsCoinStake())
         return tx.DoS(100, error("AcceptableInputs : coinstake as individual tx"));
 
-    // Rather not work on nonstandard transactions (unless -testnet)
-    //string reason;
-    //if (!TestNet() && !IsStandardTx(tx, reason))
-    //    return error("AcceptableInputs : nonstandard transaction: %s",
-    //                 reason);
-    
-
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();
     if (pool.exists(hash))
         return false;
+
+    // ----------- instantX transaction scanning -----------
+
+    BOOST_FOREACH(const CTxIn& in, tx.vin){
+        if(mapLockedInputs.count(in.prevout)){
+            if(mapLockedInputs[in.prevout] != tx.GetHash()){
+                return tx.DoS(0, error("AcceptableInputs : conflicts with existing transaction lock: %s", reason));
+            }
+        }
+    }
 
     // Check for conflicts with in-memory transactions
     {
@@ -911,10 +916,13 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
 
         int64_t nFees = tx.GetValueIn(mapInputs)-tx.GetValueOut();
         unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+        int64_t txMinFee = GetMinFee(tx, nSize, true, GMF_RELAY);
 
         // Don't accept it if it can't get into a block
-        if(!ignoreFees){
-            int64_t txMinFee = GetMinFee(tx, nSize, true, GMF_RELAY);
+        if(isDSTX) {
+            // Normally we would PrioritiseTransaction But currently it is unimplemented
+            // mempool.PrioritiseTransaction(hash, hash.ToString(), 1000, 0.1*COIN);
+        } else { // same as !ignoreFees for AcceptToMemoryPool
             if (fLimitFree && nFees < txMinFee)
                 return error("AcceptableInputs : not enough fees %s, %d < %d",
                             hash.ToString(),
@@ -943,6 +951,11 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
                 dFreeCount += nSize;
             }
         }
+
+        if (fRejectInsaneFee && nFees > txMinFee * 10000)
+            return error("AcceptableInputs: : insane fees %s, %d > %d",
+                         hash.ToString(),
+                         nFees, MIN_RELAY_TX_FEE * 10000);
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
@@ -1022,7 +1035,7 @@ int CMerkleTx::GetDepthInMainChain(CBlockIndex* &pindexRet, bool enableIX) const
         return -1; // Not in chain, not in mempool
 
     if(enableIX){
-        if (nResult < 6){
+        if (nResult < 10){
             int signatures = GetTransactionLockSignatures();
             if(signatures >= INSTANTX_SIGNATURES_REQUIRED){
                 return nInstantXDepth+nResult;
@@ -1041,9 +1054,9 @@ int CMerkleTx::GetBlocksToMaturity() const
 }
 
 
-bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree)
+bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree, bool fRejectInsaneFee, bool ignoreFees)
 {
-    return ::AcceptToMemoryPool(mempool, *this, fLimitFree, NULL);
+    return ::AcceptToMemoryPool(mempool, *this, fLimitFree, NULL, fRejectInsaneFee, ignoreFees);
 }
 
 
@@ -1090,6 +1103,41 @@ int GetInputAge(CTxIn& vin)
     }
     else
         return 0;
+}
+
+
+int GetInputAgeIX(uint256 nTXHash, CTxIn& vin)
+{
+    int sigs = 0;
+    int nResult = GetInputAge(vin);
+    if(nResult < 0) nResult = 0;
+
+    if (nResult < 6){
+        std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(nTXHash);
+        if (i != mapTxLocks.end()){
+            sigs = (*i).second.CountSignatures();
+        }
+        if(sigs >= INSTANTX_SIGNATURES_REQUIRED){
+            return nInstantXDepth+nResult;
+        }
+    }
+
+    return -1;
+}
+
+int GetIXConfirmations(uint256 nTXHash)
+{
+    int sigs = 0;
+
+    std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(nTXHash);
+    if (i != mapTxLocks.end()){
+        sigs = (*i).second.CountSignatures();
+    }
+    if(sigs >= INSTANTX_SIGNATURES_REQUIRED){
+        return nInstantXDepth;
+    }
+
+    return 0;
 }
 
 int CTxIndex::GetDepthInMainChain() const
@@ -1279,7 +1327,7 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfSta
 }
 
 unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake)
-{   
+{
     CBigNum bnTargetLimit = fProofOfStake ? GetProofOfStakeLimit(pindexLast->nHeight) : Params().ProofOfWorkLimit();
 
     if (pindexLast == NULL)
@@ -1376,7 +1424,7 @@ void Misbehaving(NodeId pnode, int howmuch)
             {
                 LogPrintf("Misbehaving: %s (%d -> %d) BAN THRESHOLD EXCEEDED\n", pn->addrName, pn->nMisbehavior-howmuch, pn->nMisbehavior);
                 //pn->fShouldBan = true;
-            } 
+            }
             else
                 LogPrintf("Misbehaving: %s (%d -> %d)\n", pn->addrName, pn->nMisbehavior-howmuch, pn->nMisbehavior);
 
@@ -1582,22 +1630,12 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
                 return DoS(100, error("ConnectInputs() : %s prevout.n out of range %d %u %u prev tx %s\n%s", GetHash().ToString(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString(), txPrev.ToString()));
 
             // If prev is coinbase or coinstake, check that it's matured
-            if(pindexBest->nHeight >= HARD_FORK_BLOCK){
-                if (txPrev.IsCoinBase() || txPrev.IsCoinStake()) 
-                {
-                    int nSpendDepth;
-                    if (IsConfirmedInNPrevBlocks(txindex, pindexBlock, nCoinbaseMaturity, nSpendDepth)){
-                        return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", nSpendDepth);
-                    }
+            if (txPrev.IsCoinBase() || txPrev.IsCoinStake())
+            {
+                int nSpendDepth;
+                if (IsConfirmedInNPrevBlocks(txindex, pindexBlock, nCoinbaseMaturity, nSpendDepth)){
+                    return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", nSpendDepth);
                 }
-            } else {
-                if (txPrev.IsCoinBase() || txPrev.IsCoinStake()){
-                    for (const CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < nCoinbaseMaturity; pindex = pindex->pprev){
-                        if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile){
-                            return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", pindexBlock->nHeight - pindex->nHeight);
-                        }
-                    }
-                }     
             }
             // ppcoin: check transaction timestamp
             if (txPrev.nTime > nTime)
@@ -1776,7 +1814,7 @@ void CBlock::RebuildAddressIndex(CTxDB& txdb)
     {
         uint256 hashTx = tx.GetHash();
         // inputs
-        if(!tx.IsCoinBase()) 
+        if(!tx.IsCoinBase())
         {
             MapPrevTx mapInputs;
             map<uint256, CTxIndex> mapQueuedChangesT;
@@ -1951,7 +1989,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
         {
             uint256 hashTx = tx.GetHash();
             // inputs
-            if(!tx.IsCoinBase()) 
+            if(!tx.IsCoinBase())
             {
                 MapPrevTx mapInputs;
                 map<uint256, CTxIndex> mapQueuedChangesT;
@@ -2258,7 +2296,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
 // ppcoin: total coin age spent in transaction, in the unit of coin-days.
 // Only those coins meeting minimum age requirement counts. As those
 // transactions not in main chain are not currently indexed so we
-// might not find out about their coin age. Older transactions are 
+// might not find out about their coin age. Older transactions are
 // guaranteed to be in main chain by sync-checkpoint. This rule is
 // introduced to help nodes establish a consistent view of the coin
 // age (trust score) of competing branches.
@@ -2266,7 +2304,7 @@ bool CTransaction::GetCoinAge(CTxDB& txdb, const CBlockIndex* pindexPrev, uint64
 {
     CBigNum bnCentSecond = 0;  // coin age in the unit of cent-seconds
     nCoinAge = 0;
-    int nStakeMinConfirmations = 0;
+    int nStakeMinConfirmations = 1440;
 
     if (IsCoinBase())
         return true;
@@ -2282,11 +2320,6 @@ bool CTransaction::GetCoinAge(CTxDB& txdb, const CBlockIndex* pindexPrev, uint64
             return false;  // Transaction timestamp violation
 
         int nSpendDepth;
-        if(pindexBest->nHeight >= HARD_FORK_BLOCK) {
-            nStakeMinConfirmations = 1440;
-        } else {
-            nStakeMinConfirmations = 1000;
-        }
 
         if (IsConfirmedInNPrevBlocks(txindex, pindexPrev, nStakeMinConfirmations - 1, nSpendDepth))
         {
@@ -2445,7 +2478,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
     bool MasternodePayments = false;
 
     if(nTime > START_MASTERNODE_PAYMENTS) MasternodePayments = true;
-   
+
     if(MasternodePayments)
     {
         LOCK2(cs_main, mempool.cs);
@@ -2551,6 +2584,7 @@ bool CBlock::AcceptBlock()
 {
     AssertLockHeld(cs_main);
 
+    // Remove for BIP-0034 FORK
     if (nVersion > CURRENT_VERSION)
         return DoS(100, error("AcceptBlock() : reject unknown block version %d", nVersion));
 
@@ -2617,6 +2651,14 @@ bool CBlock::AcceptBlock()
     if (!Checkpoints::CheckSync(nHeight))
         return error("AcceptBlock() : rejected by synchronized checkpoint");
 
+    // Reject block.nVersion=1 blocks when 95% of the network has upgraded:
+    if (nVersion < 2)
+    {
+        if (CBlockIndex::IsSuperMajority(2, pindexPrev, 950, 1000))
+        {
+            return error("AcceptBlock() : rejected nVersion=1 block");
+        }
+    }
     // Enforce rule that the coinbase starts with serialized block height
     CScript expect = CScript() << nHeight;
     if (vtx[0].vin[0].scriptSig.size() < expect.size() ||
@@ -2716,7 +2758,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     if (!fReindex && !fImporting && pblock->IsProofOfStake() && setStakeSeen.count(pblock->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash))
         return error("ProcessBlock() : duplicate proof-of-stake (%s, %d) for block %s", pblock->GetProofOfStake().first.ToString(), pblock->GetProofOfStake().second, hash.ToString());
 
-    if (pblock->hashPrevBlock != hashBestChain) 
+    if (pblock->hashPrevBlock != hashBestChain)
     {
         // Extra checks to prevent "fill up memory by spamming with bogus blocks"
         const CBlockIndex* pcheckpoint = Checkpoints::AutoSelectSyncCheckpoint();
@@ -2809,11 +2851,14 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
 
-    if(!fLiteMode && !IsInitialBlockDownload()){
-        if (!fImporting && !fReindex && pindexBest->nHeight > Checkpoints::GetTotalBlocksEstimate()){
+    if(!IsInitialBlockDownload()){
 
-            CScript payee;
-            CTxIn vin;
+    	CScript payee;
+        CTxIn vin;
+
+        // If we're in LiteMode disable darksend features without disabling masternodes
+        if (!fLiteMode && !fImporting && !fReindex && pindexBest->nHeight > Checkpoints::GetTotalBlocksEstimate()){
+
             if(masternodePayments.GetBlockPayee(pindexBest->nHeight, payee, vin)){
                 //UPDATE MASTERNODE LAST PAID TIME
                 CMasternode* pmn = mnodeman.Find(vin);
@@ -2827,8 +2872,22 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
             darkSendPool.CheckTimeout();
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
-            mnscan.DoMasternodePOSChecks();
+
+        } else if (fLiteMode && !fImporting && !fReindex && pindexBest->nHeight > Checkpoints::GetTotalBlocksEstimate())
+        {
+            if(masternodePayments.GetBlockPayee(pindexBest->nHeight, payee, vin)){
+                //UPDATE MASTERNODE LAST PAID TIME
+                CMasternode* pmn = mnodeman.Find(vin);
+                if(pmn != NULL) {
+                    pmn->nLastPaid = GetAdjustedTime();
+                }
+
+                LogPrintf("ProcessBlock() : Update Masternode Last Paid Time - %d\n", pindexBest->nHeight);
+            }
+
+            masternodePayments.ProcessBlock(GetHeight()+10);
         }
+
     }
 
     LogPrintf("ProcessBlock: ACCEPTED\n");
@@ -3267,6 +3326,8 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
 {
     switch (inv.type)
     {
+    case MSG_DSTX:
+        return mapDarksendBroadcastTxes.count(inv.hash);
     case MSG_TX:
         {
         bool txInMap = false;
@@ -3339,7 +3400,7 @@ void static ProcessGetData(CNode* pfrom)
             }
             else if (inv.IsKnownType())
             {
-            	if(fDebug) LogPrintf("ProcessGetData -- Starting \n");
+                if(fDebug) LogPrintf("ProcessGetData -- Starting \n");
                 // Send stream from relay memory
                 bool pushed = false;
                 /*{
@@ -3352,28 +3413,14 @@ void static ProcessGetData(CNode* pfrom)
                     }
                 }*/
                 if (!pushed && inv.type == MSG_TX) {
-                	string txHash = inv.hash.ToString().c_str();
-                	if(fDebug) LogPrintf("ProcessGetData -- txHash %d \n", txHash);
-                    if(mapDarksendBroadcastTxes.count(inv.hash)){
+
+                    CTransaction tx;
+                    if (mempool.lookup(inv.hash, tx)) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss <<
-                            mapDarksendBroadcastTxes[inv.hash].tx <<
-                            mapDarksendBroadcastTxes[inv.hash].vin <<
-                            mapDarksendBroadcastTxes[inv.hash].vchSig <<
-                            mapDarksendBroadcastTxes[inv.hash].sigTime;
-
-                        pfrom->PushMessage("dstx", ss);
+                        ss << tx;
+                        pfrom->PushMessage("tx", ss);
                         pushed = true;
-                    } else {
-                        CTransaction tx;
-                        if (mempool.lookup(inv.hash, tx)) {
-                            CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                            ss.reserve(1000);
-                            ss << tx;
-                            pfrom->PushMessage("tx", ss);
-                            pushed = true;
-                        }
                     }
                 }
                 if (!pushed && inv.type == MSG_TXLOCK_VOTE) {
@@ -3412,12 +3459,17 @@ void static ProcessGetData(CNode* pfrom)
                         pushed = true;
                     }
                 }
-                if (!pushed && inv.type == MSG_MASTERNODE_SCANNING_ERROR) {
-                    if(mapMasternodeScanningErrors.count(inv.hash)){
+                if (!pushed && inv.type == MSG_DSTX) {       
+                    if(mapDarksendBroadcastTxes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mapMasternodeScanningErrors[inv.hash];
-                        pfrom->PushMessage("mnse", ss);
+                        ss <<
+                            mapDarksendBroadcastTxes[inv.hash].tx <<
+                            mapDarksendBroadcastTxes[inv.hash].vin <<
+                            mapDarksendBroadcastTxes[inv.hash].vchSig <<
+                            mapDarksendBroadcastTxes[inv.hash].sigTime;
+
+                        pfrom->PushMessage("dstx", ss);
                         pushed = true;
                     }
                 }
@@ -3794,7 +3846,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CTransaction tx;
 
         //masternode signed transaction
-        bool allowFree = false;
+        bool ignoreFees = false;
         CTxIn vin;
         vector<unsigned char> vchSig;
         int64_t sigTime;
@@ -3825,7 +3877,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
                 LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString().c_str());
 
-                allowFree = true;
+                ignoreFees = true;
                 pmn->allowFreeTx = false;
 
                 if(!mapDarksendBroadcastTxes.count(tx.GetHash())){
@@ -3849,7 +3901,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         mapAlreadyAskedFor.erase(inv);
 
-        if (AcceptToMemoryPool(mempool, tx, true, &fMissingInputs, allowFree))
+        if (AcceptToMemoryPool(mempool, tx, true, &fMissingInputs, false, ignoreFees))
         {
             RelayTransaction(tx, inv.hash);
             vWorkQueue.push_back(inv.hash);
@@ -3897,6 +3949,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             if (nEvicted > 0)
                 LogPrint("mempool", "mapOrphan overflow, removed %u tx\n", nEvicted);
         }
+        if(strCommand == "dstx"){			
+	        CInv inv(MSG_DSTX, tx.GetHash());			
+	        RelayInventory(inv);			
+	    }
         if (tx.nDoS) pfrom->Misbehaving(tx.nDoS);
     }
 
@@ -4076,7 +4132,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         ProcessMessageMasternodePayments(pfrom, strCommand, vRecv);
         ProcessMessageInstantX(pfrom, strCommand, vRecv);
         ProcessSpork(pfrom, strCommand, vRecv);
-        ProcessMessageMasternodePOS(pfrom, strCommand, vRecv);
 
         // Ignore unknown commands for extensibility
     }

@@ -13,7 +13,6 @@
 #include "base58.h"
 #include "main.h"
 #include "masternode.h"
-#include "masternode-pos.h"
 #include "timedata.h"
 
 using namespace std;
@@ -99,6 +98,7 @@ public:
     void Sync(CNode* node);
     void CleanPaymentList();
     int LastPayment(CMasternode& mn);
+    int GetMinMasternodePaymentsProto();
 
     bool GetBlockPayee(int nBlockHeight, CScript& payee, CTxIn& vin);
 };
