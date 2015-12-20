@@ -272,7 +272,6 @@ HEADERS += src/qt/bitcoingui.h \
     src/crypto/common.h \
     src/crypto/hmac_sha256.h \
     src/crypto/hmac_sha512.h \
-    src/crypto/rfc6979_hmac_sha256.h \
     src/crypto/ripemd160.h \
     src/crypto/sha1.h \
     src/crypto/sha256.h \
@@ -399,7 +398,6 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/masternodeconfig.cpp \
     src/crypto/hmac_sha256.cpp \
     src/crypto/hmac_sha512.cpp \
-    src/crypto/rfc6979_hmac_sha256.cpp \
     src/crypto/ripemd160.cpp \
     src/crypto/sha1.cpp \
     src/crypto/sha256.cpp \

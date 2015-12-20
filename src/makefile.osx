@@ -118,7 +118,6 @@ OBJS= \
     obj/spork.o \
     obj/crypto/hmac_sha256.o \
     obj/crypto/hmac_sha512.o \
-    obj/crypto/rfc6979_hmac_sha256.o \
     obj/crypto/ripemd160.o \
     obj/crypto/sha1.o \
     obj/crypto/sha256.o \

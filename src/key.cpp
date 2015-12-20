@@ -4,8 +4,8 @@
 
 #include "key.h"
 
+#include "crypto/common.h"
 #include "crypto/hmac_sha512.h"
-#include "crypto/rfc6979_hmac_sha256.h"
 #include "eccryptoverify.h"
 #include "pubkey.h"
 
@@ -35,6 +35,7 @@ bool CKey::Check(const unsigned char *vch) {
 }
 
 void CKey::MakeNewKey(bool fCompressedIn) {
+    RandAddSeedPerfmon();
     do {
         GetRandBytes(vch, sizeof(vch));
     } while (!Check(vch));
@@ -77,19 +78,13 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_
     if (!fValid)
         return false;
     vchSig.resize(72);
-    RFC6979_HMAC_SHA256 prng(begin(), 32, (unsigned char*)&hash, 32);
-    do {
-        uint256 nonce;
-        prng.Generate((unsigned char*)&nonce, 32);
-        nonce += test_case;
-        int nSigLen = 72;
-        int ret = secp256k1_ecdsa_sign(instance_of_csecp256k1.ctx, hash.begin(), (unsigned char*)&vchSig[0], &nSigLen, begin(), secp256k1_nonce_function_rfc6979, (unsigned char*)&nonce);
-        nonce = 0;
-        if (ret) {
-            vchSig.resize(nSigLen);
-            return true;
-        }
-    } while(true);
+    int nSigLen = 72;
+    unsigned char extra_entropy[32] = {0};
+    WriteLE32(extra_entropy, test_case);
+    int ret = secp256k1_ecdsa_sign(instance_of_csecp256k1.ctx, hash.begin(), (unsigned char*)&vchSig[0], &nSigLen, begin(), secp256k1_nonce_function_rfc6979, test_case ? extra_entropy : NULL);
+    assert(ret);
+    vchSig.resize(nSigLen);
+    return true;
 }
 
 bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
@@ -100,7 +95,7 @@ bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
     std::string str = "Bitcoin key verification\n";
     GetRandBytes(rnd, sizeof(rnd));
     uint256 hash;
-    CHash256().Write((unsigned char*)str.data(), str.size()).Write(rnd, sizeof(rnd)).Finalize((unsigned char*)&hash);
+    CHash256().Write((unsigned char*)str.data(), str.size()).Write(rnd, sizeof(rnd)).Finalize(hash.begin());
     std::vector<unsigned char> vchSig;
     Sign(hash, vchSig);
     return pubkey.Verify(hash, vchSig);
@@ -111,15 +106,8 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
         return false;
     vchSig.resize(65);
     int rec = -1;
-    RFC6979_HMAC_SHA256 prng(begin(), 32, (unsigned char*)&hash, 32);
-    do {
-        uint256 nonce;
-        prng.Generate((unsigned char*)&nonce, 32);
-        int ret = secp256k1_ecdsa_sign_compact(instance_of_csecp256k1.ctx, hash.begin(), &vchSig[1], begin(), secp256k1_nonce_function_rfc6979, (unsigned char*)&nonce, &rec);
-        nonce = 0;
-        if (ret)
-            break;
-    } while(true);
+    int ret = secp256k1_ecdsa_sign_compact(instance_of_csecp256k1.ctx, hash.begin(), &vchSig[1], begin(), secp256k1_nonce_function_rfc6979, NULL, &rec);
+    assert(ret);
     assert(rec != -1);
     vchSig[0] = 27 + rec + (fCompressed ? 4 : 0);
     return true;
@@ -213,11 +201,9 @@ void CExtKey::Decode(const unsigned char code[74]) {
 }
 
 bool ECC_InitSanityCheck() {
-#if !defined(USE_SECP256K1)
     if (!CECKey::SanityCheck()) {
         return false;
     }
-#endif
     CKey key;
     key.MakeNewKey(true);
     CPubKey pubkey = key.GetPubKey();
