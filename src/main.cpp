@@ -2632,14 +2632,6 @@ bool CBlock::AcceptBlock()
     if (!Checkpoints::CheckSync(nHeight))
         return error("AcceptBlock() : rejected by synchronized checkpoint");
 
-    // Reject block.nVersion=1 blocks when 95% of the network has upgraded:
-    if (nVersion < 2)
-    {
-        if (CBlockIndex::IsSuperMajority(2, pindexPrev, 950, 1000))
-        {
-            return error("AcceptBlock() : rejected nVersion=1 block");
-        }
-    }
     // Enforce rule that the coinbase starts with serialized block height
     CScript expect = CScript() << nHeight;
     if (vtx[0].vin[0].scriptSig.size() < expect.size() ||
@@ -2678,18 +2670,6 @@ uint256 CBlockIndex::GetBlockTrust() const
         return 0;
 
     return ((CBigNum(1)<<256) / (bnTarget+1)).getuint256();
-}
-
-bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired, unsigned int nToCheck)
-{
-    unsigned int nFound = 0;
-    for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; i++)
-    {
-        if (pstart->nVersion >= minVersion)
-            ++nFound;
-        pstart = pstart->pprev;
-    }
-    return (nFound >= nRequired);
 }
 
 void PushGetBlocks(CNode* pnode, CBlockIndex* pindexBegin, uint256 hashEnd)
