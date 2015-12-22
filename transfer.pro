@@ -77,22 +77,6 @@ contains(USE_QRCODE, 1) {
     LIBS += -lqrencode
 }
 
-# use: qmake "USE_UPNP=1" ( enabled by default; default)
-#  or: qmake "USE_UPNP=0" (disabled by default)
-#  or: qmake "USE_UPNP=-" (not supported)
-# miniupnpc (http://miniupnp.free.fr/files/) must be installed for support
-contains(USE_UPNP, -) {
-    message(Building without UPNP support)
-} else {
-    message(Building with UPNP support)
-    count(USE_UPNP, 0) {
-        USE_UPNP=1
-    }
-    DEFINES += USE_UPNP=$$USE_UPNP MINIUPNP_STATICLIB STATICLIB
-    INCLUDEPATH += $$MINIUPNPC_INCLUDE_PATH
-    LIBS += $$join(MINIUPNPC_LIB_PATH,,-L,) -lminiupnpc
-    win32:LIBS += -liphlpapi
-}
 
 # use: qmake "USE_DBUS=1" or qmake "USE_DBUS=0"
 linux:count(USE_DBUS, 0) {
@@ -151,6 +135,14 @@ contains(USE_O3, 1) {
     QMAKE_CFLAGS += -O3
 }
 
+contains(USE_O0, 1) {
+    message(Building O0 optimization flag)
+    QMAKE_CXXFLAGS_RELEASE -= -O2
+    QMAKE_CFLAGS_RELEASE -= -O2
+    QMAKE_CXXFLAGS += -O0
+    QMAKE_CFLAGS += -O0
+}
+
 *-g++-32 {
     message("32 platform, adding -msse2 flag")
 
@@ -158,7 +150,8 @@ contains(USE_O3, 1) {
     QMAKE_CFLAGS += -msse2
 }
 
-QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter -Wstack-protector -Wno-unused-function -fpermissive -Wconversion-null -Wno-unused-variable
+QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter -Wstack-protector
+QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-variable -Wno-unused-local-typedefs
 
 windows:QMAKE_CXXFLAGS_WARN_ON += -Wno-cpp -Wno-maybe-uninitialized
 !macx:QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-local-typedefs
@@ -199,8 +192,9 @@ HEADERS += src/qt/bitcoingui.h \
     src/main.h \
     src/miner.h \
     src/net.h \
-    src/key.h \
     src/ecwrapper.h \
+    src/key.h \
+    src/pubkey.h \
     src/db.h \
     src/txdb.h \
     src/txmempool.h \
@@ -276,7 +270,6 @@ HEADERS += src/qt/bitcoingui.h \
     src/crypto/sha1.h \
     src/crypto/sha256.h \
     src/crypto/sha512.h \
-    src/eccryptoverify.h \
     src/qt/masternodemanager.h \
     src/qt/addeditadrenalinenode.h \
     src/qt/adrenalinenodeconfigdialog.h \
@@ -324,8 +317,9 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/util.cpp \
     src/hash.cpp \
     src/netbase.cpp \
-    src/key.cpp \
     src/ecwrapper.cpp \
+    src/key.cpp \
+    src/pubkey.cpp \
     src/script.cpp \
     src/scrypt.cpp \
     src/core.cpp \
@@ -402,7 +396,6 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/crypto/sha1.cpp \
     src/crypto/sha256.cpp \
     src/crypto/sha512.cpp \
-    src/eccryptoverify.cpp \
     src/qt/masternodemanager.cpp \
     src/qt/addeditadrenalinenode.cpp \
     src/qt/adrenalinenodeconfigdialog.cpp \
@@ -454,7 +447,7 @@ FORMS += \
     src/qt/forms/sendmessagesdialog.ui \
     src/qt/forms/blockbrowser.ui \
     src/qt/forms/tradingdialog.ui \
-    src/qt/plugins/mrichtexteditor/mrichtextedit.ui 
+    src/qt/plugins/mrichtexteditor/mrichtextedit.ui
 
 contains(USE_QRCODE, 1) {
 HEADERS += src/qt/qrcodedialog.h
@@ -555,12 +548,29 @@ isEmpty(OPENSSL_LIB_PATH) {
 
 isEmpty(SECP256K1_LIB_PATH) {
     macx:SECP256K1_LIB_PATH = /usr/local/lib
-    windows:SECP256K1_LIB_PATH=C:/dev/coindeps32/secp256k1/.lib
+    windows:SECP256K1_LIB_PATH=C:/dev/coindeps32/secp256knew/lib
 }
 
 isEmpty(SECP256K1_INCLUDE_PATH) {
     macx:SECP256K1_INCLUDE_PATH = /usr/local/include
-    windows:SECP256K1_INCLUDE_PATH=C:/dev/coindeps32/secp256k1/include
+    windows:SECP256K1_INCLUDE_PATH=C:/dev/coindeps32/secp256knew/include
+}
+
+# use: qmake "USE_UPNP=1" ( enabled by default; default)
+#  or: qmake "USE_UPNP=0" (disabled by default)
+#  or: qmake "USE_UPNP=-" (not supported)
+# miniupnpc (http://miniupnp.free.fr/files/) must be installed for support
+contains(USE_UPNP, -) {
+    message(Building without UPNP support)
+} else {
+    message(Building with UPNP support)
+    count(USE_UPNP, 0) {
+        USE_UPNP=1
+    }
+    DEFINES += USE_UPNP=$$USE_UPNP MINIUPNP_STATICLIB STATICLIB
+    INCLUDEPATH += $$MINIUPNPC_INCLUDE_PATH
+    LIBS += $$join(MINIUPNPC_LIB_PATH,,-L,) -lminiupnpc
+    win32:LIBS += -liphlpapi
 }
 
 windows:DEFINES += WIN32

@@ -9,6 +9,8 @@
 #include "txdb.h"
 #include "rpcserver.h"
 #include "net.h"
+#include "key.h"
+#include "pubkey.h"
 #include "util.h"
 #include "ui_interface.h"
 #include "checkpoints.h"
@@ -26,11 +28,13 @@
 #include "walletdb.h"
 #endif
 
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/filesystem/convenience.hpp>
-#include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/bind.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/function.hpp>
+#include <boost/interprocess/sync/file_lock.hpp>
+#include <boost/thread.hpp>
 #include <openssl/crypto.h>
 
 #ifndef WIN32
@@ -95,6 +99,8 @@ bool ShutdownRequested()
     return fRequestShutdown;
 }
 
+static boost::scoped_ptr<ECCVerifyHandle> globalVerifyHandle;
+
 void Shutdown()
 {
 	fRequestShutdown = true; // Needed when we shutdown the wallet
@@ -132,6 +138,8 @@ void Shutdown()
     delete pwalletMain;
     pwalletMain = NULL;
 #endif
+    globalVerifyHandle.reset();
+    ECC_Stop();
     LogPrintf("Shutdown : done\n");
 }
 
@@ -493,6 +501,10 @@ bool AppInit2(boost::thread_group& threadGroup)
 #endif
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
+
+    // Initialize elliptic curve code
+    ECC_Start();
+    globalVerifyHandle.reset(new ECCVerifyHandle());
 
     // Sanity check
     if (!InitSanityCheck())
