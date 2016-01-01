@@ -12,7 +12,7 @@ INCLUDEPATHS= \
  -I"c:/dev/coindeps32/boost_1_57_0/include" \
  -I"c:/dev/coindeps32/bdb-4.8/include" \
  -I"c:/dev/coindeps32/openssl-1.0.1p/include" \
- -I"c:/dev/coindeps32/secp256knew/include" \
+ -I"c:/dev/coindeps32/Secp256k1/include" \
  -I"c:/dev/coindeps32/miniupnpc-1.9"
 
 LIBPATHS= \
@@ -20,7 +20,7 @@ LIBPATHS= \
  -L"c:/dev/coindeps32/boost_1_57_0/lib" \
  -L"c:/dev/coindeps32/bdb-4.8/lib" \
  -L"c:/dev/coindeps32/openssl-1.0.1p/lib" \
- -L"c:/dev/coindeps32/secp256knew/lib" \
+ -L"c:/dev/coindeps32/Secp256k1/lib" \
  -L"c:/dev/coindeps32/miniupnpc-1.9"
 
 LIBS= \

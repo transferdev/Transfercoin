@@ -161,12 +161,19 @@ endif
 
 all: transferd
 
+# build secp256k1
+LIBS += $(CURDIR)/secp256k1/src/libsecp256k1_la-secp256k1.o 
+DEFS += $(addprefix -I,$(CURDIR)/secp256k1/include)
+secp256k1/src/libsecp256k1_la-secp256k1.o:
+	@echo "Building Secp256k1 ..."; cd secp256k1; chmod 755 *; ./autogen.sh; ./configure --enable-module-recovery; make; cd ..;
+
+# build leveldb
 LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/include)
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
 OBJS += obj/txdb-leveldb.o
 leveldb/libleveldb.a:
-	@echo "Building LevelDB ..."; cd leveldb; make libleveldb.a libmemenv.a; cd ..
+	@echo "Building LevelDB ..."; cd leveldb; chmod 755 *; make libleveldb.a libmemenv.a; cd ..
 obj/txdb-leveldb.o: leveldb/libleveldb.a
 
 # auto-generated dependencies:

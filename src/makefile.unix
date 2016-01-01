@@ -9,9 +9,8 @@ LINK:=$(CXX)
 ARCH:=$(system lscpu | head -n 1 | awk '{print $2}')
 
 DEFS=-DBOOST_SPIRIT_THREADSAFE
-DEFS += -DUSE_SECP256K1
-DEFS += $(addprefix -I,$(CURDIR) $(CURDIR)/obj $(BOOST_INCLUDE_PATH) $(BDB_INCLUDE_PATH) $(OPENSSL_INCLUDE_PATH) $(CURDIR)/secp256k1 $(CURDIR)/secp256k1/src $(CURDIR)/secp256k1/include)
-LIBS = $(addprefix -L,$(BOOST_LIB_PATH) $(BDB_LIB_PATH) $(OPENSSL_LIB_PATH) $(CURDIR)/secp256k1/.libs)
+DEFS += $(addprefix -I,$(CURDIR) $(CURDIR)/obj $(BOOST_INCLUDE_PATH) $(BDB_INCLUDE_PATH) $(OPENSSL_INCLUDE_PATH))
+LIBS = $(addprefix -L,$(BOOST_LIB_PATH) $(BDB_LIB_PATH) $(OPENSSL_LIB_PATH))
 
 LMODE = dynamic
 LMODE2 = dynamic
@@ -23,8 +22,7 @@ ifdef STATIC
 endif
 
 LIBS += \
- -Wl,-B$(LMODE) \
-   -l secp256k1
+ -Wl,-B$(LMODE)
 
 # for boost 1.37, add -mt to the boost libraries
 LIBS += \
@@ -186,6 +184,13 @@ endif
 
 all: transferd
 
+# build secp256k1
+LIBS += $(CURDIR)/secp256k1/src/libsecp256k1_la-secp256k1.o 
+DEFS += $(addprefix -I,$(CURDIR)/secp256k1/include)
+secp256k1/src/libsecp256k1_la-secp256k1.o:
+	@echo "Building Secp256k1 ..."; cd secp256k1; chmod 755 *; ./autogen.sh; ./configure --enable-module-recovery; make; cd ..;
+
+# build leveldb
 LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/include)
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)

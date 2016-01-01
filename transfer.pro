@@ -548,12 +548,12 @@ isEmpty(OPENSSL_LIB_PATH) {
 
 isEmpty(SECP256K1_LIB_PATH) {
     macx:SECP256K1_LIB_PATH = /usr/local/lib
-    windows:SECP256K1_LIB_PATH=C:/dev/coindeps32/secp256knew/lib
+    windows:SECP256K1_LIB_PATH=C:/dev/coindeps32/Secp256k/lib
 }
 
 isEmpty(SECP256K1_INCLUDE_PATH) {
     macx:SECP256K1_INCLUDE_PATH = /usr/local/include
-    windows:SECP256K1_INCLUDE_PATH=C:/dev/coindeps32/secp256knew/include
+    windows:SECP256K1_INCLUDE_PATH=C:/dev/coindeps32/Secp256k1/include
 }
 
 # use: qmake "USE_UPNP=1" ( enabled by default; default)
