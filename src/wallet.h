@@ -1072,14 +1072,20 @@ public:
                     mapPrev[tx.GetHash()] = &tx;
             }
 
+            // Trusted if all inputs are from us and are in the mempool:
             BOOST_FOREACH(const CTxIn& txin, ptx->vin)
             {
-                if (!mapPrev.count(txin.prevout.hash))
+                // Transactions not sent by us: not trusted
+                const CWalletTx* parent = pwallet->GetWalletTx(txin.prevout.hash);
+                if (parent == NULL)
                     return false;
+                const CTxOut& parentOut = parent->vout[txin.prevout.n];
+                if (pwallet->IsMine(parentOut) != ISMINE_SPENDABLE)
+                    return false;
+                
                 vWorkQueue.push_back(mapPrev[txin.prevout.hash]);
             }
         }
-
         return true;
     }
 

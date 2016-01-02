@@ -17,10 +17,11 @@ These dependencies are required:
 
  Library     | Purpose          | Description
  ------------|------------------|----------------------
- libssl      | Crypto           | Random Number Generation, Elliptic Curve Cryptography
+ libssl      | Crypto           | Random Number Generation
  libboost    | Utility          | Library for threading, data structures, etc
  libevent    | Networking       | OS independent asynchronous networking
  libdb4.8    | Berkeley DB      | Wallet storage (only needed when wallet enabled)
+ libsecp256k1| Secp256k1        | Elliptic Curve Cryptography
 
 Optional dependencies:
 
@@ -71,10 +72,6 @@ pass `--with-incompatible-bdb` to configure.
 Optional:
 
     sudo apt-get install libminiupnpc-dev (see --with-miniupnpc and --enable-upnp-default)
-
-ZMQ dependencies:
-
-    sudo apt-get install libzmq3-dev (provides ZMQ API 4.x)
 
 Dependencies for the GUI: Ubuntu & Debian
 -----------------------------------------
@@ -138,7 +135,7 @@ With UPNP:
     cd src/secp256k1 && chmod 755 * && \
     ./autogen.sh && ./configure && \
     make && sudo make install && \
-    cd ../.. && make -f makefile.unix && \
+    cd .. && make -f makefile.unix && \
     strip transferd
 
 (Recommended) Without UPNP:
@@ -146,7 +143,7 @@ With UPNP:
     cd src/secp256k1 && chmod 755 * && \
     ./autogen.sh && ./configure && \
     make && sudo make install && \
-    cd ../.. && make -f makefile.unix USE_UPNP= && \
+    cd .. && make -f makefile.unix USE_UPNP= && \
     strip transferd
 
 To Build Transfer-QT

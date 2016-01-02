@@ -13,14 +13,13 @@ using namespace boost;
 #include "script.h"
 #include "keystore.h"
 #include "bignum.h"
-#include "key.h"
+#include "pubkey.h"
 #include "main.h"
 #include "sync.h"
 #include "util.h"
 #include "crypto/ripemd160.h"
 #include "crypto/sha1.h"
 #include "crypto/sha256.h"
-#include "eccryptoverify.h"
 
 namespace {
 
@@ -405,16 +404,8 @@ bool static IsLowDERSignature(const valtype &vchSig) {
     if (!IsDERSignature(vchSig)) {
         return false;
     }
-    unsigned int nLenR = vchSig[3];
-    unsigned int nLenS = vchSig[5+nLenR];
-    const unsigned char *S = &vchSig[6+nLenR];
-    // If the S value is above the order of the curve divided by two, its
-    // complement modulo the order could have been used instead, which is
-    // one byte shorter when encoded correctly.
-    if (!CKey::CheckSignatureElement(S, nLenS, true))
-        return error("Non-canonical signature: S value is unnecessarily high");
-
-    return true;
+    std::vector<unsigned char> vchSigCopy(vchSig.begin(), vchSig.begin() + vchSig.size() - 1);
+    return CPubKey::CheckLowS(vchSigCopy);
 }
 
 bool static IsDefinedHashtypeSignature(const valtype &vchSig) {
@@ -1274,16 +1265,8 @@ bool static IsLowDERSignature(const valtype &vchSig, ScriptError* serror) {
     if (!IsDERSignature(vchSig)) {
         return set_error(serror, SCRIPT_ERR_SIG_DER);
     }
-    unsigned int nLenR = vchSig[3];
-    unsigned int nLenS = vchSig[5+nLenR];
-    const unsigned char *S = &vchSig[6+nLenR];
-    // If the S value is above the order of the curve divided by two, its
-    // complement modulo the order could have been used instead, which is
-    // one byte shorter when encoded correctly.
-    if (!eccrypto::CheckSignatureElement(S, nLenS, true))
-        return set_error(serror, SCRIPT_ERR_SIG_HIGH_S);
-
-    return true;
+    std::vector<unsigned char> vchSigCopy(vchSig.begin(), vchSig.begin() + vchSig.size() - 1);
+    return CPubKey::CheckLowS(vchSigCopy);
 }
 
 
@@ -1867,7 +1850,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     popstack(stack);
                     stack.push_back(vchHash);
                 }
-                break;                                   
+                break;
 
                 case OP_CODESEPARATOR:
                 {
@@ -2371,7 +2354,8 @@ bool Sign1(const CKeyID& address, const CKeyStore& keystore, uint256 hash, int n
         return false;
 
     vector<unsigned char> vchSig;
-    if (!key.Sign(hash, vchSig))
+    bool test = -1;
+    if (!key.Sign(hash, vchSig, test))
         return false;
     vchSig.push_back((unsigned char)nHashType);
     scriptSigRet << vchSig;
@@ -2628,7 +2612,7 @@ public:
 
     void operator()(const CStealthAddress &stxAddr) {
         CScript script;
-        
+
     }
 
     void operator()(const CNoDestination &none) {}
@@ -3129,7 +3113,7 @@ void CScript::SetMultisig(int nRequired, const std::vector<CPubKey>& keys)
 
 bool CScriptCompressor::IsToKeyID(CKeyID &hash) const
 {
-    if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160 
+    if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160
                             && script[2] == 20 && script[23] == OP_EQUALVERIFY
                             && script[24] == OP_CHECKSIG) {
         memcpy(&hash, &script[3], 20);

@@ -28,18 +28,21 @@ OpenSSL         \openssl-1.0.1p-mgw        http://www.openssl.org/source/
 Berkeley DB     \db-4.8.30.NC-mgw          http://www.oracle.com/technology/software/products/berkeley-db/index.html
 Boost           \boost-1.57.0-mgw          http://www.boost.org/users/download/
 miniupnpc       \miniupnpc-1.6-mgw         http://miniupnp.tuxfamily.org/files/
+Secp256k1       \secp256k1                 https://github.com/bitcoin/secp256k1
 
 Their licenses:
 OpenSSL        Old BSD license with the problematic advertising requirement
 Berkeley DB    New BSD license with additional requirement that linked software must be free open source
 Boost          MIT-like license
 miniupnpc      New (3-clause) BSD license
+Secp256k1
 
 Versions used in this release:
 OpenSSL      1.0.1p
 Berkeley DB  4.8.30.NC
 Boost        1.57.0
 miniupnpc    1.6
+Secp256k1    
 
 
 OpenSSL
@@ -48,7 +51,7 @@ MSYS transfer:
 un-tar sources with MSYS 'tar xfz' to avoid issue with symlinks (OpenSSL ticket 2377)
 change 'MAKE' env. variable from 'C:\MinGW32\bin\mingw32-make.exe' to '/c/MinGW32/bin/mingw32-make.exe'
 
-cd /c/openssl-1.0.1b-mgw
+cd /c/dev/coindeps32/openssl-1.0.1p-mgw
 ./config
 make
 
@@ -56,7 +59,7 @@ Berkeley DB
 -----------
 MSYS transfer:
 
-    cd /c/db-4.8.30.NC-mgw/build_unix
+    cd /c/dev/coindeps32/db-4.8.30.NC-mgw/build_unix
     sh ../dist/configure --enable-mingw --enable-cxx
     make
 
@@ -65,8 +68,17 @@ Boost
 DOS prompt:
 
     downloaded boost jam 3.1.18
-    cd \boost-1.47.0-mgw
+    cd \dev\coindeps32\boost-1.57.0-mgw
     bjam toolset=gcc --build-type=complete stage
+
+Secp256k1
+-----------
+MSYS transfer:
+
+    ./autogen.sh
+    ./configure --enable-module-recovery --prefix /c/dev/coindeps32/Secp256k1
+    make
+    make install
 
 MiniUPnPc
 ---------
