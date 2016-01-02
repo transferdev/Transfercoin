@@ -73,14 +73,6 @@ Optional:
 
     sudo apt-get install libminiupnpc-dev (see --with-miniupnpc and --enable-upnp-default)
 
-Secp256k1 dependencies:
-
-    cd src/secp256k1
-    ./autogen.sh
-    ./configure --enable-module-recovery
-    make
-    sudo make install
-
 Dependencies for the GUI: Ubuntu & Debian
 -----------------------------------------
 
