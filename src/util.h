@@ -251,7 +251,7 @@ std::string getTimeString(int64_t timestamp, char *buffer, size_t nBuffer);
 std::string bytesReadable(uint64_t nBytes);
 
 void ShrinkDebugFile();
-void GetRandBytes(unsigned char* buf, int num);
+bool GetRandBytes(unsigned char* buf, int num);
 int GetRandInt(int nMax);
 uint64_t GetRand(uint64_t nMax);
 uint256 GetRandHash();

@@ -27,10 +27,8 @@ before_install:
   - chmod 755 src/leveldb/build_detect_platform
   - cd src/secp256k1
   - chmod 755 *
-  - mkdir build-aux
-  - mkdir build-aux/m4
   - ./autogen.sh
-  - ./configure --prefix=$HOME/secp256k1
+  - ./configure --prefix=$HOME/secp256k1 --enable-module-recovery
   - make
   - make install
   - cd ../..

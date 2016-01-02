@@ -12,6 +12,7 @@ INCLUDEPATHS= \
  -I"c:/dev/coindeps32/boost_1_57_0/include" \
  -I"c:/dev/coindeps32/bdb-4.8/include" \
  -I"c:/dev/coindeps32/openssl-1.0.1p/include" \
+ -I"c:/dev/coindeps32/Secp256k1/include" \
  -I"c:/dev/coindeps32/miniupnpc-1.9"
 
 LIBPATHS= \
@@ -19,6 +20,7 @@ LIBPATHS= \
  -L"c:/dev/coindeps32/boost_1_57_0/lib" \
  -L"c:/dev/coindeps32/bdb-4.8/lib" \
  -L"c:/dev/coindeps32/openssl-1.0.1p/lib" \
+ -L"c:/dev/coindeps32/Secp256k1/lib" \
  -L"c:/dev/coindeps32/miniupnpc-1.9"
 
 LIBS= \
@@ -31,6 +33,7 @@ LIBS= \
  -l boost_chrono$(BOOST_SUFFIX) \
  -l db_cxx \
  -l ssl \
+ -l secp256k1 \
  -l crypto
 
 DEFS=-DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE
@@ -63,7 +66,8 @@ OBJS= \
     obj/addrman.o \
     obj/crypter.o \
     obj/key.o \
-    obj/eckey.o \
+    obj/pubkey.o \
+    obj/ecwrapper.o \
     obj/init.o \
     obj/bitcoind.o \
     obj/keystore.o \
@@ -94,7 +98,6 @@ OBJS= \
     obj/activemasternode.o \
     obj/darksend.o \
     obj/darksend-relay.o \
-    obj/eccryptoverify.o \
     obj/instantx.o \
     obj/masternodeconfig.o \
     obj/masternodeman.o \
@@ -104,7 +107,6 @@ OBJS= \
     obj/spork.o \
     obj/crypto/hmac_sha256.o \
     obj/crypto/hmac_sha512.o \
-    obj/crypto/rfc6979_hmac_sha256.o \
     obj/crypto/ripemd160.o \
     obj/crypto/sha1.o \
     obj/crypto/sha256.o \

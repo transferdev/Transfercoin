@@ -27,7 +27,7 @@ but you can get the current version from http://developer.apple.com
 
 1.  Clone the github tree to get the source code:
 
-git clone git@github.com:rat4/transfer.git transfer
+git clone http://github.com/transferdev/transfercoin transfer
 
 2.  Download and install MacPorts from http://www.macports.org/
 

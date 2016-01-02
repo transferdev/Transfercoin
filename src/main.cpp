@@ -1883,27 +1883,8 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     {
         uint256 hashTx = tx.GetHash();
         nInputs += tx.vin.size();
-
-        // Do not allow blocks that contain transactions which 'overwrite' older transactions,
-        // unless those are already completely spent.
-        // If such overwrites are allowed, coinbases and transactions depending upon those
-        // can be duplicated to remove the ability to spend the first instance -- even after
-        // being sent to another address.
-        // See BIP30 and http://r6.ca/blog/20120206T005236Z.html for more information.
-        // This logic is not necessary for memory pool transactions, as AcceptToMemoryPool
-        // already refuses previously-known transaction ids entirely.
-        // This rule was originally applied all blocks whose timestamp was after March 15, 2012, 0:00 UTC.
-        // Now that the whole chain is irreversibly beyond that time it is applied to all blocks except the
-        // two in the chain that violate it. This prevents exploiting the issue against nodes in their
-        // initial block download.
-        CTxIndex txindexOld;
-        if (txdb.ReadTxIndex(hashTx, txindexOld)) {
-            BOOST_FOREACH(CDiskTxPos &pos, txindexOld.vSpent)
-                if (pos.IsNull())
-                    return DoS(100, error("ConnectBlock() : tried to overwrite transaction"));
-        }
-
         nSigOps += GetLegacySigOpCount(tx);
+
         if (nSigOps > MAX_BLOCK_SIGOPS)
             return DoS(100, error("ConnectBlock() : too many sigops"));
 
@@ -2651,14 +2632,6 @@ bool CBlock::AcceptBlock()
     if (!Checkpoints::CheckSync(nHeight))
         return error("AcceptBlock() : rejected by synchronized checkpoint");
 
-    // Reject block.nVersion=1 blocks when 95% of the network has upgraded:
-    if (nVersion < 2)
-    {
-        if (CBlockIndex::IsSuperMajority(2, pindexPrev, 950, 1000))
-        {
-            return error("AcceptBlock() : rejected nVersion=1 block");
-        }
-    }
     // Enforce rule that the coinbase starts with serialized block height
     CScript expect = CScript() << nHeight;
     if (vtx[0].vin[0].scriptSig.size() < expect.size() ||
@@ -2699,18 +2672,6 @@ uint256 CBlockIndex::GetBlockTrust() const
     return ((CBigNum(1)<<256) / (bnTarget+1)).getuint256();
 }
 
-bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired, unsigned int nToCheck)
-{
-    unsigned int nFound = 0;
-    for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; i++)
-    {
-        if (pstart->nVersion >= minVersion)
-            ++nFound;
-        pstart = pstart->pprev;
-    }
-    return (nFound >= nRequired);
-}
-
 void PushGetBlocks(CNode* pnode, CBlockIndex* pindexBegin, uint256 hashEnd)
 {
     // Filter out duplicate requests
@@ -2720,16 +2681,6 @@ void PushGetBlocks(CNode* pnode, CBlockIndex* pindexBegin, uint256 hashEnd)
     pnode->hashLastGetBlocksEnd = hashEnd;
 
     pnode->PushMessage("getblocks", CBlockLocator(pindexBegin), hashEnd);
-}
-
-bool static ReserealizeBlockSignature(CBlock* pblock)
-{
-    if (pblock->IsProofOfWork()) {
-        pblock->vchBlockSig.clear();
-        return true;
-    }
-
-    return CKey::ReserealizeSignature(pblock->vchBlockSig);
 }
 
 bool static IsCanonicalBlockSignature(CBlock* pblock)
@@ -2774,8 +2725,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     // Block signature can be malleated in such a way that it increases block size up to maximum allowed by protocol
     // For now we just strip garbage from newly received blocks
     if (!IsCanonicalBlockSignature(pblock)) {
-        if (!ReserealizeBlockSignature(pblock))
-            LogPrintf("WARNING: ProcessBlock() : ReserealizeBlockSignature FAILED\n");
+        return error("ProcessBlock(): bad block signature encoding");
     }
 
     // Preliminary checks
@@ -3780,7 +3730,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         // Send the rest of the chain
         if (pindex)
             pindex = pindex->pnext;
-        int nLimit = 500;
+        int nLimit = 5000;
         LogPrint("net", "getblocks %d to %s limit %d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString(), nLimit);
         for (; pindex; pindex = pindex->pnext)
         {
@@ -4290,7 +4240,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         if (pingSend) {
             uint64_t nonce = 0;
             while (nonce == 0) {
-                RAND_bytes((unsigned char*)&nonce, sizeof(nonce));
+                GetRandBytes((unsigned char*)&nonce, sizeof(nonce));
             }
             pto->fPingQueued = false;
             pto->nPingUsecStart = GetTimeMicros();
