@@ -39,7 +39,7 @@ BUILD WINDOWS
 
 1) Download Windows Build Environment.rar from https://github.com/Infernoman/Transfercoin/releases/tag/WBE and unpack to C:/
 
-2) Download Transfercoin source from https://github.com/Infernoman/Transfercoin/archive/master.zip 
+2) Download Transfercoin source from https://github.com/transferdev/Transfercoin/archive/master.zip 
 
 2.1) Unpack to C:/Transfercoin
 

@@ -46,7 +46,7 @@ Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
 Build requirements:
 
-    sudo apt-get install build-essential libtool automake autotools-dev autoconf pkg-config libssl-dev libgmp-dev libevent-dev bsdmainutils
+    sudo apt-get install build-essential libtool automake autotools-dev autoconf pkg-config libssl-dev libgmp3-dev libevent-dev bsdmainutils
 
 On at least Ubuntu 14.04+ and Debian 7+ there are generic names for the
 individual boost development packages, so the following can be used to only
