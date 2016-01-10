@@ -4,9 +4,10 @@ os:
 cache: 
   apt: true
   directories:
-  - $HOME/Transfercoin/src/leveldb
-  - $HOME/Transfercoin/src/secp256k1
-  - $HOME/secp256k1
+  - $HOME/transferdev/Transfercoin/src/leveldb
+  - $HOME/transferdev/Transfercoin/src/secp256k1
+  - $HOME/infernoman/Transfercoin/src/leveldb
+  - $HOME/infernoman/Transfercoin/src/secp256k1
 addons:
   apt:
     sources:
@@ -15,23 +16,17 @@ addons:
     packages:
     - build-essential
     - libdb++-dev
-    - libboost1.55-all-dev
+    - libboost1.57-all-dev
     - autoconf
     - libssl-dev
     - libprotobuf-dev
     - protobuf-compiler
     - libqrencode-dev
+    - libgmp-dev
     - libtool
     - libminiupnpc-dev
 before_install:
   - chmod 755 src/leveldb/build_detect_platform
-  - cd src/secp256k1
-  - chmod 755 *
-  - ./autogen.sh
-  - ./configure --prefix=$HOME/secp256k1 --enable-module-recovery
-  - make
-  - make install
-  - cd ../..
 script: 
   - cd src
   - make -f makefile.unix
