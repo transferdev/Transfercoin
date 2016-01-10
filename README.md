@@ -2,6 +2,7 @@
 Transfer is a PoS-based cryptocurrency.
 
 Transfer uses libsecp256k1,
+			  libgmp,
 			  Boost1.55,
 			  OR Boost1.57,  
 			  Openssl1.01p,
@@ -20,21 +21,15 @@ BUILD LINUX
 -----------
 1) git clone https://github.com/transferdev/Transfercoin.git transfercoin
 
-2) cd transfercoin/src/secp256k1 && chmod 755 *
+2) cd transfercoin/src
 
-3) ./autogen.sh && ./configure
-
-4) make && sudo make install
-
-5) cd ..
-
-6) sudo make -f makefile.unix            # Headless transfer
+3) sudo make -f makefile.unix            # Headless transfer
 
 (optional)
 
-7) strip transferd
+4) strip transferd
 
-8) sudo cp transferd /usr/local/bin
+5) sudo cp transferd /usr/local/bin
 
 
 
@@ -44,7 +39,7 @@ BUILD WINDOWS
 
 1) Download Windows Build Environment.rar from https://github.com/Infernoman/Transfercoin/releases/tag/WBE and unpack to C:/
 
-2) Download Transfercoin source from https://github.com/Infernoman/Transfercoin/archive/master.zip 
+2) Download Transfercoin source from https://github.com/transferdev/Transfercoin/archive/master.zip 
 
 2.1) Unpack to C:/Transfercoin
 

@@ -111,9 +111,9 @@ QWidget *BitcoinAmountField::setupTabChain(QWidget *prev)
     return amount;
 }
 
-qint64 BitcoinAmountField::value(bool *valid_out) const
+CAmount BitcoinAmountField::value(bool *valid_out) const
 {
-    qint64 val_out = 0;
+    CAmount val_out = 0;
     bool valid = BitcoinUnits::parse(currentUnit, text(), &val_out);
     if(valid_out)
     {
@@ -122,7 +122,7 @@ qint64 BitcoinAmountField::value(bool *valid_out) const
     return val_out;
 }
 
-void BitcoinAmountField::setValue(qint64 value)
+void BitcoinAmountField::setValue(const CAmount& value)
 {
     setText(BitcoinUnits::format(currentUnit, value));
 }
@@ -137,7 +137,7 @@ void BitcoinAmountField::unitChanged(int idx)
 
     // Parse current value and convert to new unit
     bool valid = false;
-    qint64 currentValue = value(&valid);
+    CAmount currentValue = value(&valid);
 
     currentUnit = newUnit;
 

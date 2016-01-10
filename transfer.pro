@@ -16,11 +16,6 @@ greaterThan(QT_MAJOR_VERSION, 4) {
     DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
 }
 
-linux {
-    SECP256K1_LIB_PATH = /usr/local/lib
-    SECP256K1_INCLUDE_PATH = /usr/local/include
-}
-
 # for boost 1.37, add -mt to the boost libraries
 # use: qmake BOOST_LIB_SUFFIX=-mt
 # for boost thread win32 with _win32 sufix
@@ -93,9 +88,8 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
     QTPLUGIN += qcncodecs qjpcodecs qtwcodecs qkrcodecs qtaccessiblewidgets
 }
 
-# LIBSEC256K1 SUPPORT
-QMAKE_CXXFLAGS *= -DUSE_SECP256K1
 
+#Build Leveldb
 INCLUDEPATH += src/leveldb/include src/leveldb/helpers
 LIBS += $$PWD/src/leveldb/libleveldb.a $$PWD/src/leveldb/libmemenv.a
 SOURCES += src/txdb-leveldb.cpp
@@ -116,6 +110,22 @@ PRE_TARGETDEPS += $$PWD/src/leveldb/libleveldb.a
 QMAKE_EXTRA_TARGETS += genleveldb
 # Gross ugly hack that depends on qmake internals, unfortunately there is no other way to do it.
 QMAKE_CLEAN += $$PWD/src/leveldb/libleveldb.a; cd $$PWD/src/leveldb ; $(MAKE) clean
+
+
+#Build Secp256k1
+INCLUDEPATH += src/secp256k1/include
+LIBS += $$PWD/src/secp256k1/src/libsecp256k1_la-secp256k1.o
+!win32 {
+    # we use QMAKE_CXXFLAGS_RELEASE even without RELEASE=1 because we use RELEASE to indicate linking preferences not -O preferences
+    gensecp256k1.commands = cd $$PWD/src/secp256k1 && ./autogen.sh && ./configure --enable-module-recovery && CC=$$QMAKE_CC CXX=$$QMAKE_CXX $(MAKE) OPT=\"$$QMAKE_CXXFLAGS $$QMAKE_CXXFLAGS_RELEASE\"
+}
+gensecp256k1.target = $$PWD/src/secp256k1/src/libsecp256k1_la-secp256k1.o
+gensecp256k1.depends = FORCE
+PRE_TARGETDEPS += $$PWD/src/secp256k1/src/libsecp256k1_la-secp256k1.o
+QMAKE_EXTRA_TARGETS += gensecp256k1
+
+# Gross ugly hack that depends on qmake internals, unfortunately there is no other way to do it.
+QMAKE_CLEAN += $$PWD/src/secp256k1/src/libsecp256k1_la-secp256k1.o; cd $$PWD/src/secp256k1; $(MAKE) clean
 
 # regenerate src/build.h
 !windows|contains(USE_BUILD_INFO, 1) {
@@ -151,7 +161,7 @@ contains(USE_O0, 1) {
 }
 
 QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter -Wstack-protector
-QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-variable -Wno-unused-local-typedefs
+QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-variable -fpermissive
 
 windows:QMAKE_CXXFLAGS_WARN_ON += -Wno-cpp -Wno-maybe-uninitialized
 !macx:QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-local-typedefs

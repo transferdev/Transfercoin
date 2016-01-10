@@ -18,6 +18,7 @@ These dependencies are required:
  Library     | Purpose          | Description
  ------------|------------------|----------------------
  libssl      | Crypto           | Random Number Generation
+ libgmp      | Secp256k1        | Secp256k1 Dependency
  libboost    | Utility          | Library for threading, data structures, etc
  libevent    | Networking       | OS independent asynchronous networking
  libdb4.8    | Berkeley DB      | Wallet storage (only needed when wallet enabled)
@@ -45,7 +46,7 @@ Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
 Build requirements:
 
-    sudo apt-get install build-essential libtool automake autotools-dev autoconf pkg-config libssl-dev libevent-dev bsdmainutils
+    sudo apt-get install build-essential libtool automake autotools-dev autoconf pkg-config libssl-dev libgmp3-dev libevent-dev bsdmainutils
 
 On at least Ubuntu 14.04+ and Debian 7+ there are generic names for the
 individual boost development packages, so the following can be used to only
@@ -132,37 +133,26 @@ To Build Transferd
 
 With UPNP:
 
-    cd src/secp256k1 && chmod 755 * && \
-    ./autogen.sh && ./configure && \
-    make && sudo make install && \
-    cd .. && make -f makefile.unix && \
+    cd src && \
+    make -f makefile.unix && \
     strip transferd
 
 (Recommended) Without UPNP:
 
-    cd src/secp256k1 && chmod 755 * && \
-    ./autogen.sh && ./configure && \
-    make && sudo make install && \
-    cd .. && make -f makefile.unix USE_UPNP= && \
+    cd src && \
+    make -f makefile.unix USE_UPNP= && \
     strip transferd
 
 To Build Transfer-QT
 --------
 
 With UPNP:
-
-    cd src/secp256k1 && chmod 755 * && \
-    ./autogen.sh && ./configure && \
-    make && sudo make install && \
-    cd ../.. && qmake -qt=qt5 && \
+    qmake -qt=qt5 && \
     make \
 
 (Recommended) Without UPNP:
 
-    cd src/secp256k1 && chmod 755 * && \
-    ./autogen.sh && ./configure && \
-    make && sudo make install && \
-    cd ../.. && qmake -qt=qt5 USE_UPNP=- && \
+    qmake -qt=qt5 USE_UPNP=- && \
     make \
 
 Boost

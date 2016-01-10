@@ -4,9 +4,10 @@ os:
 cache: 
   apt: true
   directories:
-  - $HOME/Transfercoin/src/leveldb
-  - $HOME/Transfercoin/src/secp256k1
-  - $HOME/secp256k1
+  - $HOME/transferdev/Transfercoin/src/leveldb
+  - $HOME/transferdev/Transfercoin/src/secp256k1
+  - $HOME/Infernoman/Transfercoin/src/leveldb
+  - $HOME/Infernoman/Transfercoin/src/secp256k1
 addons:
   apt:
     sources:
@@ -21,17 +22,11 @@ addons:
     - libprotobuf-dev
     - protobuf-compiler
     - libqrencode-dev
+    - libgmp3-dev
     - libtool
     - libminiupnpc-dev
 before_install:
   - chmod 755 src/leveldb/build_detect_platform
-  - cd src/secp256k1
-  - chmod 755 *
-  - ./autogen.sh
-  - ./configure --prefix=$HOME/secp256k1 --enable-module-recovery
-  - make
-  - make install
-  - cd ../..
 script: 
   - cd src
   - make -f makefile.unix
