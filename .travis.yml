@@ -22,7 +22,7 @@ addons:
     - libprotobuf-dev
     - protobuf-compiler
     - libqrencode-dev
-    - libgmp-dev
+    - libgmp3-dev
     - libtool
     - libminiupnpc-dev
 before_install:
