@@ -16,7 +16,7 @@ addons:
     packages:
     - build-essential
     - libdb++-dev
-    - libboost1.57-all-dev
+    - libboost1.55-all-dev
     - autoconf
     - libssl-dev
     - libprotobuf-dev
