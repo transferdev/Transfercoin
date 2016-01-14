@@ -556,16 +556,6 @@ isEmpty(OPENSSL_LIB_PATH) {
     windows:OPENSSL_LIB_PATH=C:/dev/coindeps32/openssl-1.0.1p/lib
 }
 
-isEmpty(SECP256K1_LIB_PATH) {
-    macx:SECP256K1_LIB_PATH = /usr/local/lib
-    windows:SECP256K1_LIB_PATH=C:/dev/coindeps32/Secp256k/lib
-}
-
-isEmpty(SECP256K1_INCLUDE_PATH) {
-    macx:SECP256K1_INCLUDE_PATH = /usr/local/include
-    windows:SECP256K1_INCLUDE_PATH=C:/dev/coindeps32/Secp256k1/include
-}
-
 # use: qmake "USE_UPNP=1" ( enabled by default; default)
 #  or: qmake "USE_UPNP=0" (disabled by default)
 #  or: qmake "USE_UPNP=-" (not supported)
@@ -609,15 +599,13 @@ macx:QMAKE_CXXFLAGS_THREAD += -pthread
 macx:QMAKE_INFO_PLIST = share/qt/Info.plist
 
 # Set libraries and includes at end, to use platform-defined defaults if not overridden
-INCLUDEPATH += $$SECP256K1_INCLUDE_PATH $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH $$QRENCODE_INCLUDE_PATH
-LIBS += $$join(SECP256K1_LIB_PATH,,-L,) $$join(BOOST_LIB_PATH,,-L,) $$join(BDB_LIB_PATH,,-L,) $$join(OPENSSL_LIB_PATH,,-L,) $$join(QRENCODE_LIB_PATH,,-L,)
+INCLUDEPATH += $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH $$QRENCODE_INCLUDE_PATH
+LIBS += $$join(BOOST_LIB_PATH,,-L,) $$join(BDB_LIB_PATH,,-L,) $$join(OPENSSL_LIB_PATH,,-L,) $$join(QRENCODE_LIB_PATH,,-L,)
 LIBS += -lssl -lcrypto -ldb_cxx$$BDB_LIB_SUFFIX
 # -lgdi32 has to happen after -lcrypto (see  #681)
 windows:LIBS += -lws2_32 -lshlwapi -lmswsock -lole32 -loleaut32 -luuid -lgdi32
 !windows: {
-    LIBS += -lsecp256k1
-} else {
-    LIBS += -lsecp256k1 -lgmp
+    LIBS += -lgmp
 }
 LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_THREAD_LIB_SUFFIX
 windows:LIBS += -lboost_chrono$$BOOST_LIB_SUFFIX
