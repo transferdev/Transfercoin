@@ -617,7 +617,7 @@ windows:LIBS += -lws2_32 -lshlwapi -lmswsock -lole32 -loleaut32 -luuid -lgdi32
 !win32 {
     LIBS += -lsecp256k1
 } else {
-	LIBS += -lsecp256k1 -lgmp
+    LIBS += -lsecp256k1 -lgmp
 }
 LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_THREAD_LIB_SUFFIX
 windows:LIBS += -lboost_chrono$$BOOST_LIB_SUFFIX
