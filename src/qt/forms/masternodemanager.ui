@@ -34,7 +34,7 @@
      <item>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -146,13 +146,6 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="copyAddressButton">
-               <property name="text">
-                <string>Copy &amp;Address</string>
-               </property>
-              </widget>
-             </item>
-             <item>
               <spacer name="horizontalSpacer">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
@@ -196,12 +189,17 @@
              </column>
              <column>
               <property name="text">
-               <string>Status</string>
+               <string>Donation %</string>
               </property>
              </column>
              <column>
               <property name="text">
-               <string>Collateral Address</string>
+               <string>Donation Address</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Status</string>
               </property>
              </column>
             </widget>
@@ -219,16 +217,16 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="getConfigButton">
+              <widget class="QPushButton" name="removeButton">
                <property name="text">
-                <string>&amp;Get Config</string>
+                <string>&amp;Remove</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="removeButton">
+              <widget class="QPushButton" name="UpdateButton">
                <property name="text">
-                <string>&amp;Remove</string>
+                <string>&amp;Update</string>
                </property>
               </widget>
              </item>
@@ -252,33 +250,6 @@
              <property name="bottomMargin">
               <number>0</number>
              </property>
-             <item>
-              <widget class="QPushButton" name="startButton">
-               <property name="text">
-                <string>&amp;Start</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="stopButton">
-               <property name="text">
-                <string>Sto&amp;p</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_4">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
             </layout>
            </item>
            <item>
@@ -287,16 +258,16 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QPushButton" name="startAllButton">
+              <widget class="QPushButton" name="startButton">
                <property name="text">
-                <string>S&amp;tart All</string>
+                <string>S&amp;tart</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="stopAllButton">
+              <widget class="QPushButton" name="startAllButton">
                <property name="text">
-                <string>St&amp;op All</string>
+                <string>St&amp;art All</string>
                </property>
               </widget>
              </item>
