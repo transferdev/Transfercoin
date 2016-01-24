@@ -61,34 +61,6 @@ MasternodeManager::~MasternodeManager()
     delete ui;
 }
 
-static void NotifyAdrenalineNodeUpdated(MasternodeManager *page, CAdrenalineNodeConfig nodeConfig)
-{
-    // alias, address, privkey, collateral address
-    QString alias = QString::fromStdString(nodeConfig.sAlias);
-    QString addr = QString::fromStdString(nodeConfig.sAddress);
-    QString privkey = QString::fromStdString(nodeConfig.sMasternodePrivKey);
-    QString collateral = QString::fromStdString(nodeConfig.sCollateralAddress);
-
-    QMetaObject::invokeMethod(page, "updateAdrenalineNode", Qt::QueuedConnection,
-                              Q_ARG(QString, alias),
-                              Q_ARG(QString, addr),
-                              Q_ARG(QString, privkey),
-                              Q_ARG(QString, collateral)
-                              );
-}
-
-void MasternodeManager::subscribeToCoreSignals()
-{
-    // Connect signals to core
-    uiInterface.NotifyAdrenalineNodeChanged.connect(boost::bind(&NotifyAdrenalineNodeUpdated, this, _1));
-}
-
-void MasternodeManager::unsubscribeFromCoreSignals()
-{
-    // Disconnect signals from core
-    uiInterface.NotifyAdrenalineNodeChanged.disconnect(boost::bind(&NotifyAdrenalineNodeUpdated, this, _1));
-}
-
 void MasternodeManager::on_tableWidget_2_itemSelectionChanged()
 {
     if(ui->tableWidget_2->selectedItems().count() > 0)

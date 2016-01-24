@@ -44,8 +44,6 @@ private:
     ClientModel *clientModel;
     WalletModel *walletModel;
     CCriticalSection cs_adrenaline;
-    void subscribeToCoreSignals();
-    void unsubscribeFromCoreSignals();
 
 private slots:
     void on_createButton_clicked();

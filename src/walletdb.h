@@ -91,30 +91,6 @@ public:
 
 };
 
-class CAdrenalineNodeConfig
-{
-public:
-    int nVersion;
-    std::string sAlias;
-    std::string sAddress;
-    std::string sCollateralAddress;
-    std::string sMasternodePrivKey;
-
-    CAdrenalineNodeConfig()
-    {
-	nVersion = 0;
-    }
-
-    IMPLEMENT_SERIALIZE(
-        READWRITE(nVersion);
-        READWRITE(sAlias);
-        READWRITE(sAddress);
-        READWRITE(sCollateralAddress);
-	READWRITE(sMasternodePrivKey);
-    )
-};
-
-
 /** Access to the wallet database (wallet.dat) */
 class CWalletDB : public CDB
 {
