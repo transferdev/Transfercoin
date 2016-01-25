@@ -13,6 +13,11 @@
 #include "walletdb.h"
 #include "wallet.h"
 #include "init.h"
+#include "rpcserver.h"
+#include <boost/lexical_cast.hpp>
+#include <fstream>
+using namespace json_spirit;
+using namespace std;
 
 #include <QAbstractItemDelegate>
 #include <QPainter>
@@ -34,10 +39,7 @@ MasternodeManager::MasternodeManager(QWidget *parent) :
     ui->setupUi(this);
 
     ui->editButton->setEnabled(false);
-    ui->getConfigButton->setEnabled(false);
     ui->startButton->setEnabled(false);
-    ui->stopButton->setEnabled(false);
-    ui->copyAddressButton->setEnabled(false);
 
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->tableWidget_2->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -49,7 +51,7 @@ MasternodeManager::MasternodeManager(QWidget *parent) :
     if(!GetBoolArg("-reindexaddr", false))
         timer->start(30000);
 
-    
+
 
     updateNodeList();
 }
@@ -59,47 +61,16 @@ MasternodeManager::~MasternodeManager()
     delete ui;
 }
 
-static void NotifyAdrenalineNodeUpdated(MasternodeManager *page, CAdrenalineNodeConfig nodeConfig)
-{
-    // alias, address, privkey, collateral address
-    QString alias = QString::fromStdString(nodeConfig.sAlias);
-    QString addr = QString::fromStdString(nodeConfig.sAddress);
-    QString privkey = QString::fromStdString(nodeConfig.sMasternodePrivKey);
-    QString collateral = QString::fromStdString(nodeConfig.sCollateralAddress);
-    
-    QMetaObject::invokeMethod(page, "updateAdrenalineNode", Qt::QueuedConnection,
-                              Q_ARG(QString, alias),
-                              Q_ARG(QString, addr),
-                              Q_ARG(QString, privkey),
-                              Q_ARG(QString, collateral)
-                              );
-}
-
-void MasternodeManager::subscribeToCoreSignals()
-{
-    // Connect signals to core
-    uiInterface.NotifyAdrenalineNodeChanged.connect(boost::bind(&NotifyAdrenalineNodeUpdated, this, _1));
-}
-
-void MasternodeManager::unsubscribeFromCoreSignals()
-{
-    // Disconnect signals from core
-    uiInterface.NotifyAdrenalineNodeChanged.disconnect(boost::bind(&NotifyAdrenalineNodeUpdated, this, _1));
-}
-
 void MasternodeManager::on_tableWidget_2_itemSelectionChanged()
 {
     if(ui->tableWidget_2->selectedItems().count() > 0)
     {
         ui->editButton->setEnabled(true);
-        ui->getConfigButton->setEnabled(true);
         ui->startButton->setEnabled(true);
-        ui->stopButton->setEnabled(true);
-	ui->copyAddressButton->setEnabled(true);
     }
 }
 
-void MasternodeManager::updateAdrenalineNode(QString alias, QString addr, QString privkey, QString collateral)
+void MasternodeManager::updateAdrenalineNode(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, QString donationAddress, QString donationPercentage, QString status)
 {
     LOCK(cs_adrenaline);
     bool bFound = false;
@@ -119,13 +90,15 @@ void MasternodeManager::updateAdrenalineNode(QString alias, QString addr, QStrin
 
     QTableWidgetItem *aliasItem = new QTableWidgetItem(alias);
     QTableWidgetItem *addrItem = new QTableWidgetItem(addr);
-    QTableWidgetItem *statusItem = new QTableWidgetItem("");
-    QTableWidgetItem *collateralItem = new QTableWidgetItem(collateral);
+    QTableWidgetItem *donationAddressItem = new QTableWidgetItem(donationAddress);
+    QTableWidgetItem *donationPercentageItem = new QTableWidgetItem(donationPercentage);
+    QTableWidgetItem *statusItem = new QTableWidgetItem(status);
 
     ui->tableWidget_2->setItem(nodeRow, 0, aliasItem);
     ui->tableWidget_2->setItem(nodeRow, 1, addrItem);
-    ui->tableWidget_2->setItem(nodeRow, 2, statusItem);
-    ui->tableWidget_2->setItem(nodeRow, 3, collateralItem);
+    ui->tableWidget_2->setItem(nodeRow, 2, donationPercentageItem);
+    ui->tableWidget_2->setItem(nodeRow, 3, donationAddressItem);
+    ui->tableWidget_2->setItem(nodeRow, 4, statusItem);
 }
 
 static QString seconds_to_DHMS(quint32 duration)
@@ -184,15 +157,7 @@ void MasternodeManager::updateNodeList()
     }
 
     ui->countLabel->setText(QString::number(ui->tableWidget->rowCount()));
-
-    if(pwalletMain)
-    {
-        LOCK(cs_adrenaline);
-        BOOST_FOREACH(PAIRTYPE(std::string, CAdrenalineNodeConfig) adrenaline, pwalletMain->mapMyAdrenalineNodes)
-        {
-            updateAdrenalineNode(QString::fromStdString(adrenaline.second.sAlias), QString::fromStdString(adrenaline.second.sAddress), QString::fromStdString(adrenaline.second.sMasternodePrivKey), QString::fromStdString(adrenaline.second.sCollateralAddress));
-        }
-    }
+    on_UpdateButton_clicked();
 }
 
 
@@ -219,79 +184,6 @@ void MasternodeManager::on_createButton_clicked()
     aenode->exec();
 }
 
-void MasternodeManager::on_copyAddressButton_clicked()
-{
-    QItemSelectionModel* selectionModel = ui->tableWidget_2->selectionModel();
-    QModelIndexList selected = selectionModel->selectedRows();
-    if(selected.count() == 0)
-        return;
-
-    QModelIndex index = selected.at(0);
-    int r = index.row();
-    std::string sCollateralAddress = ui->tableWidget_2->item(r, 3)->text().toStdString();
-
-    QApplication::clipboard()->setText(QString::fromStdString(sCollateralAddress));
-}
-
-void MasternodeManager::on_editButton_clicked()
-{
-    QItemSelectionModel* selectionModel = ui->tableWidget_2->selectionModel();
-    QModelIndexList selected = selectionModel->selectedRows();
-    if(selected.count() == 0)
-        return;
-
-    QModelIndex index = selected.at(0);
-    int r = index.row();
-    std::string sAddress = ui->tableWidget_2->item(r, 1)->text().toStdString();
-
-    // get existing config entry
-
-}
-
-void MasternodeManager::on_getConfigButton_clicked()
-{
-    QItemSelectionModel* selectionModel = ui->tableWidget_2->selectionModel();
-    QModelIndexList selected = selectionModel->selectedRows();
-    if(selected.count() == 0)
-        return;
-
-    QModelIndex index = selected.at(0);
-    int r = index.row();
-    std::string sAddress = ui->tableWidget_2->item(r, 1)->text().toStdString();
-    CAdrenalineNodeConfig c = pwalletMain->mapMyAdrenalineNodes[sAddress];
-    std::string sPrivKey = c.sMasternodePrivKey;
-    AdrenalineNodeConfigDialog* d = new AdrenalineNodeConfigDialog(this, QString::fromStdString(sAddress), QString::fromStdString(sPrivKey));
-    d->exec();
-}
-
-void MasternodeManager::on_removeButton_clicked()
-{
-    QItemSelectionModel* selectionModel = ui->tableWidget_2->selectionModel();
-    QModelIndexList selected = selectionModel->selectedRows();
-    if(selected.count() == 0)
-        return;
-
-    QMessageBox::StandardButton confirm;
-    confirm = QMessageBox::question(this, "Delete Adrenaline Node?", "Are you sure you want to delete this adrenaline node configuration?", QMessageBox::Yes|QMessageBox::No);
-
-    if(confirm == QMessageBox::Yes)
-    {
-        QModelIndex index = selected.at(0);
-        int r = index.row();
-        std::string sAddress = ui->tableWidget_2->item(r, 1)->text().toStdString();
-        CAdrenalineNodeConfig c = pwalletMain->mapMyAdrenalineNodes[sAddress];
-        CWalletDB walletdb(pwalletMain->strWalletFile);
-        pwalletMain->mapMyAdrenalineNodes.erase(sAddress);
-        walletdb.EraseAdrenalineNodeConfig(c.sAddress);
-        ui->tableWidget_2->clearContents();
-        ui->tableWidget_2->setRowCount(0);
-        BOOST_FOREACH(PAIRTYPE(std::string, CAdrenalineNodeConfig) adrenaline, pwalletMain->mapMyAdrenalineNodes)
-        {
-            updateAdrenalineNode(QString::fromStdString(adrenaline.second.sAlias), QString::fromStdString(adrenaline.second.sAddress), QString::fromStdString(adrenaline.second.sMasternodePrivKey), QString::fromStdString(adrenaline.second.sCollateralAddress));
-        }
-    }
-}
-
 void MasternodeManager::on_startButton_clicked()
 {
     // start the node
@@ -302,90 +194,104 @@ void MasternodeManager::on_startButton_clicked()
 
     QModelIndex index = selected.at(0);
     int r = index.row();
-    std::string sAddress = ui->tableWidget_2->item(r, 1)->text().toStdString();
-    CAdrenalineNodeConfig c = pwalletMain->mapMyAdrenalineNodes[sAddress];
+    std::string sAlias = ui->tableWidget_2->item(r, 0)->text().toStdString();
 
-    std::string errorMessage;
-    bool result = activeMasternode.RegisterByPubKey(c.sAddress, c.sMasternodePrivKey, c.sCollateralAddress, errorMessage);
+
+
+    if(pwalletMain->IsLocked()) {
+    }
+
+    std::string statusObj;
+    statusObj += "<center>Alias: " + sAlias;
+
+    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+        if(mne.getAlias() == sAlias) {
+            std::string errorMessage;
+            std::string strDonateAddress = mne.getDonationAddress();
+            std::string strDonationPercentage = mne.getDonationPercentage();
+
+            bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strDonateAddress, strDonationPercentage, errorMessage);
+
+            if(result) {
+                statusObj += "<br>Successfully started masternode." ;
+            } else {
+                statusObj += "<br>Failed to start masternode.<br>Error: " + errorMessage;
+            }
+            break;
+        }
+    }
+    statusObj += "</center>";
+    pwalletMain->Lock();
 
     QMessageBox msg;
-    if(result)
-        msg.setText("Adrenaline Node at " + QString::fromStdString(c.sAddress) + " started.");
-    else
-        msg.setText("Error: " + QString::fromStdString(errorMessage));
+    msg.setText(QString::fromStdString(statusObj));
 
-    msg.exec();
-}
-
-void MasternodeManager::on_stopButton_clicked()
-{
-    // start the node
-    QItemSelectionModel* selectionModel = ui->tableWidget_2->selectionModel();
-    QModelIndexList selected = selectionModel->selectedRows();
-    if(selected.count() == 0)
-        return;
-
-    QModelIndex index = selected.at(0);
-    int r = index.row();
-    std::string sAddress = ui->tableWidget_2->item(r, 1)->text().toStdString();
-    CAdrenalineNodeConfig c = pwalletMain->mapMyAdrenalineNodes[sAddress];
-
-    std::string errorMessage;
-    bool result = activeMasternode.StopMasterNode(c.sAddress, c.sMasternodePrivKey, errorMessage);
-    QMessageBox msg;
-    if(result)
-    {
-        msg.setText("Adrenaline Node at " + QString::fromStdString(c.sAddress) + " stopped.");
-    }
-    else
-    {
-        msg.setText("Error: " + QString::fromStdString(errorMessage));
-    }
     msg.exec();
 }
 
 void MasternodeManager::on_startAllButton_clicked()
 {
-    std::string results;
-    BOOST_FOREACH(PAIRTYPE(std::string, CAdrenalineNodeConfig) adrenaline, pwalletMain->mapMyAdrenalineNodes)
-    {
-        CAdrenalineNodeConfig c = adrenaline.second;
-	std::string errorMessage;
-        bool result = activeMasternode.RegisterByPubKey(c.sAddress, c.sMasternodePrivKey, c.sCollateralAddress, errorMessage);
-	if(result)
-	{
-   	    results += c.sAddress + ": STARTED\n";
-	}	
-	else
-	{
-	    results += c.sAddress + ": ERROR: " + errorMessage + "\n";
-	}
+    if(pwalletMain->IsLocked()) {
     }
 
+    std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
+
+    int total = 0;
+    int successful = 0;
+    int fail = 0;
+    std::string statusObj;
+
+    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+        total++;
+
+        std::string errorMessage;
+        std::string strDonateAddress = mne.getDonationAddress();
+        std::string strDonationPercentage = mne.getDonationPercentage();
+
+        bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strDonateAddress, strDonationPercentage, errorMessage);
+
+        if(result) {
+            successful++;
+        } else {
+            fail++;
+            statusObj += "\nFailed to start " + mne.getAlias() + ". Error: " + errorMessage;
+        }
+    }
+    pwalletMain->Lock();
+
+    std::string returnObj;
+    returnObj = "Successfully started " + boost::lexical_cast<std::string>(successful) + " masternodes, failed to start " +
+            boost::lexical_cast<std::string>(fail) + ", total " + boost::lexical_cast<std::string>(total);
+    if (fail > 0)
+        returnObj += statusObj;
+
     QMessageBox msg;
-    msg.setText(QString::fromStdString(results));
+    msg.setText(QString::fromStdString(returnObj));
     msg.exec();
 }
 
-void MasternodeManager::on_stopAllButton_clicked()
+void MasternodeManager::on_UpdateButton_clicked()
 {
-    std::string results;
-    BOOST_FOREACH(PAIRTYPE(std::string, CAdrenalineNodeConfig) adrenaline, pwalletMain->mapMyAdrenalineNodes)
-    {
-        CAdrenalineNodeConfig c = adrenaline.second;
-	std::string errorMessage;
-        bool result = activeMasternode.StopMasterNode(c.sAddress, c.sMasternodePrivKey, errorMessage);
-	if(result)
-	{
-   	    results += c.sAddress + ": STOPPED\n";
-	}	
-	else
-	{
-	    results += c.sAddress + ": ERROR: " + errorMessage + "\n";
-	}
-    }
+    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+        std::string errorMessage;
+        std::string strDonateAddress = mne.getDonationAddress();
+        std::string strDonationPercentage = mne.getDonationPercentage();
 
-    QMessageBox msg;
-    msg.setText(QString::fromStdString(results));
-    msg.exec();
+        std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
+        if (errorMessage == ""){
+            updateAdrenalineNode(QString::fromStdString(mne.getAlias()), QString::fromStdString(mne.getIp()), QString::fromStdString(mne.getPrivKey()), QString::fromStdString(mne.getTxHash()),
+                QString::fromStdString(mne.getOutputIndex()), QString::fromStdString(strDonateAddress), QString::fromStdString(strDonationPercentage), QString::fromStdString("Not in the masternode list."));
+        }
+        else {
+            updateAdrenalineNode(QString::fromStdString(mne.getAlias()), QString::fromStdString(mne.getIp()), QString::fromStdString(mne.getPrivKey()), QString::fromStdString(mne.getTxHash()),
+                QString::fromStdString(mne.getOutputIndex()), QString::fromStdString(strDonateAddress), QString::fromStdString(strDonationPercentage), QString::fromStdString(errorMessage));
+        }
+
+        BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+            if (mn.addr.ToString().c_str() == mne.getIp()){
+                updateAdrenalineNode(QString::fromStdString(mne.getAlias()), QString::fromStdString(mne.getIp()), QString::fromStdString(mne.getPrivKey()), QString::fromStdString(mne.getTxHash()),
+                QString::fromStdString(mne.getOutputIndex()), QString::fromStdString(strDonateAddress), QString::fromStdString(strDonationPercentage), QString::fromStdString("Masternode is Running."));
+            }
+        }
+    }
 }

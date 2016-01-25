@@ -1,5 +1,8 @@
 #include "addeditadrenalinenode.h"
 #include "ui_addeditadrenalinenode.h"
+#include "masternodeconfig.h"
+#include "masternodemanager.h"
+#include "ui_masternodemanager.h"
 
 #include "walletdb.h"
 #include "wallet.h"
@@ -29,69 +32,62 @@ void AddEditAdrenalineNode::on_okButton_clicked()
 {
     if(ui->aliasLineEdit->text() == "")
     {
-	QMessageBox msg;
+        QMessageBox msg;
         msg.setText("Please enter an alias.");
-	msg.exec();
-	return;
+        msg.exec();
+        return;
     }
     else if(ui->addressLineEdit->text() == "")
     {
-	QMessageBox msg;
-        msg.setText("Please enter an address.");
-	msg.exec();
-	return;
+        QMessageBox msg;
+        msg.setText("Please enter an ip address and port. (123.45.67.89:17170)");
+        msg.exec();
+        return;
+    }
+    else if(ui->privkeyLineEdit->text() == "")
+    {
+        QMessageBox msg;
+        msg.setText("Please enter a masternode private key. This can be found using the \"masternode genkey\" command in the console.");
+        msg.exec();
+        return;
+    }
+    else if(ui->txhashLineEdit->text() == "")
+    {
+        QMessageBox msg;
+        msg.setText("Please enter the transaction hash for the transaction that has 10 000 coins");
+        msg.exec();
+        return;
+    }
+    else if(ui->outputindexLineEdit->text() == "")
+    {
+        QMessageBox msg;
+        msg.setText("Please enter a transaction output index. This can be found using the \"masternode outputs\" command in the console.");
+        msg.exec();
+        return;
     }
     else
     {
-	CAdrenalineNodeConfig c;
-        c.sAlias = ui->aliasLineEdit->text().toStdString();
-	c.sAddress = ui->addressLineEdit->text().toStdString();
-        CKey secret;
-        secret.MakeNewKey(false);
-        c.sMasternodePrivKey = CBitcoinSecret(secret).ToString();
-	
-        CWalletDB walletdb(pwalletMain->strWalletFile);
-        CAccount account;
-        walletdb.ReadAccount(c.sAlias, account);
-        bool bKeyUsed = false;
-	bool bForceNew = false;
+        std::string sAlias = ui->aliasLineEdit->text().toStdString();
+        std::string sAddress = ui->addressLineEdit->text().toStdString();
+        std::string sMasternodePrivKey = ui->privkeyLineEdit->text().toStdString();
+        std::string sTxHash = ui->txhashLineEdit->text().toStdString();
+        std::string sOutputIndex = ui->outputindexLineEdit->text().toStdString();
+        std::string sDonationAddress = ui->donationaddressLineEdit->text().toStdString();
+        std::string sDonationPercentage = ui->donationpercentageLineEdit->text().toStdString();
 
-        // Check if the current key has been used
-        if (account.vchPubKey.IsValid())
+        boost::filesystem::path pathConfigFile = GetDataDir() / "masternode.conf";
+        boost::filesystem::ofstream stream (pathConfigFile.string(), ios::out | ios::app);
+        if (stream.is_open())
         {
-            CScript scriptPubKey;
-            scriptPubKey.SetDestination(account.vchPubKey.GetID());
-            for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin();
-                 it != pwalletMain->mapWallet.end() && account.vchPubKey.IsValid();
-                 ++it)
-            {
-                const CWalletTx& wtx = (*it).second;
-                BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-                    if (txout.scriptPubKey == scriptPubKey)
-                        bKeyUsed = true;
+            stream << sAlias << " " << sAddress << " " << sMasternodePrivKey << " " << sTxHash << " " << sOutputIndex;
+            if (sDonationAddress != "" && sDonationAddress != ""){
+                stream << " " << sDonationAddress << " " << sDonationPercentage << std::endl;
+            } else {
+                stream << std::endl;
             }
+            stream.close();
         }
-
-        // Generate a new key
-        if (!account.vchPubKey.IsValid() || bForceNew || bKeyUsed)
-        {
-            if (!pwalletMain->GetKeyFromPool(account.vchPubKey))
-            {
-		QMessageBox msg;
-                msg.setText("Keypool ran out, please call keypoolrefill first.");
-		msg.exec();
-		return;
-	    }
-            pwalletMain->SetAddressBookName(account.vchPubKey.GetID(), c.sAlias);
-            walletdb.WriteAccount(c.sAlias, account);
-        }
-
-        c.sCollateralAddress = CBitcoinAddress(account.vchPubKey.GetID()).ToString();
-
-        pwalletMain->mapMyAdrenalineNodes.insert(make_pair(c.sAddress, c));
-	walletdb.WriteAdrenalineNodeConfig(c.sAddress, c);
-        uiInterface.NotifyAdrenalineNodeChanged(c);
-
+        masternodeConfig.add(sAlias, sAddress, sMasternodePrivKey, sTxHash, sOutputIndex, sDonationAddress, sDonationPercentage);
         accept();
     }
 }

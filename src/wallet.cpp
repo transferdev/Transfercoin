@@ -4797,12 +4797,3 @@ void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t> &mapKeyBirth) const {
     for (std::map<CKeyID, CBlockIndex*>::const_iterator it = mapKeyFirstBlock.begin(); it != mapKeyFirstBlock.end(); it++)
         mapKeyBirth[it->first] = it->second->nTime - 7200; // block times can be 2h off
 }
-
-bool CWallet::AddAdrenalineNodeConfig(CAdrenalineNodeConfig nodeConfig)
-{
-    bool rv = CWalletDB(strWalletFile).WriteAdrenalineNodeConfig(nodeConfig.sAlias, nodeConfig);
-    if(rv)
-    uiInterface.NotifyAdrenalineNodeChanged(nodeConfig);
-
-    return rv;
-}
