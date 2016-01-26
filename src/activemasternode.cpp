@@ -40,7 +40,7 @@ void CActiveMasternode::ManageStatus()
                 return;
             }
         } else {
-        	service = CService(strMasterNodeAddr);
+        	service = CService(strMasterNodeAddr, true);
         }
 
         LogPrintf("CActiveMasternode::ManageStatus() - Checking inbound connection to '%s'\n", service.ToString().c_str());
@@ -128,7 +128,7 @@ bool CActiveMasternode::StopMasterNode(std::string strService, std::string strKe
 		return false;
 	}
 
-	return StopMasterNode(vin, CService(strService), keyMasternode, pubKeyMasternode, errorMessage);
+	return StopMasterNode(vin, CService(strService, true), keyMasternode, pubKeyMasternode, errorMessage);
 }
 
 // Send stop dseep to network for main masternode
@@ -266,7 +266,7 @@ bool CActiveMasternode::Register(std::string strService, std::string strKeyMaste
         }
     }
 
-	return Register(vin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, donationAddress, donationPercentage, errorMessage);
+	return Register(vin, CService(strService, true), keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, donationAddress, donationPercentage, errorMessage);
 }
 
 bool CActiveMasternode::Register(CTxIn vin, CService service, CKey keyCollateralAddress, CPubKey pubKeyCollateralAddress, CKey keyMasternode, CPubKey pubKeyMasternode, CScript donationAddress, int donationPercentage, std::string &retErrorMessage) {
@@ -307,30 +307,6 @@ bool CActiveMasternode::Register(CTxIn vin, CService service, CKey keyCollateral
 
     return true;
 }
-
-bool CActiveMasternode::RegisterByPubKey(std::string strService, std::string strKeyMasternode, std::string collateralAddress, std::string& errorMessage) {
-    CTxIn vin;
-    CPubKey pubKeyCollateralAddress;
-    CKey keyCollateralAddress;
-    CPubKey pubKeyMasternode;
-    CKey keyMasternode;
-    CScript donationAddress = CScript();
-    int donationPercentage = 0;
-
-    if(!darkSendSigner.SetKey(strKeyMasternode, errorMessage, keyMasternode, pubKeyMasternode))
-    {
-        LogPrintf("CActiveMasternode::RegisterByPubKey() - Error upon calling SetKey: %s\n", errorMessage.c_str());
-        return false;
-    }
-
-    if(!GetMasterNodeVinForPubKey(collateralAddress, vin, pubKeyCollateralAddress, keyCollateralAddress)) {
-        errorMessage = "could not allocate vin for collateralAddress";
-        LogPrintf("Register::Register() - Error: %s\n", errorMessage.c_str());
-        return false;
-    }
-    return Register(vin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, donationAddress, donationPercentage, errorMessage);
-}
-
 
 bool CActiveMasternode::GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey) {
 	return GetMasterNodeVin(vin, pubkey, secretKey, "", "");
