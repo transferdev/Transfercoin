@@ -18,15 +18,22 @@ addons:
     - libdb++-dev
     - libboost1.55-all-dev
     - autoconf
-    - libssl-dev
-    - libprotobuf-dev
     - protobuf-compiler
-    - libqrencode-dev
-    - libgmp3-dev
     - libtool
     - libminiupnpc-dev
+    - libqrencode-dev
+    - libprotobuf-dev
+    - libssl-dev
+    - libgmp3-dev
+    - libqt5gui5
+    - qtbase5-dev
+    - libqt5dbus5
+    - qttools5-dev
+    - qttools5-dev-tools
 before_install:
   - chmod 755 src/leveldb/build_detect_platform
-script: 
+script:
+  - qmake -qt=qt5 USE_UPNP=-
+  - make
   - cd src
   - make -f makefile.unix

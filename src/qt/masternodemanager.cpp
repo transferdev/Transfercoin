@@ -44,14 +44,10 @@ MasternodeManager::MasternodeManager(QWidget *parent) :
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->tableWidget_2->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
-    subscribeToCoreSignals();
-
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateNodeList()));
     if(!GetBoolArg("-reindexaddr", false))
         timer->start(30000);
-
-
 
     updateNodeList();
 }
