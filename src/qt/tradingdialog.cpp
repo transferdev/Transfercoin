@@ -6,6 +6,7 @@
 #include <qtimer.h>
 #include <rpcserver.h>
 
+#include <QClipboard>
 #include <QDebug>
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
@@ -1341,6 +1342,18 @@ void tradingDialog::on_SellBidPriceEdit_textChanged(const QString &arg1)
 void tradingDialog::on_CSUnitsInput_textChanged(const QString &arg1)
 {
     CalculateCSReceiveLabel(); //update cost
+}
+
+void tradingDialog::on_SecretPasteButton_clicked()
+{
+    // Paste text from clipboard into recipient field
+    ui->SecretKeyInput->setText(QApplication::clipboard()->text());
+}
+
+void tradingDialog::on_KeyPasteButton_clicked()
+{
+    // Paste text from clipboard into recipient field
+    ui->ApiKeyInput->setText(QApplication::clipboard()->text());
 }
 
 void tradingDialog::setModel(WalletModel *model)

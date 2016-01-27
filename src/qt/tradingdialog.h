@@ -72,6 +72,9 @@ private slots:
     void on_Withdraw_Max_Amount_clicked();
     void on_WithdrawUnitsBtn_clicked();
 
+    void on_KeyPasteButton_clicked();
+    void on_SecretPasteButton_clicked();
+
     int SetExchangeInfoTextLabels();
 
     QString BittrexTimeStampToReadable(QString DateTime);
