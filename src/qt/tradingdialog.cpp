@@ -6,6 +6,7 @@
 #include <qtimer.h>
 #include <rpcserver.h>
 
+#include <QClipboard>
 #include <QDebug>
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
@@ -42,35 +43,32 @@ tradingDialog::tradingDialog(QWidget *parent) :
     ui->SellCostLabel->setPalette(sample_palette);
     ui->TXAvailableLabel->setPalette(sample_palette);
     ui->TXAvailableLabel_2->setPalette(sample_palette);
-    ui->TXAvailableLabel_3->setPalette(sample_palette);
+    ui->BittrexTXLabel->setPalette(sample_palette);
+    ui->BittrexBTCLabel->setPalette(sample_palette);
     ui->BtcAvailableLbl_2->setPalette(sample_palette);
     //Set tabs to inactive
     ui->TradingTabWidget->setTabEnabled(0,false);
     ui->TradingTabWidget->setTabEnabled(1,false);
+    ui->TradingTabWidget->setTabEnabled(3,false);
     ui->TradingTabWidget->setTabEnabled(4,false);
     ui->TradingTabWidget->setTabEnabled(5,false);
-    ui->TradingTabWidget->setTabEnabled(6,false);
     // Listen for keypress
     connect(ui->PasswordInput, SIGNAL(returnPressed()),ui->LoadKeys,SIGNAL(clicked()));
 
 
     /*OrderBook Table Init*/
-    CreateOrderBookTables(*ui->BidsTable,QStringList() << "TOTAL(BTC)"<< "TX(SIZE)" << "BID(BTC)");
-    CreateOrderBookTables(*ui->AsksTable,QStringList() << "ASK(BTC)"  << "TX(SIZE)" << "TOTAL(BTC)");
+    CreateOrderBookTables(*ui->BidsTable,QStringList() << "SUM(BTC)" << "TOTAL(BTC)" << "TX(SIZE)" << "BID(BTC)");
+    CreateOrderBookTables(*ui->AsksTable,QStringList() << "ASK(BTC)" << "TX(SIZE)" << "TOTAL(BTC)" << "SUM(BTC)");
     /*OrderBook Table Init*/
 
     /*Market History Table Init*/
     ui->MarketHistoryTable->setColumnCount(5);
     ui->MarketHistoryTable->verticalHeader()->setVisible(false);
-
     ui->MarketHistoryTable->setHorizontalHeaderLabels(QStringList()<<"DATE"<<"BUY/SELL"<<"BID/ASK"<<"TOTAL UNITS(TX)"<<"TOTAL COST(BTC");
     ui->MarketHistoryTable->setRowCount(0);
-
     int Cellwidth =  ui->MarketHistoryTable->width() / 5;
-
     ui->MarketHistoryTable->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
-
-    ui->MarketHistoryTable->horizontalHeader()->resizeSection(1,Cellwidth); // column 1, width 50
+    ui->MarketHistoryTable->horizontalHeader()->resizeSection(1,Cellwidth);
     ui->MarketHistoryTable->horizontalHeader()->resizeSection(2,Cellwidth);
     ui->MarketHistoryTable->horizontalHeader()->resizeSection(3,Cellwidth);
     ui->MarketHistoryTable->horizontalHeader()->resizeSection(4,Cellwidth);
@@ -80,56 +78,46 @@ tradingDialog::tradingDialog(QWidget *parent) :
     /*Market History Table Init*/
 
     /*Account History Table Init*/
-    ui->TradeHistoryTable->setColumnCount(13);
-
-    ui->TradeHistoryTable->setHorizontalHeaderLabels(QStringList() << "Date Time" << "Exchange" << "OrderType"  << "Limit" << "QTY" << "QTY_Rem" << "Price" << "PricePerUnit" <<
-                                                     "Conditional" << "Condition" << "Condition Target" << "ImmediateOrCancel" << "Closed");
+    ui->TradeHistoryTable->setColumnCount(9);
+    ui->TradeHistoryTable->verticalHeader()->setVisible(false);
+    ui->TradeHistoryTable->setHorizontalHeaderLabels(QStringList() << "Date Time" << "Exchange" << "OrderType"  << "Limit" << "QTY" << "QTY_Rem" << "Price" << "PricePerUnit" << "Closed");
     ui->TradeHistoryTable->setRowCount(0);
+    Cellwidth =  ui->TradeHistoryTable->width() / 9;
+    ui->TradeHistoryTable->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    ui->TradeHistoryTable->horizontalHeader()->resizeSection(1,Cellwidth);
+    ui->TradeHistoryTable->horizontalHeader()->resizeSection(2,Cellwidth);
+    ui->TradeHistoryTable->horizontalHeader()->resizeSection(3,Cellwidth);
+    ui->TradeHistoryTable->horizontalHeader()->resizeSection(4,Cellwidth);
+    ui->TradeHistoryTable->horizontalHeader()->resizeSection(5,Cellwidth);
+    ui->TradeHistoryTable->horizontalHeader()->resizeSection(6,Cellwidth);
+    ui->TradeHistoryTable->horizontalHeader()->resizeSection(7,Cellwidth);
+    ui->TradeHistoryTable->horizontalHeader()->resizeSection(8,Cellwidth);
+    ui->TradeHistoryTable->horizontalHeader()->resizeSection(9,Cellwidth);
     ui->TradeHistoryTable->horizontalHeader()->setDefaultAlignment(Qt::AlignLeft);
     ui->TradeHistoryTable->horizontalHeader()->setStyleSheet("QHeaderView::section, QHeaderView::section * {font-weight :bold;}");
-    ui->TradeHistoryTable->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     /*Account History Table Init*/
 
     /*Open Orders Table*/
-    ui->OpenOrdersTable->setColumnCount(15);
-    ui->OpenOrdersTable->setHorizontalHeaderLabels(QStringList() << "OrderId" << "Date Time" << "Exchange" << "OrderType"  << "Limit" << "QTY" << "QTY_Rem" << "Price" << "PricePerUnit" << "CancelInitiated" <<
-                                                   "Conditional" << "Condition" << "Condition Target" << "ImmediateOrCancel" << "Cancel Order");
+    ui->OpenOrdersTable->setColumnCount(10);
+    ui->OpenOrdersTable->verticalHeader()->setVisible(false);
+    ui->OpenOrdersTable->setHorizontalHeaderLabels(QStringList() << "OrderId" << "Date Time" << "Exchange" << "OrderType"  << "Limit" << "QTY" << "QTY_Rem" << "Price" << "PricePerUnit" << "Cancel Order");
     ui->OpenOrdersTable->setRowCount(0);
+    Cellwidth =  ui->TradeHistoryTable->width() / 9;
+    ui->OpenOrdersTable->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    ui->OpenOrdersTable->horizontalHeader()->resizeSection(2,Cellwidth);
+    ui->OpenOrdersTable->horizontalHeader()->resizeSection(3,Cellwidth);
+    ui->OpenOrdersTable->horizontalHeader()->resizeSection(4,Cellwidth);
+    ui->OpenOrdersTable->horizontalHeader()->resizeSection(5,Cellwidth);
+    ui->OpenOrdersTable->horizontalHeader()->resizeSection(6,Cellwidth);
+    ui->OpenOrdersTable->horizontalHeader()->resizeSection(7,Cellwidth);
+    ui->OpenOrdersTable->horizontalHeader()->resizeSection(8,Cellwidth);
+    ui->OpenOrdersTable->horizontalHeader()->resizeSection(9,Cellwidth);
     ui->OpenOrdersTable->setColumnHidden(0,true);
     ui->OpenOrdersTable->horizontalHeader()->setDefaultAlignment(Qt::AlignLeft);
     ui->OpenOrdersTable->horizontalHeader()->setStyleSheet("QHeaderView::section, QHeaderView::section * {font-weight :bold;}");
 
-    ui->OpenOrdersTable->horizontalHeader()->resizeSection(1,120); // column 1, width 50
-    ui->OpenOrdersTable->horizontalHeader()->resizeSection(2,70);
-    ui->OpenOrdersTable->horizontalHeader()->resizeSection(3,70);
-    ui->OpenOrdersTable->horizontalHeader()->resizeSection(4,70);
-    ui->OpenOrdersTable->horizontalHeader()->resizeSection(5,70);
-    ui->OpenOrdersTable->horizontalHeader()->resizeSection(6,70);
-    ui->OpenOrdersTable->horizontalHeader()->resizeSection(7,70);
-
-    ui->OpenOrdersTable->setColumnHidden(9,true);
-    ui->OpenOrdersTable->setColumnHidden(10,true);
-    ui->OpenOrdersTable->setColumnHidden(11,true);
-    ui->OpenOrdersTable->setColumnHidden(12,true);
-    ui->OpenOrdersTable->setColumnHidden(13,true);
-
     connect (ui->OpenOrdersTable, SIGNAL(cellClicked(int,int)), this, SLOT(CancelOrderSlot(int, int)));
     /*Open Orders Table*/
-
-    /*populate static combo values*/
-    ui->BuyBidcomboBox   -> addItems(QStringList()<<"Last"<<"Bid"<<"Ask");
-    ui->buyOrdertypeCombo->hide();
-    //ui->buyOrdertypeCombo-> addItems(QStringList()<<"Limit"<<"Conditional");
-    ui->SellBidcomboBox  -> addItems(QStringList()<<"Last"<<"Bid"<<"Ask");
-    //ui->SellOrdertypeCombo-> addItems(QStringList()<<"Limit"<<"Conditional");
-    ui->SellOrdertypeCombo->hide();
-    ui->OrderTypeL->hide();
-    //ui->BuyTimeInForceCombo-> addItems(QStringList()<<"Good 'Til Cancelled"<<"Immediate Or Cancel");
-    //ui->BuyConditionCombo->   addItems(QStringList()<<"Greater Than Or Equal To"<<"Less Than Or Equal To");
-    //ui->BuyConditionCombo->hide();
-    //ui->BuyWhenPriceLabel->hide();
-    //ui->ConditionLineEdit->hide();
-    /*populate static combo values*/
 }
 
 void tradingDialog::InitTrading()
@@ -306,16 +294,17 @@ return 0;
 
 void tradingDialog::CreateOrderBookTables(QTableWidget& Table,QStringList TableHeader){
 
-    Table.setColumnCount(3);
+    Table.setColumnCount(4);
     Table.verticalHeader()->setVisible(false);
 
     Table.setHorizontalHeaderLabels(TableHeader);
 
-    int Cellwidth =  Table.width() / 3;
+    int Cellwidth =  Table.width() / 4;
 
     Table.horizontalHeader()->resizeSection(1,Cellwidth); // column 1, width 50
     Table.horizontalHeader()->resizeSection(2,Cellwidth);
     Table.horizontalHeader()->resizeSection(3,Cellwidth);
+    Table.horizontalHeader()->resizeSection(4,Cellwidth);
 
     Table.setRowCount(0);
 
@@ -379,16 +368,6 @@ void tradingDialog::ParseAndPopulateOpenOrdersTable(QString Response){
 
             RowCount = ui->OpenOrdersTable->rowCount();
 
-            QString ios;
-            QString IsConditional;
-            QString ConditionTarget;
-            QString CancelInitiated;
-
-            obj["ImmediateOrCancel"].toBool() == true ? (ios = "true")             : ( ios = "false");
-            obj["IsConditional"].toBool()     == true ? (IsConditional = "true")   : ( IsConditional = "false");
-            obj["ConditionTarget"].toBool()   == true ? (ConditionTarget = "true") : ( ConditionTarget = "false");
-            obj["CancelInitiated"].toBool()   == true ? (CancelInitiated = "true") : ( CancelInitiated = "false");
-
             ui->OpenOrdersTable->insertRow(RowCount);
             ui->OpenOrdersTable->setItem(itteration, 0, new QTableWidgetItem(obj["OrderUuid"].toString()));
             ui->OpenOrdersTable->setItem(itteration, 1, new QTableWidgetItem(BittrexTimeStampToReadable(obj["Opened"].toString())));
@@ -399,16 +378,11 @@ void tradingDialog::ParseAndPopulateOpenOrdersTable(QString Response){
             ui->OpenOrdersTable->setItem(itteration, 6, new QTableWidgetItem(str.number(obj["QuantityRemaining"].toDouble(),'i',8)));
             ui->OpenOrdersTable->setItem(itteration, 7, new QTableWidgetItem(str.number(obj["Price"].toDouble(),'i',8)));
             ui->OpenOrdersTable->setItem(itteration, 8, new QTableWidgetItem(str.number(obj["PricePerUnit"].toDouble(),'i',8)));
-            ui->OpenOrdersTable->setItem(itteration, 9, new QTableWidgetItem(CancelInitiated));
-            ui->OpenOrdersTable->setItem(itteration, 10, new QTableWidgetItem(IsConditional));
-            ui->OpenOrdersTable->setItem(itteration, 11, new QTableWidgetItem(obj["Condition"].toString()));
-            ui->OpenOrdersTable->setItem(itteration, 12, new QTableWidgetItem(ConditionTarget));
-            ui->OpenOrdersTable->setItem(itteration, 13, new QTableWidgetItem(ios));
-            ui->OpenOrdersTable->setItem(itteration, 14, new QTableWidgetItem(tr("Cancel Order")));
+            ui->OpenOrdersTable->setItem(itteration, 9, new QTableWidgetItem(tr("Cancel Order")));
 
             //Handle the cancel link in open orders table
             QTableWidgetItem* CancelCell;
-            CancelCell= ui->OpenOrdersTable->item(itteration, 14);    //Set the wtablewidget item to the cancel cell item.
+            CancelCell= ui->OpenOrdersTable->item(itteration, 9);    //Set the wtablewidget item to the cancel cell item.
             CancelCell->setForeground(QColor::fromRgb(255,0,0));      //make this item red.
             CancelCell->setTextAlignment(Qt::AlignCenter);
             itteration++;
@@ -459,14 +433,6 @@ void tradingDialog::ParseAndPopulateAccountHistoryTable(QString Response){
 
             RowCount = ui->TradeHistoryTable->rowCount();
 
-            QString ios;
-            QString IsConditional;
-            QString ConditionTarget;
-
-            obj["ImmediateOrCancel"].toBool() == true ? (ios = "true")             : ( ios = "false");
-            obj["IsConditional"].toBool()     == true ? (IsConditional = "true")   : ( IsConditional = "false");
-            obj["ConditionTarget"].toBool()   == true ? (ConditionTarget = "true") : ( ConditionTarget = "false");
-
             ui->TradeHistoryTable->insertRow(RowCount);
             ui->TradeHistoryTable->setItem(itteration, 0, new QTableWidgetItem(BittrexTimeStampToReadable(obj["TimeStamp"].toString())));
             ui->TradeHistoryTable->setItem(itteration, 1, new QTableWidgetItem(obj["Exchange"].toString()));
@@ -476,11 +442,7 @@ void tradingDialog::ParseAndPopulateAccountHistoryTable(QString Response){
             ui->TradeHistoryTable->setItem(itteration, 5, new QTableWidgetItem(str.number(obj["QuantityRemaining"].toDouble(),'i',8)));
             ui->TradeHistoryTable->setItem(itteration, 6, new QTableWidgetItem(str.number(obj["Price"].toDouble(),'i',8)));
             ui->TradeHistoryTable->setItem(itteration, 7, new QTableWidgetItem(str.number(obj["PricePerUnit"].toDouble(),'i',8)));
-            ui->TradeHistoryTable->setItem(itteration, 8, new QTableWidgetItem(IsConditional));
-            ui->TradeHistoryTable->setItem(itteration, 9, new QTableWidgetItem(obj["Condition"].toString()));
-            ui->TradeHistoryTable->setItem(itteration, 10, new QTableWidgetItem(ConditionTarget));
-            ui->TradeHistoryTable->setItem(itteration, 11, new QTableWidgetItem(ios));
-            ui->TradeHistoryTable->setItem(itteration, 12, new QTableWidgetItem(obj["Closed"].toString()));
+            ui->TradeHistoryTable->setItem(itteration, 8, new QTableWidgetItem(obj["Closed"].toString()));
             itteration++;
         }
 
@@ -501,8 +463,8 @@ void tradingDialog::ParseAndPopulateOrderBookTables(QString OrderBook){
 
     double TXSupply = 0;
     double TXDemand = 0;
-    double BtcSupply  = 0;
-    double BtcDemand  = 0;
+    double BtcSupply = 0;
+    double BtcDemand = 0;
 
     ui->AsksTable->setRowCount(0);
 
@@ -514,17 +476,17 @@ void tradingDialog::ParseAndPopulateOrderBookTables(QString OrderBook){
         double y = obj["Quantity"].toDouble();
         double a = (x * y);
 
-        TXSupply = TXSupply + y;
-        BtcSupply  = BtcSupply  + a;
+        TXSupply += y;
+        BtcSupply += a;
 
         AskRows = ui->AsksTable->rowCount();
         ui->AsksTable->insertRow(AskRows);
-
         ui->AsksTable->setItem(SellItteration, 0, new QTableWidgetItem(str.number(x,'i',8)));
         ui->AsksTable->setItem(SellItteration, 1, new QTableWidgetItem(str.number(y,'i',8)));
         ui->AsksTable->setItem(SellItteration, 2, new QTableWidgetItem(str.number(a,'i',8)));
+        ui->AsksTable->setItem(SellItteration, 3, new QTableWidgetItem(str.number(BtcSupply,'i',8)));
         SellItteration++;
-     }
+    }
 
     ui->BidsTable->setRowCount(0);
 
@@ -536,26 +498,26 @@ void tradingDialog::ParseAndPopulateOrderBookTables(QString OrderBook){
         double y = obj["Quantity"].toDouble();
         double a = (x * y);
 
-        TXDemand = TXDemand + y;
-        BtcDemand  = BtcDemand  + a;
+        TXDemand += y;
+        BtcDemand += a;
 
         BidRows = ui->BidsTable->rowCount();
         ui->BidsTable->insertRow(BidRows);
-        ui->BidsTable->setItem(BuyItteration, 0, new QTableWidgetItem(str.number(a,'i',8)));
-        ui->BidsTable->setItem(BuyItteration, 1, new QTableWidgetItem(str.number(y,'i',8)));
-        ui->BidsTable->setItem(BuyItteration, 2, new QTableWidgetItem(str.number(x,'i',8)));
+        ui->BidsTable->setItem(BuyItteration, 0, new QTableWidgetItem(str.number(BtcDemand,'i',8)));
+        ui->BidsTable->setItem(BuyItteration, 1, new QTableWidgetItem(str.number(a,'i',8)));
+        ui->BidsTable->setItem(BuyItteration, 2, new QTableWidgetItem(str.number(y,'i',8)));
+        ui->BidsTable->setItem(BuyItteration, 3, new QTableWidgetItem(str.number(x,'i',8)));
         BuyItteration++;
-     }
+    }
 
-        ui->TXSupply->setText("<b>Supply:</b> <span style='font-weight:bold; font-size:14px; color:blue'>" + str.number(TXSupply,'i',8) + "</span><b> TX</b>");
-        ui->BtcSupply->setText("<span style='font-weight:bold; font-size:14px; color:blue'>" + str.number(BtcSupply,'i',8) + "</span><b> BTC</b>");
-        ui->AsksCount->setText("<b>Ask's :</b> <span style='font-weight:bold; font-size:14px; color:blue'>" + str.number(ui->AsksTable->rowCount()) + "</span>");
+    ui->TXSupply->setText("<b>Supply:</b> <span style='font-weight:bold; font-size:14px; color:blue'>" + str.number(TXSupply,'i',8) + "</span><b> TX</b>");
+    ui->BtcSupply->setText("<span style='font-weight:bold; font-size:14px; color:blue'>" + str.number(BtcSupply,'i',8) + "</span><b> BTC</b>");
+    ui->AsksCount->setText("<b>Ask's :</b> <span style='font-weight:bold; font-size:14px; color:blue'>" + str.number(ui->AsksTable->rowCount()) + "</span>");
 
-
-        ui->TXDemand->setText("<b>Demand:</b> <span style='font-weight:bold; font-size:14px; color:blue'>" + str.number(TXDemand,'i',8) + "</span><b> TX</b>");
-        ui->BtcDemand->setText("<span style='font-weight:bold; font-size:14px; color:blue'>" + str.number(BtcDemand,'i',8) + "</span><b> BTC</b>");
-        ui->BidsCount->setText("<b>Bid's :</b> <span style='font-weight:bold; font-size:14px; color:blue'>" + str.number(ui->BidsTable->rowCount()) + "</span>");
-  obj.empty();
+    ui->TXDemand->setText("<b>Demand:</b> <span style='font-weight:bold; font-size:14px; color:blue'>" + str.number(TXDemand,'i',8) + "</span><b> TX</b>");
+    ui->BtcDemand->setText("<span style='font-weight:bold; font-size:14px; color:blue'>" + str.number(BtcDemand,'i',8) + "</span><b> BTC</b>");
+    ui->BidsCount->setText("<b>Bid's :</b> <span style='font-weight:bold; font-size:14px; color:blue'>" + str.number(ui->BidsTable->rowCount()) + "</span>");
+    obj.empty();
 }
 
 
@@ -590,6 +552,7 @@ void tradingDialog::ActionsOnSwitch(int index = -1){
 
     QString Response = "";
     QString Response2 = "";
+    QString Response3 = "";
 
     if(index == -1){
        index = ui->TradingTabWidget->currentIndex();
@@ -600,38 +563,34 @@ void tradingDialog::ActionsOnSwitch(int index = -1){
 
                     Response = GetBalance("BTC");
                     Response2 = GetBalance("TX");
+                    Response3 = GetOrderBook();
 
-                    if((Response.size() > 0 && Response != "Error") || (Response2.size() > 0 && Response2 != "Error")){
+                    if((Response.size() > 0 && Response != "Error") && (Response2.size() > 0 && Response2 != "Error")){
                         DisplayBalance(*ui->BtcAvailableLbl, *ui->TXAvailableLabel, Response, Response2);
+                    }
+                    if ((Response3.size() > 0 && Response3 != "Error")) {
+                        ParseAndPopulateOrderBookTables(Response3);
                     }
 
                 break;
 
                 case 1: //Cross send tab active
                     Response = GetBalance("TX");
-
-                    if(Response.size() > 0 && Response != "Error"){
-                        DisplayBalance(*ui->TXAvailableLabel_3, Response);
+                    Response2 = GetBalance("BTC");
+                    if((Response.size() > 0 && Response != "Error") && (Response2.size() > 0 && Response2 != "Error")){
+                        DisplayBalance(*ui->BittrexTXLabel, *ui->BittrexBTCLabel, Response, Response2);
                     }
 
                 break;
 
-                case 2: //Order book tab is the current tab - update the info
-                    Response = GetOrderBook();
-                    if(Response.size() > 0 && Response != "Error"){
-                        ParseAndPopulateOrderBookTables(Response);
-                    }
-
-                break;
-
-                case 3://market history tab
+                case 2://market history tab
                     Response = GetMarketHistory();
                     if(Response.size() > 0 && Response != "Error"){
                         ParseAndPopulateMarketHistoryTable(Response);
                     }
                 break;
 
-                case 4: //open orders tab
+                case 3: //open orders tab
                     Response = GetOpenOrders();
                     if(Response.size() > 0 && Response != "Error"){
                         ParseAndPopulateOpenOrdersTable(Response);
@@ -639,27 +598,26 @@ void tradingDialog::ActionsOnSwitch(int index = -1){
 
                 break;
 
-                case 5://account history tab
+                case 4://account history tab
                     Response = GetAccountHistory();
                     if(Response.size() > 0 && Response != "Error"){
                         ParseAndPopulateAccountHistoryTable(Response);
                     }
                 break;
 
-                case 6://show balance tab
+                case 5://show balance tab
                     Response = GetBalance("BTC");
                     if(Response.size() > 0 && Response != "Error"){
                         DisplayBalance(*ui->BitcoinBalanceLabel,*ui->BitcoinAvailableLabel,*ui->BitcoinPendingLabel, QString::fromUtf8("BTC"),Response);
                     }
 
                     Response = GetBalance("TX");
-
                     if(Response.size() > 0 && Response != "Error"){
                         DisplayBalance(*ui->TXBalanceLabel,*ui->TXAvailableLabel_2,*ui->TXPendingLabel, QString::fromUtf8("TX"),Response);
                     }
                 break;
 
-                case 7:
+                case 6:
 
                 break;
 
@@ -777,7 +735,7 @@ void tradingDialog::CalculateCSReceiveLabel(){
 
         double x = obj["Rate"].toDouble(); //would like to use int64 here
         double y = obj["Quantity"].toDouble();
-        // If 
+        // If
         if ( ((Quantity / x) - y) > 0 )
         {
             Price = x;
@@ -795,15 +753,19 @@ void tradingDialog::CalculateCSReceiveLabel(){
 
     QString ReceiveStr = "";
     QString DumpStr = "";
-    if ( Qty < AvailableTX ) 
+    QString TotalStr = "";
+    if ( Qty < AvailableTX )
     {
         ui->CSReceiveLabel->setText(ReceiveStr.number((ui->CSUnitsInput->text().toDouble() - 0.0002),'i',8));
         ui->CSDumpLabel->setText(DumpStr.number(Price,'i',8));
+        ui->CSTotalLabel->setText(DumpStr.number(Qty,'i',8));
     } else {
         ReceiveStr = "N/A";
+        TotalStr = "N/A";
         DumpStr = "N/A";
         ui->CSReceiveLabel->setText(ReceiveStr);
         ui->CSDumpLabel->setText(DumpStr);
+        ui->CSTotalLabel->setText(TotalStr);
     }
 }
 
@@ -828,7 +790,6 @@ void tradingDialog::on_UpdateKeys_clicked(bool Save, bool Load)
          ui->TradingTabWidget->setTabEnabled(3,true);
          ui->TradingTabWidget->setTabEnabled(4,true);
          ui->TradingTabWidget->setTabEnabled(5,true);
-         ui->TradingTabWidget->setTabEnabled(6,true);
   }else if ( ResponseObject.value("success").toBool() == true && Save){
          QMessageBox::information(this,"API Configuration Complete","Your API keys have been saved and the connection has been successfully configured and tested.");
          ui->ApiKeyInput->setEchoMode(QLineEdit::Password);
@@ -839,9 +800,8 @@ void tradingDialog::on_UpdateKeys_clicked(bool Save, bool Load)
          ui->TradingTabWidget->setTabEnabled(3,true);
          ui->TradingTabWidget->setTabEnabled(4,true);
          ui->TradingTabWidget->setTabEnabled(5,true);
-         ui->TradingTabWidget->setTabEnabled(6,true);
   }else{
-  	     QMessageBox::information(this,"API Configuration Complete","Api connection has been successfully configured and tested.");
+         QMessageBox::information(this,"API Configuration Complete","Api connection has been successfully configured and tested.");
          ui->ApiKeyInput->setEchoMode(QLineEdit::Password);
          ui->SecretKeyInput->setEchoMode(QLineEdit::Password);
          ui->PasswordInput->setText("");
@@ -850,7 +810,6 @@ void tradingDialog::on_UpdateKeys_clicked(bool Save, bool Load)
          ui->TradingTabWidget->setTabEnabled(3,true);
          ui->TradingTabWidget->setTabEnabled(4,true);
          ui->TradingTabWidget->setTabEnabled(5,true);
-         ui->TradingTabWidget->setTabEnabled(6,true);
   }
 
 }
@@ -859,10 +818,10 @@ string tradingDialog::encryptDecrypt(string toEncrypt, string password) {
 
     char * key = new char [password.size()+1];
     std::strcpy (key, password.c_str());
-	key[password.size()] = '\0'; // don't forget the terminating 0
+    key[password.size()] = '\0'; // don't forget the terminating 0
 
     string output = toEncrypt;
-    
+
     for (unsigned int i = 0; i < toEncrypt.size(); i++)
         output[i] = toEncrypt[i] ^ key[i % (sizeof(key) / sizeof(char))];
     return output;
@@ -989,7 +948,7 @@ void tradingDialog::on_Buy_Max_Amount_clicked()
 
 void tradingDialog::on_CS_Max_Amount_clicked()
 {
-    double Quantity = ui->TXAvailableLabel_3->text().toDouble();
+    double Quantity = ui->BittrexTXLabel->text().toDouble();
     double Received = 0;
     double Qty = 0;
     double Price = 0;
@@ -1007,7 +966,7 @@ void tradingDialog::on_CS_Max_Amount_clicked()
 
         double x = obj["Rate"].toDouble(); //would like to use int64 here
         double y = obj["Quantity"].toDouble();
-        // If 
+        // If
         if ( (Quantity - y) > 0 )
         {
             Price = x;
@@ -1042,21 +1001,6 @@ void tradingDialog::on_Withdraw_Max_Amount_clicked()
     double AvailableTX = ResultObject["Available"].toDouble();
 
     ui->WithdrawUnitsInput->setText(str.number(AvailableTX,'i',8));
-}
-
-void tradingDialog::on_buyOrdertypeCombo_activated(const QString &arg1)
-{
-   if(arg1 == "Conditional"){
-                             //ui->BuyWhenPriceLabel->show();
-                             //ui->BuyConditionCombo->show();
-                             //ui->ConditionLineEdit->show();
-                             //ui->Conditionlabel->show();
-                            }else if (arg1 == "Limit"){
-                                                     //  ui->BuyWhenPriceLabel->hide();
-                                                     //  ui->BuyConditionCombo->hide();
-                                                     //  ui->ConditionLineEdit->hide();
-                                                     //  ui->Conditionlabel->hide();
-                                                      }
 }
 
 QJsonObject tradingDialog::GetResultObjectFromJSONObject(QString response){
@@ -1273,7 +1217,7 @@ void tradingDialog::on_CSUnitsBtn_clicked()
 
             double x = obj["Rate"].toDouble(); //would like to use int64 here
             double y = obj["Quantity"].toDouble();
-            // If 
+            // If
             if ( ((Quantity / x) - y) > 0 )
             {
                 Price = x;
@@ -1375,25 +1319,6 @@ void tradingDialog::on_WithdrawUnitsBtn_clicked()
         }
 }
 
-void tradingDialog::on_AdvancedView_stateChanged(int arg1)
-{
-    //Show or hide columns in OpenOrders Table depending on checkbox state
-    if(arg1 == 2){
-        ui->OpenOrdersTable->setColumnHidden(9,false);
-        ui->OpenOrdersTable->setColumnHidden(10,false);
-        ui->OpenOrdersTable->setColumnHidden(11,false);
-        ui->OpenOrdersTable->setColumnHidden(12,false);
-        ui->OpenOrdersTable->setColumnHidden(13,false);
-    }else if(arg1 == 0) {
-        ui->OpenOrdersTable->setColumnHidden(9,true);
-        ui->OpenOrdersTable->setColumnHidden(10,true);
-        ui->OpenOrdersTable->setColumnHidden(11,true);
-        ui->OpenOrdersTable->setColumnHidden(12,true);
-        ui->OpenOrdersTable->setColumnHidden(13,true);
-
-          }
-}
-
 void tradingDialog::on_UnitsInputTX_textChanged(const QString &arg1)
 {
      CalculateSellCostLabel(); //update cost
@@ -1417,6 +1342,18 @@ void tradingDialog::on_SellBidPriceEdit_textChanged(const QString &arg1)
 void tradingDialog::on_CSUnitsInput_textChanged(const QString &arg1)
 {
     CalculateCSReceiveLabel(); //update cost
+}
+
+void tradingDialog::on_SecretPasteButton_clicked()
+{
+    // Paste text from clipboard into recipient field
+    ui->SecretKeyInput->setText(QApplication::clipboard()->text());
+}
+
+void tradingDialog::on_KeyPasteButton_clicked()
+{
+    // Paste text from clipboard into recipient field
+    ui->ApiKeyInput->setText(QApplication::clipboard()->text());
 }
 
 void tradingDialog::setModel(WalletModel *model)

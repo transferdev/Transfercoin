@@ -52,7 +52,6 @@ private slots:
 
     void CalculateBuyCostLabel();
     void on_Buy_Max_Amount_clicked();
-    void on_buyOrdertypeCombo_activated(const QString &arg1);
     void on_BuyBidcomboBox_currentIndexChanged(const QString &arg1);
     void on_UnitsInput_textChanged(const QString &arg1);
     void on_BuyBidPriceEdit_textChanged(const QString &arg1);
@@ -73,7 +72,9 @@ private slots:
     void on_Withdraw_Max_Amount_clicked();
     void on_WithdrawUnitsBtn_clicked();
 
-    void on_AdvancedView_stateChanged(int arg1);
+    void on_KeyPasteButton_clicked();
+    void on_SecretPasteButton_clicked();
+
     int SetExchangeInfoTextLabels();
 
     QString BittrexTimeStampToReadable(QString DateTime);
