@@ -7,6 +7,7 @@
 #include "rpcserver.h"
 #include "rpcclient.h"
 
+#include <QClipboard>
 #include <QTime>
 #include <QThread>
 #include <QKeyEvent>
@@ -203,8 +204,6 @@ RPCConsole::RPCConsole(QWidget *parent) :
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);
     ui->messagesWidget->installEventFilter(this);
-
-    connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
 
     // set OpenSSL version label
     ui->openSSLVersion->setText(SSLeay_version(SSLEAY_VERSION));
@@ -482,6 +481,16 @@ void RPCConsole::setTrafficGraphRange(int mins)
             ui->lblGraphRange->setText(QString(tr("%1 h %2 m")).arg(hours).arg(minsLeft));
         }
     }
+}
+
+void RPCConsole::on_copyButton_clicked()
+{
+    GUIUtil::setClipboard(ui->lineEdit->text());
+}
+
+void RPCConsole::on_pasteButton_clicked()
+{
+	ui->lineEdit->setText(QApplication::clipboard()->text());
 }
 
 void RPCConsole::updateTrafficStats(quint64 totalBytesIn, quint64 totalBytesOut)

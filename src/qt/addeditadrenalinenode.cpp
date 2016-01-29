@@ -13,6 +13,7 @@
 #include "init.h"
 #include "base58.h"
 #include <QMessageBox>
+#include <QClipboard>
 
 AddEditAdrenalineNode::AddEditAdrenalineNode(QWidget *parent) :
     QDialog(parent),
@@ -97,3 +98,26 @@ void AddEditAdrenalineNode::on_cancelButton_clicked()
     reject();
 }
 
+void AddEditAdrenalineNode::on_AddEditAddressPasteButton_clicked()
+{
+    // Paste text from clipboard into recipient field
+    ui->addressLineEdit->setText(QApplication::clipboard()->text());
+}
+
+void AddEditAdrenalineNode::on_AddEditPrivkeyPasteButton_clicked()
+{
+    // Paste text from clipboard into recipient field
+    ui->privkeyLineEdit->setText(QApplication::clipboard()->text());
+}
+
+void AddEditAdrenalineNode::on_AddEditTxhashPasteButton_clicked()
+{
+    // Paste text from clipboard into recipient field
+    ui->txhashLineEdit->setText(QApplication::clipboard()->text());
+}
+
+void AddEditAdrenalineNode::on_AddEditDonationPasteButton_clicked()
+{
+    // Paste text from clipboard into recipient field
+    ui->donationaddressLineEdit->setText(QApplication::clipboard()->text());
+}

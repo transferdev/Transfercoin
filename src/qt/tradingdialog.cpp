@@ -35,26 +35,26 @@ tradingDialog::tradingDialog(QWidget *parent) :
     ui->setupUi(this);
     timerid = 0;
     qDebug() <<  "Expected this";
+    
+    ui->BtcAvailableLabel->setTextFormat(Qt::RichText);
+    ui->TXAvailableLabel->setTextFormat(Qt::RichText);
+    ui->BuyCostLabel->setTextFormat(Qt::RichText);
+    ui->SellCostLabel->setTextFormat(Qt::RichText);
+    ui->BittrexBTCLabel->setTextFormat(Qt::RichText);
+    ui->BittrexTXLabel->setTextFormat(Qt::RichText);
+    ui->CSDumpLabel->setTextFormat(Qt::RichText);
+    ui->CSTotalLabel->setTextFormat(Qt::RichText);
+    ui->CSReceiveLabel->setTextFormat(Qt::RichText);
 
-    QPalette sample_palette;
-    sample_palette.setColor(QPalette::Window, Qt::green);
-
-    ui->BuyCostLabel->setPalette(sample_palette);
-    ui->SellCostLabel->setPalette(sample_palette);
-    ui->TXAvailableLabel->setPalette(sample_palette);
-    ui->TXAvailableLabel_2->setPalette(sample_palette);
-    ui->BittrexTXLabel->setPalette(sample_palette);
-    ui->BittrexBTCLabel->setPalette(sample_palette);
-    ui->BtcAvailableLbl_2->setPalette(sample_palette);
     //Set tabs to inactive
     ui->TradingTabWidget->setTabEnabled(0,false);
     ui->TradingTabWidget->setTabEnabled(1,false);
     ui->TradingTabWidget->setTabEnabled(3,false);
     ui->TradingTabWidget->setTabEnabled(4,false);
     ui->TradingTabWidget->setTabEnabled(5,false);
+
     // Listen for keypress
     connect(ui->PasswordInput, SIGNAL(returnPressed()),ui->LoadKeys,SIGNAL(clicked()));
-
 
     /*OrderBook Table Init*/
     CreateOrderBookTables(*ui->BidsTable,QStringList() << "SUM(BTC)" << "TOTAL(BTC)" << "TX(SIZE)" << "BID(BTC)");
@@ -279,13 +279,13 @@ int tradingDialog::SetExchangeInfoTextLabels(){
     ui->volumet->setTextFormat(Qt::RichText);
     ui->volumebtc->setTextFormat(Qt::RichText);
 
-    ui->Ask->setText("<b>Ask:</b> <span style='font-weight:bold; font-size:14px; color:Red'>" + str.number(obj["Ask"].toDouble(),'i',8) + "</span> BTC");
+    ui->Ask->setText("<b>Ask:</b> <span style='font-weight:bold; font-size:12px; color:Red'>" + str.number(obj["Ask"].toDouble(),'i',8) + "</span> BTC");
 
-    ui->Bid->setText("<b>Bid:</b> <span style='font-weight:bold; font-size:14px; color:Green;'>" + str.number(obj["Bid"].toDouble(),'i',8) + "</span> BTC");
+    ui->Bid->setText("<b>Bid:</b> <span style='font-weight:bold; font-size:12px; color:Green;'>" + str.number(obj["Bid"].toDouble(),'i',8) + "</span> BTC");
 
-    ui->volumet->setText("<b>TX Volume:</b> <span style='font-weight:bold; font-size:14px; color:blue;'>" + str.number(obj["Volume"].toDouble(),'i',8) + "</span> TX");
+    ui->volumet->setText("<b>TX Volume:</b> <span style='font-weight:bold; font-size:12px; color:blue;'>" + str.number(obj["Volume"].toDouble(),'i',8) + "</span> TX");
 
-    ui->volumebtc->setText("<b>BTC Volume:</b> <span style='font-weight:bold; font-size:14px; color:blue;'>" + str.number(obj["BaseVolume"].toDouble(),'i',8) + "</span> BTC");
+    ui->volumebtc->setText("<b>BTC Volume:</b> <span style='font-weight:bold; font-size:12px; color:blue;'>" + str.number(obj["BaseVolume"].toDouble(),'i',8) + "</span> BTC");
 
     obj.empty();
 
@@ -336,7 +336,7 @@ void tradingDialog::DisplayBalance(QLabel &BalanceLabel, QString Response){
     //Set the labels, parse the json result to get values.
     QJsonObject ResultObject = GetResultObjectFromJSONObject(Response);
 
-    BalanceLabel.setText(str.number(ResultObject["Available"].toDouble(),'i',8));
+    BalanceLabel.setText("<span style='font-weight:bold; font-size:12px; color:green'>" + str.number(ResultObject["Available"].toDouble(),'i',8) + "</span>");
 }
 
 void tradingDialog::DisplayBalance(QLabel &BalanceLabel, QLabel &BalanceLabel2, QString Response, QString Response2){
@@ -348,8 +348,8 @@ void tradingDialog::DisplayBalance(QLabel &BalanceLabel, QLabel &BalanceLabel2, 
     QJsonObject ResultObject = GetResultObjectFromJSONObject(Response);
     QJsonObject ResultObject2 = GetResultObjectFromJSONObject(Response2);
 
-    BalanceLabel.setText(str.number(ResultObject["Available"].toDouble(),'i',8));
-    BalanceLabel2.setText(str2.number(ResultObject2["Available"].toDouble(),'i',8));
+    BalanceLabel.setText("<span style='font-weight:bold; font-size:12px; color:green'>" + str.number(ResultObject["Available"].toDouble(),'i',8) + "</span>");
+    BalanceLabel2.setText("<span style='font-weight:bold; font-size:12px; color:green'>" + str2.number(ResultObject2["Available"].toDouble(),'i',8) + "</span>");
 }
 
 void tradingDialog::ParseAndPopulateOpenOrdersTable(QString Response){
@@ -510,13 +510,13 @@ void tradingDialog::ParseAndPopulateOrderBookTables(QString OrderBook){
         BuyItteration++;
     }
 
-    ui->TXSupply->setText("<b>Supply:</b> <span style='font-weight:bold; font-size:14px; color:blue'>" + str.number(TXSupply,'i',8) + "</span><b> TX</b>");
-    ui->BtcSupply->setText("<span style='font-weight:bold; font-size:14px; color:blue'>" + str.number(BtcSupply,'i',8) + "</span><b> BTC</b>");
-    ui->AsksCount->setText("<b>Ask's :</b> <span style='font-weight:bold; font-size:14px; color:blue'>" + str.number(ui->AsksTable->rowCount()) + "</span>");
+    ui->TXSupply->setText("<b>Supply:</b> <span style='font-weight:bold; font-size:12px; color:blue'>" + str.number(TXSupply,'i',8) + "</span><b> TX</b>");
+    ui->BtcSupply->setText("<span style='font-weight:bold; font-size:12px; color:blue'>" + str.number(BtcSupply,'i',8) + "</span><b> BTC</b>");
+    ui->AsksCount->setText("<b>Ask's :</b> <span style='font-weight:bold; font-size:12px; color:blue'>" + str.number(ui->AsksTable->rowCount()) + "</span>");
 
-    ui->TXDemand->setText("<b>Demand:</b> <span style='font-weight:bold; font-size:14px; color:blue'>" + str.number(TXDemand,'i',8) + "</span><b> TX</b>");
-    ui->BtcDemand->setText("<span style='font-weight:bold; font-size:14px; color:blue'>" + str.number(BtcDemand,'i',8) + "</span><b> BTC</b>");
-    ui->BidsCount->setText("<b>Bid's :</b> <span style='font-weight:bold; font-size:14px; color:blue'>" + str.number(ui->BidsTable->rowCount()) + "</span>");
+    ui->TXDemand->setText("<b>Demand:</b> <span style='font-weight:bold; font-size:12px; color:blue'>" + str.number(TXDemand,'i',8) + "</span><b> TX</b>");
+    ui->BtcDemand->setText("<span style='font-weight:bold; font-size:12px; color:blue'>" + str.number(BtcDemand,'i',8) + "</span><b> BTC</b>");
+    ui->BidsCount->setText("<b>Bid's :</b> <span style='font-weight:bold; font-size:12px; color:blue'>" + str.number(ui->BidsTable->rowCount()) + "</span>");
     obj.empty();
 }
 
@@ -566,7 +566,7 @@ void tradingDialog::ActionsOnSwitch(int index = -1){
                     Response3 = GetOrderBook();
 
                     if((Response.size() > 0 && Response != "Error") && (Response2.size() > 0 && Response2 != "Error")){
-                        DisplayBalance(*ui->BtcAvailableLbl, *ui->TXAvailableLabel, Response, Response2);
+                        DisplayBalance(*ui->BtcAvailableLabel, *ui->TXAvailableLabel, Response, Response2);
                     }
                     if ((Response3.size() > 0 && Response3 != "Error")) {
                         ParseAndPopulateOrderBookTables(Response3);
@@ -698,7 +698,7 @@ void tradingDialog::CalculateBuyCostLabel(){
     double cost = ((price * Quantity) + ((price * Quantity / 100) * 0.25));
 
     QString Str = "";
-    ui->BuyCostLabel->setText(Str.number(cost,'i',8));
+    ui->BuyCostLabel->setText("<span style='font-weight:bold; font-size:12px; color:red'>" + Str.number(cost,'i',8) + "</span>");
 }
 
 void tradingDialog::CalculateSellCostLabel(){
@@ -708,7 +708,7 @@ void tradingDialog::CalculateSellCostLabel(){
     double cost = ((price * Quantity) - ((price * Quantity / 100) * 0.25));
 
     QString Str = "";
-    ui->SellCostLabel->setText(Str.number(cost,'i',8));
+    ui->SellCostLabel->setText("<span style='font-weight:bold; font-size:12px; color:green'>" + Str.number(cost,'i',8) + "</span>");
 }
 
 void tradingDialog::CalculateCSReceiveLabel(){
@@ -756,16 +756,16 @@ void tradingDialog::CalculateCSReceiveLabel(){
     QString TotalStr = "";
     if ( Qty < AvailableTX )
     {
-        ui->CSReceiveLabel->setText(ReceiveStr.number((ui->CSUnitsInput->text().toDouble() - 0.0002),'i',8));
-        ui->CSDumpLabel->setText(DumpStr.number(Price,'i',8));
-        ui->CSTotalLabel->setText(DumpStr.number(Qty,'i',8));
+        ui->CSReceiveLabel->setText("<span style='font-weight:bold; font-size:12px; color:green'>" + ReceiveStr.number((ui->CSUnitsInput->text().toDouble() - 0.0002),'i',8) + "</span>");
+        ui->CSDumpLabel->setText("<span style='font-weight:bold; font-size:12px; color:red'>" + DumpStr.number(Price,'i',8) + "</span>");
+        ui->CSTotalLabel->setText("<span style='font-weight:bold; font-size:12px; color:red'>" + TotalStr.number(Qty,'i',8) + "</span>");
     } else {
         ReceiveStr = "N/A";
         TotalStr = "N/A";
         DumpStr = "N/A";
-        ui->CSReceiveLabel->setText(ReceiveStr);
-        ui->CSDumpLabel->setText(DumpStr);
-        ui->CSTotalLabel->setText(TotalStr);
+        ui->CSReceiveLabel->setText("<span style='font-weight:bold; font-size:12px; color:red'>" + ReceiveStr + "</span>");
+        ui->CSDumpLabel->setText("<span style='font-weight:bold; font-size:12px; color:red'>" + DumpStr + "</span>");
+        ui->CSTotalLabel->setText("<span style='font-weight:bold; font-size:12px; color:red'>" + TotalStr + "</span>");
     }
 }
 
@@ -1344,6 +1344,18 @@ void tradingDialog::on_CSUnitsInput_textChanged(const QString &arg1)
     CalculateCSReceiveLabel(); //update cost
 }
 
+void tradingDialog::on_CSPasteButton_clicked()
+{
+    // Paste text from clipboard into recipient field
+    ui->CSUnitsAddress->setText(QApplication::clipboard()->text());
+}
+
+void tradingDialog::on_WithdrawPasteButton_clicked()
+{
+    // Paste text from clipboard into recipient field
+    ui->WithdrawAddress->setText(QApplication::clipboard()->text());
+}
+
 void tradingDialog::on_SecretPasteButton_clicked()
 {
     // Paste text from clipboard into recipient field
@@ -1354,6 +1366,17 @@ void tradingDialog::on_KeyPasteButton_clicked()
 {
     // Paste text from clipboard into recipient field
     ui->ApiKeyInput->setText(QApplication::clipboard()->text());
+}
+
+void setClipboard(const QString& str)
+{
+    QApplication::clipboard()->setText(str, QClipboard::Clipboard);
+    QApplication::clipboard()->setText(str, QClipboard::Selection);
+}
+
+void tradingDialog::on_DepositCopyButton_clicked()
+{
+    setClipboard(ui->DepositAddressLabel->text());
 }
 
 void tradingDialog::setModel(WalletModel *model)

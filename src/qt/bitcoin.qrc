@@ -50,6 +50,7 @@
         <file alias="onion">res/icons/onion.png</file>
         <file alias="onionblack">res/icons/onion-black.png</file>
         <file alias="browse">res/icons/browse.png</file>
+        <file alias="trade">res/icons/trade.png</file>
     </qresource>
     <qresource prefix="/icons/black">
         <file alias="connect_0">res/icons/black/connect0_16.png</file>

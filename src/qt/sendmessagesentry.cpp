@@ -46,6 +46,12 @@ void SendMessagesEntry::on_pasteButton_clicked()
     ui->sendTo->setText(QApplication::clipboard()->text());
 }
 
+void SendMessagesEntry::on_PubkeyPasteButton_clicked()
+{
+    // Paste text from clipboard into recipient field
+    ui->publicKey->setText(QApplication::clipboard()->text());
+}
+
 void SendMessagesEntry::on_addressBookButton_clicked()
 {
     if(!model)
