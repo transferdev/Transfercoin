@@ -331,7 +331,7 @@ bool CTransfercoinSecret::SetString(const std::string& strSecret) {
  * The data vector contains RIPEMD160(SHA256(cscript)), where cscript is the serialized redemption script.
  */
 CChainParams::Base58Type pubkey_address = (CChainParams::Base58Type)0;
-CChainParams::Base58Type script_address = (CChainParams::Base58Type)0;
+CChainParams::Base58Type script_address = (CChainParams::Base58Type)5;
 bool CBitcoinAddress::Set(const CKeyID &id) {
     SetData(Params().Base58Prefix(pubkey_address), &id, 20);
     return true;
