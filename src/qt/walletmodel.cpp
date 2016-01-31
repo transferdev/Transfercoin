@@ -219,7 +219,7 @@ bool WalletModel::validateAddress(const QString &address)
             return true;
     };
 
-    CBitcoinAddress addressParsed(sAddr);
+    CTransfercoinAddress addressParsed(sAddr);
     return addressParsed.IsValid();
 }
 
@@ -256,7 +256,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         setAddress.insert(rcp.address);
         ++nAddresses;
 
-        CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
+        CScript scriptPubKey = GetScriptForDestination(CTransfercoinAddress(rcp.address.toStdString()).Get());
         vecSend.push_back(std::pair<CScript, CAmount>(scriptPubKey, rcp.amount));
 
         total += rcp.amount;
@@ -377,7 +377,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
 
                     CKeyID ckidTo = cpkTo.GetID();
 
-                    CBitcoinAddress addrTo(ckidTo);
+                    CTransfercoinAddress addrTo(ckidTo);
 
                     if (SecretToPublicKey(ephem_secret, ephem_pubkey) != 0)
                     {
@@ -443,7 +443,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
             }
 
             CScript scriptPubKey;
-            scriptPubKey.SetDestination(CBitcoinAddress(sAddr).Get());
+            scriptPubKey.SetDestination(CTransfercoinAddress(sAddr).Get());
             vecSend.push_back(make_pair(scriptPubKey, rcp.amount));
 
             if (rcp.narration.length() > 0)
@@ -521,7 +521,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
     foreach(const SendCoinsRecipient &rcp, recipients)
     {
         std::string strAddress = rcp.address.toStdString();
-        CTxDestination dest = CBitcoinAddress(strAddress).Get();
+        CTxDestination dest = CTransfercoinAddress(strAddress).Get();
         std::string strLabel = rcp.label.toStdString();
         {
             LOCK(wallet->cs_wallet);
@@ -657,7 +657,7 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel, CWallet *wallet,
                                   Q_ARG(int, status));
     } else
     {
-    QString strAddress = QString::fromStdString(CBitcoinAddress(address).ToString());
+    QString strAddress = QString::fromStdString(CTransfercoinAddress(address).ToString());
     QString strLabel = QString::fromStdString(label);
 
     qDebug() << "NotifyAddressBookChanged : " + strAddress + " " + strLabel + " isMine=" + QString::number(isMine) + " status=" + QString::number(status);
@@ -820,7 +820,7 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
         CTxDestination address;
         if(!out.fSpendable || !ExtractDestination(cout.tx->vout[cout.i].scriptPubKey, address))
             continue;
-        mapCoins[QString::fromStdString(CBitcoinAddress(address).ToString())].push_back(out);
+        mapCoins[QString::fromStdString(CTransfercoinAddress(address).ToString())].push_back(out);
     }
 }
 

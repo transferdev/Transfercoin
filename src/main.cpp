@@ -1663,37 +1663,37 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
             if (!txindex.vSpent[prevout.n].IsNull())
                 return fMiner ? false : error("ConnectInputs() : %s prev tx already used at %s", GetHash().ToString(), txindex.vSpent[prevout.n].ToString());
 
-       if(fValidateSig)
-       {
-            // Skip ECDSA signature verification when connecting blocks (fBlock=true)
-            // before the last blockchain checkpoint. This is safe because block merkle hashes are
-            // still computed and checked, and any change will be caught at the next checkpoint.
-            if (!(fBlock && (nBestHeight < Checkpoints::GetTotalBlocksEstimate())))
+            if(fValidateSig)
             {
-                // Verify signature
-                if (!VerifySignature(txPrev, *this, i, flags, 0))
+                // Skip ECDSA signature verification when connecting blocks (fBlock=true)
+                // before the last blockchain checkpoint. This is safe because block merkle hashes are
+                // still computed and checked, and any change will be caught at the next checkpoint.
+                if (!(fBlock && !IsInitialBlockDownload()))
                 {
-                    if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
-                        // Check whether the failure was caused by a
-                        // non-mandatory script verification check, such as
-                        // non-null dummy arguments;
-                        // if so, don't trigger DoS protection to
-                        // avoid splitting the network between upgraded and
-                        // non-upgraded nodes.
-                        if (VerifySignature(txPrev, *this, i, flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, 0))
-                            return error("ConnectInputs() : %s non-mandatory VerifySignature failed", GetHash().ToString());
+                    // Verify signature
+                    if (!VerifySignature(txPrev, *this, i, flags, 0))
+                    {
+                        if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
+                            // Check whether the failure was caused by a
+                            // non-mandatory script verification check, such as
+                            // non-null dummy arguments;
+                            // if so, don't trigger DoS protection to
+                            // avoid splitting the network between upgraded and
+                            // non-upgraded nodes.
+                            if (VerifySignature(txPrev, *this, i, flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, 0))
+                                return error("ConnectInputs() : %s non-mandatory VerifySignature failed", GetHash().ToString());
+                        }
+                        // Failures of other flags indicate a transaction that is
+                        // invalid in new blocks, e.g. a invalid P2SH. We DoS ban
+                        // such nodes as they are not following the protocol. That
+                        // said during an upgrade careful thought should be taken
+                        // as to the correct behavior - we may want to continue
+                        // peering with non-upgraded nodes even after a soft-fork
+                        // super-majority vote has passed.
+                        return DoS(100,error("ConnectInputs() : %s VerifySignature failed", GetHash().ToString()));
                     }
-                    // Failures of other flags indicate a transaction that is
-                    // invalid in new blocks, e.g. a invalid P2SH. We DoS ban
-                    // such nodes as they are not following the protocol. That
-                    // said during an upgrade careful thought should be taken
-                    // as to the correct behavior - we may want to continue
-                    // peering with non-upgraded nodes even after a soft-fork
-                    // super-majority vote has passed.
-                    return DoS(100,error("ConnectInputs() : %s VerifySignature failed", GetHash().ToString()));
                 }
             }
-       }
 
             // Mark outpoints as spent
             txindex.vSpent[prevout.n] = posThisTx;
@@ -2457,21 +2457,19 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
     // ----------- masternode payments -----------
 
     bool MasternodePayments = false;
+    bool fIsInitialDownload = IsInitialBlockDownload();
 
     if(nTime > START_MASTERNODE_PAYMENTS) MasternodePayments = true;
-
-    if(MasternodePayments)
+    if (!fIsInitialDownload)
     {
-        LOCK2(cs_main, mempool.cs);
+        if(MasternodePayments)
+        {
+            LOCK2(cs_main, mempool.cs);
 
-        CBlockIndex *pindex = pindexBest;
-        if(IsProofOfStake() && pindex != NULL){
-            if(pindex->GetBlockHash() == hashPrevBlock){
-                bool fIsInitialDownload = IsInitialBlockDownload();
-
-                // If we don't already have its previous block, skip masternode payment step
-                if (!fIsInitialDownload)
-                {
+            CBlockIndex *pindex = pindexBest;
+            if(IsProofOfStake() && pindex != NULL){
+                if(pindex->GetBlockHash() == hashPrevBlock){
+                    // If we don't already have its previous block, skip masternode payment step
                     CAmount masternodePaymentAmount;
                     for (int i = vtx[1].vout.size(); i--> 0; ) {
                         masternodePaymentAmount = vtx[1].vout[i].nValue;
@@ -2501,7 +2499,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 
                     CTxDestination address1;
                     ExtractDestination(payee, address1);
-                    CBitcoinAddress address2(address1);
+                    CTransfercoinAddress address2(address1);
 
                     if(!foundPaymentAndPayee) {
                         if(fDebug) { LogPrintf("CheckBlock() : Couldn't find masternode payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), pindexBest->nHeight+1); }
@@ -2510,16 +2508,16 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                         LogPrintf("CheckBlock() : Found payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), pindexBest->nHeight+1);
                     }
                 } else {
-                    if(fDebug) { LogPrintf("CheckBlock() : Is initial download, skipping masternode payment check %d\n", pindexBest->nHeight+1); }
+                    if(fDebug) { LogPrintf("CheckBlock() : Skipping masternode payment check - nHeight %d Hash %s\n", pindexBest->nHeight+1, GetHash().ToString().c_str()); }
                 }
             } else {
-                if(fDebug) { LogPrintf("CheckBlock() : Skipping masternode payment check - nHeight %d Hash %s\n", pindexBest->nHeight+1, GetHash().ToString().c_str()); }
+                if(fDebug) { LogPrintf("CheckBlock() : pindex is null, skipping masternode payment check\n"); }
             }
         } else {
-            if(fDebug) { LogPrintf("CheckBlock() : pindex is null, skipping masternode payment check\n"); }
+            if(fDebug) { LogPrintf("CheckBlock() : skipping masternode payment checks\n"); }
         }
     } else {
-        if(fDebug) { LogPrintf("CheckBlock() : skipping masternode payment checks\n"); }
+        if(fDebug) { LogPrintf("CheckBlock() : Is initial download, skipping masternode payment check %d\n", pindexBest->nHeight+1); }
     }
 
 
@@ -2581,8 +2579,16 @@ bool CBlock::AcceptBlock()
     CBlockIndex* pindexPrev = (*mi).second;
     int nHeight = pindexPrev->nHeight+1;
 
-    if (IsProofOfWork() && nHeight > Params().LastPOWBlock())
+    uint256 hashProof;
+    if (IsProofOfWork() && nHeight > Params().LastPOWBlock()){
         return DoS(100, error("AcceptBlock() : reject proof-of-work at height %d", nHeight));
+    } else {
+        // PoW is checked in CheckBlock()
+        if (IsProofOfWork())
+        {
+            hashProof = GetPoWHash();
+        }
+    }
 
     if (IsProofOfStake() && nHeight < Params().POSStartBlock())
         return DoS(100, error("AcceptBlock() : reject proof-of-stake at height <= %d", nHeight));
@@ -2612,7 +2618,6 @@ bool CBlock::AcceptBlock()
     if (!Checkpoints::CheckHardened(nHeight, hash))
         return DoS(100, error("AcceptBlock() : rejected by hardened checkpoint lock-in at %d", nHeight));
 
-    uint256 hashProof;
     // Verify hash target and signature of coinstake tx
     if (IsProofOfStake())
     {
@@ -2621,11 +2626,6 @@ bool CBlock::AcceptBlock()
         {
             return error("AcceptBlock() : check proof-of-stake failed for block %s", hash.ToString());
         }
-    }
-    // PoW is checked in CheckBlock()
-    if (IsProofOfWork())
-    {
-        hashProof = GetPoWHash();
     }
 
     // Check that the block satisfies synchronized checkpoint
@@ -2803,7 +2803,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 
     if(!IsInitialBlockDownload()){
 
-    	CScript payee;
+        CScript payee;
         CTxIn vin;
 
         // If we're in LiteMode disable darksend features without disabling masternodes
@@ -3409,7 +3409,7 @@ void static ProcessGetData(CNode* pfrom)
                         pushed = true;
                     }
                 }
-                if (!pushed && inv.type == MSG_DSTX) {       
+                if (!pushed && inv.type == MSG_DSTX) {
                     if(mapDarksendBroadcastTxes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
@@ -3759,6 +3759,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         LOCK(cs_main);
 
+        if (IsInitialBlockDownload())
+            return true;
+
         CBlockIndex* pindex = NULL;
         if (locator.IsNull())
         {
@@ -3899,10 +3902,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             if (nEvicted > 0)
                 LogPrint("mempool", "mapOrphan overflow, removed %u tx\n", nEvicted);
         }
-        if(strCommand == "dstx"){			
-	        CInv inv(MSG_DSTX, tx.GetHash());			
-	        RelayInventory(inv);			
-	    }
+        if(strCommand == "dstx"){
+            CInv inv(MSG_DSTX, tx.GetHash());
+            RelayInventory(inv);
+        }
         if (tx.nDoS) pfrom->Misbehaving(tx.nDoS);
     }
 
