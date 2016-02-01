@@ -34,7 +34,8 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
     transactionTableModel(0),
     cachedBalance(0), cachedStake(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
     cachedEncryptionStatus(Unencrypted),
-    cachedNumBlocks(0)
+    cachedNumBlocks(0),
+    fProcessingQueuedTransactions(false)
 {
     fHaveWatchOnly = wallet->HaveWatchOnly();
     fForceCheckBalanceChanged = false;
@@ -694,7 +695,27 @@ static void ShowProgress(WalletModel *walletmodel, const std::string &title, int
     QMetaObject::invokeMethod(walletmodel, "showProgress", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(title)),
                               Q_ARG(int, nProgress));
+    if (nProgress == 0)
+    	fQueueNotifications = true;
+
+    if (nProgress == 100)
+    {
+          fQueueNotifications = false;
+        BOOST_FOREACH(const PAIRTYPE(uint256, ChangeType)& notification, vQueueNotifications)
+            NotifyTransactionChanged(walletmodel, NULL, notification.first, notification.second);
+        if (vQueueNotifications.size() > 10) // prevent balloon spam, show maximum 10 balloons
+            QMetaObject::invokeMethod(walletmodel, "setProcessingQueuedTransactions", Qt::QueuedConnection, Q_ARG(bool, true));
+        for (unsigned int i = 0; i < vQueueNotifications.size(); ++i)
+        {
+            if (vQueueNotifications.size() - i <= 10)
+                QMetaObject::invokeMethod(walletmodel, "setProcessingQueuedTransactions", Qt::QueuedConnection, Q_ARG(bool, false));
+
+            NotifyTransactionChanged(walletmodel, NULL, vQueueNotifications[i].first, vQueueNotifications[i].second);
+        }
+        std::vector<std::pair<uint256, ChangeType> >().swap(vQueueNotifications); // clear
+    }
 }
+
 
 static void NotifyWatchonlyChanged(WalletModel *walletmodel, bool fHaveWatchonly)
 {
