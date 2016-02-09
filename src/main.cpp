@@ -3868,7 +3868,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         {
             RelayTransaction(tx, inv.hash);
             vWorkQueue.push_back(inv.hash);
-            vEraseQueue.push_back(inv.hash);
 
             // Recursively process any orphan transactions that depended on this one
             for (unsigned int i = 0; i < vWorkQueue.size(); i++)
@@ -3893,7 +3892,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     }
                     else if (!fMissingInputs2)
                     {
-                        // invalid or too-little-fee orphan
+                        // Has inputs but not accepted to mempool
+                        // Probably non-standard or insufficient fee/priority
                         vEraseQueue.push_back(orphanTxHash);
                         LogPrint("mempool", "   removed orphan tx %s\n", orphanTxHash.ToString());
                     }
