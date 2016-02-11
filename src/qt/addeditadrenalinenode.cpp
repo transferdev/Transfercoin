@@ -19,6 +19,11 @@ AddEditAdrenalineNode::AddEditAdrenalineNode(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AddEditAdrenalineNode)
 {
+    ui->donationpercentageLine->setVisible(false);
+    ui->donationpercentageLineEdit->setVisible(false);
+    ui->donationaddressLine->setVisible(false);
+    ui->donationaddressLineEdit->setVisible(false);
+    ui->AddEditDonationPasteButton->setVisible(false);
     ui->setupUi(this);
 
 }

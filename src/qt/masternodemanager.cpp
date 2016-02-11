@@ -66,7 +66,7 @@ void MasternodeManager::on_tableWidget_2_itemSelectionChanged()
     }
 }
 
-void MasternodeManager::updateAdrenalineNode(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, QString donationAddress, QString donationPercentage, QString status)
+void MasternodeManager::updateAdrenalineNode(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, QString status)
 {
     LOCK(cs_adrenaline);
     bool bFound = false;
@@ -86,15 +86,11 @@ void MasternodeManager::updateAdrenalineNode(QString alias, QString addr, QStrin
 
     QTableWidgetItem *aliasItem = new QTableWidgetItem(alias);
     QTableWidgetItem *addrItem = new QTableWidgetItem(addr);
-    QTableWidgetItem *donationAddressItem = new QTableWidgetItem(donationAddress);
-    QTableWidgetItem *donationPercentageItem = new QTableWidgetItem(donationPercentage);
     QTableWidgetItem *statusItem = new QTableWidgetItem(status);
 
     ui->tableWidget_2->setItem(nodeRow, 0, aliasItem);
     ui->tableWidget_2->setItem(nodeRow, 1, addrItem);
-    ui->tableWidget_2->setItem(nodeRow, 2, donationPercentageItem);
-    ui->tableWidget_2->setItem(nodeRow, 3, donationAddressItem);
-    ui->tableWidget_2->setItem(nodeRow, 4, statusItem);
+    ui->tableWidget_2->setItem(nodeRow, 2, statusItem);
 }
 
 static QString seconds_to_DHMS(quint32 duration)
@@ -276,17 +272,17 @@ void MasternodeManager::on_UpdateButton_clicked()
         std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
         if (errorMessage == ""){
             updateAdrenalineNode(QString::fromStdString(mne.getAlias()), QString::fromStdString(mne.getIp()), QString::fromStdString(mne.getPrivKey()), QString::fromStdString(mne.getTxHash()),
-                QString::fromStdString(mne.getOutputIndex()), QString::fromStdString(strDonateAddress), QString::fromStdString(strDonationPercentage), QString::fromStdString("Not in the masternode list."));
+                QString::fromStdString(mne.getOutputIndex()), QString::fromStdString("Not in the masternode list."));
         }
         else {
             updateAdrenalineNode(QString::fromStdString(mne.getAlias()), QString::fromStdString(mne.getIp()), QString::fromStdString(mne.getPrivKey()), QString::fromStdString(mne.getTxHash()),
-                QString::fromStdString(mne.getOutputIndex()), QString::fromStdString(strDonateAddress), QString::fromStdString(strDonationPercentage), QString::fromStdString(errorMessage));
+                QString::fromStdString(mne.getOutputIndex()), QString::fromStdString(errorMessage));
         }
 
         BOOST_FOREACH(CMasternode& mn, vMasternodes) {
             if (mn.addr.ToString().c_str() == mne.getIp()){
                 updateAdrenalineNode(QString::fromStdString(mne.getAlias()), QString::fromStdString(mne.getIp()), QString::fromStdString(mne.getPrivKey()), QString::fromStdString(mne.getTxHash()),
-                QString::fromStdString(mne.getOutputIndex()), QString::fromStdString(strDonateAddress), QString::fromStdString(strDonationPercentage), QString::fromStdString("Masternode is Running."));
+                QString::fromStdString(mne.getOutputIndex()), QString::fromStdString("Masternode is Running."));
             }
         }
     }
