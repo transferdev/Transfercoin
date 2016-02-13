@@ -1307,7 +1307,7 @@ bool SecureMsgReceiveData(CNode* pfrom, std::string strCommand, CDataStream& vRe
 
         if (vchData.size() < 4)
         {
-            pfrom->Misbehaving(1);
+            Misbehaving(pfrom->GetId(), 1);
             return false; // not enough data received to be a valid smsgInv
         };
 
@@ -1336,14 +1336,14 @@ bool SecureMsgReceiveData(CNode* pfrom, std::string strCommand, CDataStream& vRe
         if (nInvBuckets > (SMSG_RETENTION / SMSG_BUCKET_LEN) + 1) // +1 for some leeway
         {
             LogPrint("smessage", "Peer sent more bucket headers than possible %u, %u.\n", nInvBuckets, (SMSG_RETENTION / SMSG_BUCKET_LEN));
-            pfrom->Misbehaving(1);
+            Misbehaving(pfrom->GetId(), 1);
             return false;
         };
 
         if (vchData.size() < 4 + nInvBuckets*16)
         {
             LogPrint("smessage", "Remote node did not send enough data.\n");
-            pfrom->Misbehaving(1);
+            Misbehaving(pfrom->GetId(), 1);
             return false;
         };
 
@@ -1371,14 +1371,14 @@ bool SecureMsgReceiveData(CNode* pfrom, std::string strCommand, CDataStream& vRe
                     LogPrint("smessage", "Not interested in peer bucket %d, has expired.\n", time);
 
                 if (time < now - SMSG_RETENTION - SMSG_TIME_LEEWAY)
-                    pfrom->Misbehaving(1);
+                    Misbehaving(pfrom->GetId(), 1);
                 continue;
             };
             if (time > now + SMSG_TIME_LEEWAY)
             {
                 if (fDebugSmsg)
                     LogPrint("smessage", "Not interested in peer bucket %d, in the future.\n", time);
-                pfrom->Misbehaving(1);
+                Misbehaving(pfrom->GetId(), 1);
                 continue;
             };
 
@@ -1526,7 +1526,7 @@ bool SecureMsgReceiveData(CNode* pfrom, std::string strCommand, CDataStream& vRe
         {
             if (fDebugSmsg)
                 LogPrint("smessage", "Not interested in peer bucket %d, in the future.\n", time);
-            pfrom->Misbehaving(1);
+            Misbehaving(pfrom->GetId(), 1);
             return false;
         };
         
@@ -1693,7 +1693,7 @@ bool SecureMsgReceiveData(CNode* pfrom, std::string strCommand, CDataStream& vRe
         if (vchData.size() < 8)
         {
             LogPrint("smessage", "smsgMatch, not enough data %u.\n", vchData.size());
-            pfrom->Misbehaving(1);
+            Misbehaving(pfrom->GetId(), 1);
             return false;
         };
 
@@ -1756,7 +1756,7 @@ bool SecureMsgReceiveData(CNode* pfrom, std::string strCommand, CDataStream& vRe
         if (vchData.size() < 8)
         {
             LogPrint("smessage", "smsgIgnore, not enough data %u.\n", vchData.size());
-            pfrom->Misbehaving(1);
+            Misbehaving(pfrom->GetId(), 1);
             return false;
         };
 
@@ -2833,7 +2833,7 @@ int SecureMsgReceive(CNode* pfrom, std::vector<uint8_t>& vchData)
     if (nBunch == 0 || nBunch > 500)
     {
         LogPrint("smessage", "Error: Invalid no. messages received in bunch %u, for bucket %d.\n", nBunch, bktTime);
-        pfrom->Misbehaving(1);
+        Misbehaving(pfrom->GetId(), 1);
         
         {
             LOCK(cs_smsg);
@@ -2863,10 +2863,10 @@ int SecureMsgReceive(CNode* pfrom, std::vector<uint8_t>& vchData)
             // message dropped
             if (rv == 2) // invalid proof of work
             {
-                pfrom->Misbehaving(10);
+                Misbehaving(pfrom->GetId(), 1);
             } else
             {
-                pfrom->Misbehaving(1);
+                Misbehaving(pfrom->GetId(), 1);
             };
             continue;
         };

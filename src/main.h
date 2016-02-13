@@ -122,6 +122,7 @@ class CReserveKey;
 class CTxDB;
 class CTxIndex;
 class CWalletInterface;
+struct CNodeStateStats;
 
 /** Register a wallet to receive updates from core */
 void RegisterWallet(CWalletInterface* pwalletIn);
@@ -180,10 +181,14 @@ int GetInputAgeIX(uint256 nTXHash, CTxIn& vin);
 int GetIXConfirmations(uint256 nTXHash);
 /** Abort with a message */
 bool AbortNode(const std::string &msg, const std::string &userMessage="");
-/** Increase a node's misbehavior score. */
-void Misbehaving(NodeId nodeid, int howmuch);
+/** Get statistics from node state */
+bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 
 int64_t GetMasternodePayment(int nHeight, int64_t blockValue);
+
+struct CNodeStateStats {
+    int nMisbehavior;
+};
 
 
 /** Position on disk for a particular transaction. */
