@@ -26,8 +26,6 @@ class CMasternodeMan;
 
 extern CMasternodeMan mnodeman;
 
-extern void Misbehaving(NodeId nodeid, int howmuch);
-
 void DumpMasternodes();
 
 /** Access to the MN database (mncache.dat) */
