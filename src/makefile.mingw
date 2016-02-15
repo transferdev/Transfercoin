@@ -158,7 +158,7 @@ transferd.exe: $(OBJS:obj/%=obj/%)
 
 clean:
 	-rm -f obj/*.o
-	-rm -f darksilkd.exe
+	-rm -f transferd.exe
 	-rm -f obj/build.h
 	cd leveldb && TARGET_OS=NATIVE_WINDOWS $(MAKE) clean && cd ..
 
