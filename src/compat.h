@@ -22,6 +22,7 @@
 #include <netdb.h>
 #include <net/if.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <ifaddrs.h>
 #include <unistd.h>
 
