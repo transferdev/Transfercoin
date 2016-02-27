@@ -51,7 +51,6 @@ int nWalletBackups = 10;
 #endif
 CClientUIInterface uiInterface;
 bool fConfChange;
-bool fMinimizeCoinAge;
 unsigned int nNodeLifespan;
 unsigned int nDerivationMethodIndex;
 unsigned int nMinerSleep;
@@ -257,7 +256,6 @@ std::string HelpMessage()
     strUsage += "  -blocknotify=<cmd>     " + _("Execute command when the best block changes (%s in cmd is replaced by block hash)") + "\n";
     strUsage += "  -walletnotify=<cmd>    " + _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)") + "\n";
     strUsage += "  -confchange            " + _("Require a confirmations for change (default: 0)") + "\n";
-    strUsage += "  -minimizecoinage       " + _("Minimize weight consumption (experimental) (default: 0)") + "\n";
     strUsage += "  -alertnotify=<cmd>     " + _("Execute command when a relevant alert is received (%s in cmd is replaced by message)") + "\n";
     strUsage += "  -upgradewallet         " + _("Upgrade wallet to latest format") + "\n";
     strUsage += "  -createwalletbackups=<n> " + _("Number of automatic wallet backups (default: 10)") + "\n";
@@ -491,7 +489,6 @@ bool AppInit2(boost::thread_group& threadGroup)
 #endif
 
     fConfChange = GetBoolArg("-confchange", false);
-    fMinimizeCoinAge = GetBoolArg("-minimizecoinage", false);
 
 #ifdef ENABLE_WALLET
     if (mapArgs.count("-mininput"))
