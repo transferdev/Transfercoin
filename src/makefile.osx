@@ -69,6 +69,7 @@ CFLAGS += -Wall -Wextra -Wformat -Wno-ignored-qualifiers -Wformat-security -Wno-
 
 OBJS= \
     obj/alert.o \
+    obj/allocators.o \
     obj/version.o \
     obj/cleanse.o \
     obj/checkpoints.o \
