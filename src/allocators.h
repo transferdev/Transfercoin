@@ -7,6 +7,7 @@
 
 #include "cleanse.h"
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/once.hpp>
 #include <map>
 #include <string>
 #include <string.h>
@@ -32,6 +33,11 @@ public:
         // Determine bitmask for extracting page from address
         assert(!(page_size & (page_size-1))); // size must be power of two
         page_mask = ~(page_size - 1);
+    }
+
+    ~LockedPageManagerBase()
+    {
+        assert(this->GetLockedPageCount() == 0);
     }
 
     // For all pages in affected range, increase lock count
@@ -117,13 +123,39 @@ public:
 /**
  * Singleton class to keep track of locked (ie, non-swappable) memory pages, for use in
  * std::allocator templates.
+ *
+ * Some implementations of the STL allocate memory in some constructors (i.e., see
+ * MSVC's vector<T> implementation where it allocates 1 byte of memory in the allocator.)
+ * Due to the unpredictable order of static initializers, we have to make sure the
+ * LockedPageManager instance exists before any other STL-based objects that use
+ * secure_allocator are created. So instead of having LockedPageManager also be
+ * static-intialized, it is created on demand.
  */
 class LockedPageManager: public LockedPageManagerBase<MemoryPageLocker>
 {
 public:
-    static LockedPageManager instance; // instantiated in util.cpp
+    static LockedPageManager& Instance() 
+    {
+        boost::call_once(LockedPageManager::CreateInstance, LockedPageManager::init_flag);
+        return *LockedPageManager::_instance;
+    }
+
 private:
     LockedPageManager();
+
+    static void CreateInstance()
+    {
+        // Using a local static instance guarantees that the object is initialized
+        // when it's first needed and also deinitialized after all objects that use
+        // it are done with it.  I can think of one unlikely scenario where we may
+        // have a static deinitialization order/problem, but the check in
+        // LockedPageManagerBase's destructor helps us detect if that ever happens.
+        static LockedPageManager instance;
+        LockedPageManager::_instance = &instance;
+    }
+
+    static LockedPageManager* _instance;
+    static boost::once_flag init_flag;
 };
 
 //
@@ -131,12 +163,12 @@ private:
 // Intended for non-dynamically allocated structures.
 //
 template<typename T> void LockObject(const T &t) {
-    LockedPageManager::instance.LockRange((void*)(&t), sizeof(T));
+    LockedPageManager::Instance().LockRange((void*)(&t), sizeof(T));
 }
 
 template<typename T> void UnlockObject(const T &t) {
     memory_cleanse((void*)(&t), sizeof(T));
-    LockedPageManager::instance.UnlockRange((void*)(&t), sizeof(T));
+    LockedPageManager::Instance().UnlockRange((void*)(&t), sizeof(T));
 }
 
 //
@@ -168,7 +200,7 @@ struct secure_allocator : public std::allocator<T>
         T *p;
         p = std::allocator<T>::allocate(n, hint);
         if (p != NULL)
-            LockedPageManager::instance.LockRange(p, sizeof(T) * n);
+            LockedPageManager::Instance().LockRange(p, sizeof(T) * n);
         return p;
     }
 
@@ -177,7 +209,7 @@ struct secure_allocator : public std::allocator<T>
         if (p != NULL)
         {
             memory_cleanse(p, sizeof(T) * n);
-            LockedPageManager::instance.UnlockRange(p, sizeof(T) * n);
+            LockedPageManager::Instance().UnlockRange(p, sizeof(T) * n);
         }
         std::allocator<T>::deallocate(p, n);
     }
