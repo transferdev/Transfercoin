@@ -71,7 +71,7 @@ OBJS= \
     obj/alert.o \
     obj/allocators.o \
     obj/version.o \
-    obj/cleanse.o \
+    obj/support/cleanse.o \
     obj/checkpoints.o \
     obj/netbase.o \
     obj/addrman.o \
