@@ -507,6 +507,17 @@ bool CheckStake(CBlock* pblock, CWallet& wallet)
         // Process this block the same as if we had received it from another node
         if (!ProcessBlock(NULL, pblock))
             return error("CheckStake() : ProcessBlock, block not accepted");
+        else
+        {
+            //ProcessBlock successful for PoS. now FixSpentCoins.
+            int nMismatchSpent;
+            CAmount nBalanceInQuestion;
+            wallet.FixSpentCoins(nMismatchSpent, nBalanceInQuestion);
+            if (nMismatchSpent != 0)
+            {
+                LogPrintf("PoS mismatched spent coins = %d and balance affects = %d \n", nMismatchSpent, nBalanceInQuestion);
+            }
+        }
     }
 
     return true;
