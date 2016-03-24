@@ -3,7 +3,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef _BITCOIN_COMPAT_H
-#define _BITCOIN_COMPAT_H 1
+#define _BITCOIN_COMPAT_H
 
 #ifdef WIN32
 #ifdef _WIN32_WINNT
@@ -17,7 +17,6 @@
 #define NOMINMAX
 #endif
 #include <winsock2.h>
-#include <mswsock.h>
 #include <ws2tcpip.h>
 #else
 #include <sys/types.h>
@@ -30,15 +29,14 @@
 #include <ifaddrs.h>
 #include <unistd.h>
 
-typedef u_int SOCKET;
 #endif
 
 
 #ifdef WIN32
 #define MSG_NOSIGNAL        0
 #define MSG_DONTWAIT        0
-typedef int socklen_t;
 #else
+typedef u_int SOCKET;
 #include "errno.h"
 #define WSAGetLastError()   errno
 #define WSAEINVAL           EINVAL
