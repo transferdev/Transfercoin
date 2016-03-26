@@ -58,7 +58,8 @@ HEADERS = $(wildcard *.h)
 
 OBJS= \
     obj/alert.o \
-    obj/cleanse.o \
+    obj/allocators.o \
+    obj/support/cleanse.o \
     obj/base58.o \
     obj/version.o \
     obj/checkpoints.o \

@@ -115,8 +115,6 @@ extern bool fHaveGUI;
 extern bool fUseFastIndex;
 extern unsigned int nDerivationMethodIndex;
 
-extern bool fMinimizeCoinAge;
-
 extern bool fLargeWorkForkFound;
 extern bool fLargeWorkInvalidChainFound;
 
