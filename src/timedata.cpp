@@ -30,27 +30,25 @@ int64_t GetTimeOffset()
     return nTimeOffset;
 }
 
-#define TRANSFER_TIMEDATA_MAX_SAMPLES 200
-
 int64_t GetAdjustedTime()
 {
     return GetTime() + GetTimeOffset();
 }
 
-void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
+void AddTimeData(const CNetAddr& ip, int64_t nTime)
 {
+    int64_t nOffsetSample = nTime - GetTime();
+
     LOCK(cs_nTimeOffset);
     // Ignore duplicates
     static set<CNetAddr> setKnown;
-    if (setKnown.size() == TRANSFER_TIMEDATA_MAX_SAMPLES)
-        return;
     if (!setKnown.insert(ip).second)
         return;
 
     // Add data
-    static CMedianFilter<int64_t> vTimeOffsets(TRANSFER_TIMEDATA_MAX_SAMPLES,0);
+    static CMedianFilter<int64_t> vTimeOffsets(200,0);
     vTimeOffsets.input(nOffsetSample);
-    LogPrint("net", "Added time data, samples %d, offset %+d (%+d minutes)\n", vTimeOffsets.size(), nOffsetSample, nOffsetSample/60);
+    LogPrintf("Added time data, samples %d, offset %+d (%+d minutes)\n", vTimeOffsets.size(), nOffsetSample, nOffsetSample/60);
 
     // There is a known issue here (see issue #4521):
     //
@@ -100,11 +98,12 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
                     uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_WARNING);
                 }
             }
-        }        
-        BOOST_FOREACH(int64_t n, vSorted)
-            LogPrint("net", "%+d  ", n);
-        LogPrint("net", "|  ");
-
-        LogPrint("net", "nTimeOffset = %+d  (%+d minutes)\n", nTimeOffset, nTimeOffset/60);
+        }
+        if (fDebug) {
+            BOOST_FOREACH(int64_t n, vSorted)
+                LogPrintf("%+d  ", n);
+            LogPrintf("|  ");
+        }
+        LogPrintf("nTimeOffset = %+d  (%+d minutes)\n", nTimeOffset, nTimeOffset/60);
     }
 }
