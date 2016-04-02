@@ -4,6 +4,8 @@
 
 #include "rpcserver.h"
 
+
+#include "main.h"
 #include "alert.h"
 #include "main.h"
 #include "net.h"
@@ -75,7 +77,8 @@ Value getpeerinfo(const Array& params, bool fHelp)
 
     BOOST_FOREACH(const CNodeStats& stats, vstats) {
         Object obj;
-
+        CNodeStateStats statestats;
+        bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
         obj.push_back(Pair("addr", stats.addrName));
         if (!(stats.addrLocal.empty()))
             obj.push_back(Pair("addrlocal", stats.addrLocal));
@@ -85,6 +88,7 @@ Value getpeerinfo(const Array& params, bool fHelp)
         obj.push_back(Pair("bytessent", (int64_t)stats.nSendBytes));
         obj.push_back(Pair("bytesrecv", (int64_t)stats.nRecvBytes));
         obj.push_back(Pair("conntime", (int64_t)stats.nTimeConnected));
+        obj.push_back(Pair("timeoffset", stats.nTimeOffset));
         obj.push_back(Pair("pingtime", stats.dPingTime));
         if (stats.dPingWait > 0.0)
             obj.push_back(Pair("pingwait", stats.dPingWait));
@@ -92,7 +96,9 @@ Value getpeerinfo(const Array& params, bool fHelp)
         obj.push_back(Pair("subver", stats.strSubVer));
         obj.push_back(Pair("inbound", stats.fInbound));
         obj.push_back(Pair("startingheight", stats.nStartingHeight));
-        obj.push_back(Pair("banscore", stats.nMisbehavior));
+        if (fStateStats) {
+            obj.push_back(Pair("banscore", statestats.nMisbehavior));
+        }
         obj.push_back(Pair("syncnode", stats.fSyncNode));
 
         ret.push_back(obj);

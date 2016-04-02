@@ -74,6 +74,9 @@ private slots:
 
     void on_KeyPasteButton_clicked();
     void on_SecretPasteButton_clicked();
+    void on_CSPasteButton_clicked();
+    void on_WithdrawPasteButton_clicked();
+    void on_DepositCopyButton_clicked();
 
     int SetExchangeInfoTextLabels();
 

@@ -43,7 +43,7 @@ bool CMasternodeConfig::read(boost::filesystem::path path) {
                 donationPercent = donation.substr(pos + 1);
                 donationAddress = donation.substr(0, pos);
             }
-            CBitcoinAddress address(donationAddress);
+            CTransfercoinAddress address(donationAddress);
             if (!address.IsValid()) {
                 LogPrintf("Invalid Transfer address in masternode.conf line: %s\n", line.c_str());
                 streamConfig.close();

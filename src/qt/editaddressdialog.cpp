@@ -6,6 +6,7 @@
 
 #include <QDataWidgetMapper>
 #include <QMessageBox>
+#include <QClipboard>
 
 EditAddressDialog::EditAddressDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
@@ -147,4 +148,10 @@ void EditAddressDialog::setAddress(const QString &address)
 {
     this->address = address;
     ui->addressEdit->setText(address);
+}
+
+void EditAddressDialog::on_EditAddressPasteButton_clicked()
+{
+    // Paste text from clipboard into recipient field
+    ui->addressEdit->setText(QApplication::clipboard()->text());
 }
