@@ -37,7 +37,7 @@ BUILD LINUX
 BUILD WINDOWS
 -------------
 
-1) Download Windows Build Environment.rar from https://github.com/Infernoman/Transfercoin/releases/tag/WBE and unpack to C:/
+1) Download Qt.zip from https://github.com/transferdev/Transfercoin/releases/tag/1.2.3B and unpack to C:/
 
 2) Download Transfercoin source from https://github.com/transferdev/Transfercoin/archive/master.zip 
 
@@ -65,6 +65,6 @@ BUILD WINDOWS
 
 12) cd ../Transfercoin
 
-13) Type "qmake USE_UPNP=-" and hit enter to run
+13) Type "qmake USE_UPNP=0" and hit enter to run
 
 14) Type "mingw32-make" and hit enter to start building. When it's finished you can find your .exe in the release folder.
