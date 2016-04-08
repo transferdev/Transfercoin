@@ -170,57 +170,6 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_6">
-     <property name="bottomMargin">
-      <number>0</number>
-     </property>
-     <item>
-      <widget class="QLabel" name="donationaddressLine">
-       <property name="text">
-        <string>Donation Address</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="donationaddressLineEdit"/>
-     </item>
-     <item>
-      <widget class="QToolButton" name="AddEditDonationPasteButton">
-       <property name="toolTip">
-        <string>Paste address from clipboard</string>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="icon">
-        <iconset resource="../bitcoin.qrc">
-         <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
-       </property>
-       <property name="shortcut">
-        <string>Alt+P</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_7">
-     <property name="bottomMargin">
-      <number>0</number>
-     </property>
-     <item>
-      <widget class="QLabel" name="donationpercentageLine">
-       <property name="text">
-        <string>Donation %</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="donationpercentageLineEdit"/>
-     </item>
-    </layout>
-   </item>
-   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_Buttons">
      <item>
       <widget class="QPushButton" name="okButton">

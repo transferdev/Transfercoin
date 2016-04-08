@@ -139,7 +139,7 @@ bool RecvLine(SOCKET hSocket, string& strLine)
     while (true)
     {
         char c;
-		int nBytes = recv(hSocket, &c, 1, 0);
+        int nBytes = recv(hSocket, &c, 1, 0);
 
         if (nBytes > 0)
         {
@@ -207,7 +207,7 @@ void static AdvertizeLocal()
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
-		if (pnode->fSuccessfullyConnected)
+        if (pnode->fSuccessfullyConnected)
         {
             CAddress addrLocal = GetLocalAddress(&pnode->addr);
             if (addrLocal.IsRoutable() && (CService)addrLocal != (CService)pnode->addrLocal)
@@ -365,7 +365,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool darkSendMaste
         CNode* pnode = FindNode((CService)addrConnect);
         if (pnode)
         {
-	    if(darkSendMaster)
+            if(darkSendMaster)
                 pnode->fDarkSendMaster = true;
 
             pnode->AddRef();
@@ -816,7 +816,7 @@ void ThreadSocketHandler()
                     if (pnode->fInbound)
                         nInbound++;
             }
-			int nMaxOutbound = min(MAX_OUTBOUND_CONNECTIONS, (int)GetArg("-maxconnections", 25));
+            int nMaxOutbound = min(MAX_OUTBOUND_CONNECTIONS, (int)GetArg("-maxconnections", 25));
             if (hSocket == INVALID_SOCKET)
             {
                 int nErr = WSAGetLastError();
@@ -1022,8 +1022,8 @@ void ThreadMapPort()
         string strDesc = "Transfer " + FormatFullVersion();
 
         try {
-          while (!ShutdownRequested()) {
-		boost::this_thread::interruption_point();
+            while (!ShutdownRequested()) {
+                boost::this_thread::interruption_point();
 
 #ifndef UPNPDISCOVER_SUCCESS
                 /* miniupnpc 1.5 */

@@ -199,8 +199,8 @@ void MasternodeManager::on_startButton_clicked()
     BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
         if(mne.getAlias() == sAlias) {
             std::string errorMessage;
-            std::string strDonateAddress = mne.getDonationAddress();
-            std::string strDonationPercentage = mne.getDonationPercentage();
+            std::string strDonateAddress = "";
+            std::string strDonationPercentage = "";
 
             bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strDonateAddress, strDonationPercentage, errorMessage);
 
@@ -237,8 +237,8 @@ void MasternodeManager::on_startAllButton_clicked()
         total++;
 
         std::string errorMessage;
-        std::string strDonateAddress = mne.getDonationAddress();
-        std::string strDonationPercentage = mne.getDonationPercentage();
+        std::string strDonateAddress = "";
+        std::string strDonationPercentage = "";
 
         bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strDonateAddress, strDonationPercentage, errorMessage);
 
@@ -266,8 +266,8 @@ void MasternodeManager::on_UpdateButton_clicked()
 {
     BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
         std::string errorMessage;
-        std::string strDonateAddress = mne.getDonationAddress();
-        std::string strDonationPercentage = mne.getDonationPercentage();
+        std::string strDonateAddress = "";
+        std::string strDonationPercentage = "";
 
         std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
         if (errorMessage == ""){
