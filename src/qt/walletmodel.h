@@ -195,11 +195,13 @@ public:
     void lockCoin(COutPoint& output);
     void unlockCoin(COutPoint& output);
     void listLockedCoins(std::vector<COutPoint>& vOutpts);
+    bool processingQueuedTransactions() { return fProcessingQueuedTransactions; }
 
 private:
     CWallet *wallet;
     bool fHaveWatchOnly;
     bool fForceCheckBalanceChanged;
+    bool fProcessingQueuedTransactions;
 
     // Wallet has an options model for wallet-specific options
     // (transaction fee, for example)
@@ -266,6 +268,8 @@ public slots:
     void updateWatchOnlyFlag(bool fHaveWatchonly);
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
+    /* Needed to update fProcessingQueuedTransactions through a QueuedConnection */
+    void setProcessingQueuedTransactions(bool value) { fProcessingQueuedTransactions = value; }
 
 };
 

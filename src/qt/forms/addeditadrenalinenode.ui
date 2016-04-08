@@ -65,6 +65,23 @@
      <item>
       <widget class="QLineEdit" name="addressLineEdit"/>
      </item>
+     <item>
+      <widget class="QToolButton" name="AddEditAddressPasteButton">
+       <property name="toolTip">
+        <string>Paste address from clipboard</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
+       </property>
+       <property name="shortcut">
+        <string>Alt+P</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
@@ -81,6 +98,23 @@
      </item>
      <item>
       <widget class="QLineEdit" name="privkeyLineEdit"/>
+     </item>
+     <item>
+      <widget class="QToolButton" name="AddEditPrivkeyPasteButton">
+       <property name="toolTip">
+        <string>Paste address from clipboard</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
+       </property>
+       <property name="shortcut">
+        <string>Alt+P</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -99,6 +133,23 @@
      <item>
       <widget class="QLineEdit" name="txhashLineEdit"/>
      </item>
+     <item>
+      <widget class="QToolButton" name="AddEditTxhashPasteButton">
+       <property name="toolTip">
+        <string>Paste address from clipboard</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
+       </property>
+       <property name="shortcut">
+        <string>Alt+P</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
@@ -115,40 +166,6 @@
      </item>
      <item>
       <widget class="QLineEdit" name="outputindexLineEdit"/>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_6">
-     <property name="bottomMargin">
-      <number>0</number>
-     </property>
-     <item>
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Donation Address</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="donationaddressLineEdit"/>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_7">
-     <property name="bottomMargin">
-      <number>0</number>
-     </property>
-     <item>
-      <widget class="QLabel" name="label_7">
-       <property name="text">
-        <string>Donation %</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="donationpercentageLineEdit"/>
      </item>
     </layout>
    </item>
@@ -175,6 +192,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../bitcoin.qrc"/>
+ </resources>
  <connections/>
 </ui>

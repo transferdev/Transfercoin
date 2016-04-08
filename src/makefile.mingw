@@ -58,7 +58,8 @@ HEADERS = $(wildcard *.h)
 
 OBJS= \
     obj/alert.o \
-    obj/cleanse.o \
+    obj/allocators.o \
+    obj/support/cleanse.o \
     obj/base58.o \
     obj/version.o \
     obj/checkpoints.o \
@@ -156,18 +157,9 @@ obj/%.o: %.c $(HEADERS)
 transferd.exe: $(OBJS:obj/%=obj/%)
 	g++ $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
-obj/scrypt-x86.o: scrypt-x86.S
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
-
-obj/scrypt-x86_64.o: scrypt-x86_64.S
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
-
-obj/scrypt-arm.o: scrypt-arm.S
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
-
 clean:
 	-rm -f obj/*.o
-	-rm -f darksilkd.exe
+	-rm -f transferd.exe
 	-rm -f obj/build.h
 	cd leveldb && TARGET_OS=NATIVE_WINDOWS $(MAKE) clean && cd ..
 

@@ -195,7 +195,7 @@ bool CMasternodeScanningError::SignatureValid()
     pubkey.SetDestination(pmn->pubkey2.GetID());
     CTxDestination address1;
     ExtractDestination(pubkey, address1);
-    CBitcoinAddress address2(address1);
+    CTransfercoinAddress address2(address1);
 
     if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchMasterNodeSignature, strMessage, errorMessage)) {
         LogPrintf("CMasternodeScanningError::SignatureValid() - Verify message failed\n");
@@ -224,7 +224,7 @@ bool CMasternodeScanningError::Sign()
     pubkey.SetDestination(pubkey2.GetID());
     CTxDestination address1;
     ExtractDestination(pubkey, address1);
-    CBitcoinAddress address2(address1);
+    CTransfercoinAddress address2(address1);
     //LogPrintf("signing pubkey2 %s \n", address2.ToString().c_str());
 
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchMasterNodeSignature, key2)) {
