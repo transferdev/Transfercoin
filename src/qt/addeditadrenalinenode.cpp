@@ -19,11 +19,6 @@ AddEditAdrenalineNode::AddEditAdrenalineNode(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AddEditAdrenalineNode)
 {
-    ui->donationpercentageLine->setVisible(false);
-    ui->donationpercentageLineEdit->setVisible(false);
-    ui->donationaddressLine->setVisible(false);
-    ui->donationaddressLineEdit->setVisible(false);
-    ui->AddEditDonationPasteButton->setVisible(false);
     ui->setupUi(this);
 
 }
@@ -78,22 +73,15 @@ void AddEditAdrenalineNode::on_okButton_clicked()
         std::string sMasternodePrivKey = ui->privkeyLineEdit->text().toStdString();
         std::string sTxHash = ui->txhashLineEdit->text().toStdString();
         std::string sOutputIndex = ui->outputindexLineEdit->text().toStdString();
-        std::string sDonationAddress = ui->donationaddressLineEdit->text().toStdString();
-        std::string sDonationPercentage = ui->donationpercentageLineEdit->text().toStdString();
 
         boost::filesystem::path pathConfigFile = GetDataDir() / "masternode.conf";
         boost::filesystem::ofstream stream (pathConfigFile.string(), ios::out | ios::app);
         if (stream.is_open())
         {
-            stream << sAlias << " " << sAddress << " " << sMasternodePrivKey << " " << sTxHash << " " << sOutputIndex;
-            if (sDonationAddress != "" && sDonationAddress != ""){
-                stream << " " << sDonationAddress << " " << sDonationPercentage << std::endl;
-            } else {
-                stream << std::endl;
-            }
+            stream << sAlias << " " << sAddress << " " << sMasternodePrivKey << " " << sTxHash << " " << sOutputIndex << std::endl;
             stream.close();
         }
-        masternodeConfig.add(sAlias, sAddress, sMasternodePrivKey, sTxHash, sOutputIndex, sDonationAddress, sDonationPercentage);
+        masternodeConfig.add(sAlias, sAddress, sMasternodePrivKey, sTxHash, sOutputIndex);
         accept();
     }
 }
@@ -119,10 +107,4 @@ void AddEditAdrenalineNode::on_AddEditTxhashPasteButton_clicked()
 {
     // Paste text from clipboard into recipient field
     ui->txhashLineEdit->setText(QApplication::clipboard()->text());
-}
-
-void AddEditAdrenalineNode::on_AddEditDonationPasteButton_clicked()
-{
-    // Paste text from clipboard into recipient field
-    ui->donationaddressLineEdit->setText(QApplication::clipboard()->text());
 }

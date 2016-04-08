@@ -26,7 +26,6 @@ private slots:
     void on_AddEditAddressPasteButton_clicked();
     void on_AddEditPrivkeyPasteButton_clicked();
     void on_AddEditTxhashPasteButton_clicked();
-    void on_AddEditDonationPasteButton_clicked();
 
 signals:
 
