@@ -397,8 +397,8 @@ Value masternode(const Array& params, bool fHelp)
     		if(mne.getAlias() == alias) {
     			found = true;
     			std::string errorMessage;
-                std::string strDonateAddress = mne.getDonationAddress();
-                std::string strDonationPercentage = mne.getDonationPercentage();
+                std::string strDonateAddress = "";
+                std::string strDonationPercentage = "";
 
                 bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strDonateAddress, strDonationPercentage, errorMessage);
   
@@ -451,8 +451,8 @@ Value masternode(const Array& params, bool fHelp)
 			total++;
 
 			std::string errorMessage;
-            std::string strDonateAddress = mne.getDonationAddress();
-            std::string strDonationPercentage = mne.getDonationPercentage();
+            std::string strDonateAddress = "";
+            std::string strDonationPercentage = "";
 
             bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strDonateAddress, strDonationPercentage, errorMessage);
 
@@ -604,8 +604,6 @@ Value masternode(const Array& params, bool fHelp)
     		mnObj.push_back(Pair("privateKey", mne.getPrivKey()));
     		mnObj.push_back(Pair("txHash", mne.getTxHash()));
     		mnObj.push_back(Pair("outputIndex", mne.getOutputIndex()));
-    		mnObj.push_back(Pair("donationAddress", mne.getDonationAddress()));			
-	        mnObj.push_back(Pair("donationPercent", mne.getDonationPercentage()));
     		resultObj.push_back(Pair("masternode", mnObj));
     	}
 
