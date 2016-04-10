@@ -6,7 +6,7 @@
 
 #include "peertablemodel.h"
 
-#include <QDialog>
+#include <QWidget>
 
 namespace Ui {
     class RPCConsole;
@@ -17,7 +17,7 @@ class QItemSelection;
 class CNodeCombinedStats;
 
 /** Local Bitcoin RPC console. */
-class RPCConsole: public QDialog
+class RPCConsole: public QWidget
 {
     Q_OBJECT
 
@@ -37,6 +37,7 @@ public:
 
 protected:
     virtual bool eventFilter(QObject* obj, QEvent *event);
+    void keyPressEvent(QKeyEvent *);
 
 private:
     /** show detailed information on ui about selected node */

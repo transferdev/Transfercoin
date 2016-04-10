@@ -365,8 +365,8 @@ Value setban(const Array& params, bool fHelp)
             banTime = params[2].get_int64();
 
         bool absolute = false;
-        if (params.size() == 4 && params[3].get_bool() == true)
-            absolute = true;
+        if (params.size() == 4)
+            absolute = params[3].get_bool();
 
         isSubnet ? CNode::Ban(subNet, banTime, absolute) : CNode::Ban(netAddr, banTime, absolute);
 

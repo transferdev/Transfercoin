@@ -194,7 +194,7 @@ void RPCExecutor::request(const QString &command)
 }
 
 RPCConsole::RPCConsole(QWidget *parent) :
-    QDialog(parent),
+    QWidget(parent),
     ui(new Ui::RPCConsole),
     historyPtr(0)
 {
@@ -262,7 +262,7 @@ bool RPCConsole::eventFilter(QObject* obj, QEvent *event)
             }
         }
     }
-    return QDialog::eventFilter(obj, event);
+    return QWidget::eventFilter(obj, event);
 }
 
 void RPCConsole::setClientModel(ClientModel *model)
@@ -282,6 +282,23 @@ void RPCConsole::setClientModel(ClientModel *model)
 
         updateTrafficStats(model->getTotalBytesRecv(), model->getTotalBytesSent());
         connect(model, SIGNAL(bytesChanged(quint64,quint64)), this, SLOT(updateTrafficStats(quint64, quint64)));
+
+        // set up peer table
+        ui->peerWidget->setModel(model->getPeerTableModel());
+        ui->peerWidget->verticalHeader()->hide();
+        ui->peerWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        ui->peerWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
+        ui->peerWidget->setSelectionMode(QAbstractItemView::SingleSelection);
+        ui->peerWidget->setColumnWidth(PeerTableModel::Address, ADDRESS_COLUMN_WIDTH);
+        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(ui->peerWidget, MINIMUM_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH);
+
+        // connect the peerWidget's selection model to our peerSelected() handler
+        QItemSelectionModel *peerSelectModel = ui->peerWidget->selectionModel();
+        connect(peerSelectModel,
+                SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
+                this,
+                SLOT(peerSelected(const QItemSelection &, const QItemSelection &)));
+        connect(model->getPeerTableModel(), SIGNAL(layoutChanged()), this, SLOT(peerLayoutChanged()));
 
         // Provide initial values
         ui->clientVersion->setText(model->formatFullVersion());
@@ -336,6 +353,14 @@ void RPCConsole::clear()
     message(CMD_REPLY, (tr("Welcome to the Transfer RPC console.") + "<br>" +
                         tr("Use up and down arrows to navigate history, and <b>Ctrl-L</b> to clear screen.") + "<br>" +
                         tr("Type <b>help</b> for an overview of available commands.")), true);
+}
+
+void RPCConsole::keyPressEvent(QKeyEvent *event)
+{
+    if(windowType() != Qt::Widget && event->key() == Qt::Key_Escape)
+    {
+        close();
+    }
 }
 
 void RPCConsole::message(int category, const QString &message, bool html)
@@ -510,7 +535,7 @@ void RPCConsole::showBackups()
 
 void RPCConsole::peerSelected(const QItemSelection &selected, const QItemSelection &deselected)
 {
-    if (selected.indexes().isEmpty())
+    if (!clientModel || selected.indexes().isEmpty())
         return;
 
     // mark the cached banscore as unknown
@@ -529,6 +554,9 @@ void RPCConsole::peerSelected(const QItemSelection &selected, const QItemSelecti
 
 void RPCConsole::peerLayoutChanged()
 {
+    if (!clientModel)
+        return;
+
     const CNodeCombinedStats *stats = NULL;
     bool fUnselect = false, fReselect = false, fDisconnected = false;
 
