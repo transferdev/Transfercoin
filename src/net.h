@@ -32,6 +32,8 @@ extern int nBestHeight;
 static const int PING_INTERVAL = 1 * 60;
 /** Time after which to disconnect, after waiting for a ping response (or inactivity). */
 static const int TIMEOUT_INTERVAL = 20 * 60;
+/** Maximum length of strSubVer in `version` message */
+static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 
 inline unsigned int ReceiveFloodSize() { return 2000*GetArg("-maxreceivebuffer", 5*1000); }
 inline unsigned int SendBufferSize() { return 5000*GetArg("-maxsendbuffer", 1*1000); }
@@ -127,6 +129,9 @@ extern CCriticalSection cs_nLastNodeId;
 
 extern NodeId nLastNodeId;
 extern CCriticalSection cs_nLastNodeId;
+
+/** Subversion as sent to the P2P network in `version` messages */
+extern std::string strSubVersion;
 
 class CNodeStats
 {
