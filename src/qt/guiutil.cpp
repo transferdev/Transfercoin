@@ -825,4 +825,5 @@ QString formatPingTime(double dPingTime)
     return dPingTime == 0 ? QObject::tr("N/A") : QString(QObject::tr("%1 s")).arg(QString::number(dPingTime, 'f', 3));
 }
 
+
 } // namespace GUIUtil

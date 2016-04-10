@@ -164,6 +164,9 @@ namespace GUIUtil
     /* Format a CNodeCombinedStats.dPingTime into a user-readable string or display N/A, if 0*/
     QString formatPingTime(double dPingTime);
 
+    /* Format a CNodeCombinedStats.dPingTime into a user-readable string or display N/A, if 0*/
+    QString formatPingTime(double dPingTime);
+
     /** Help message for Bitcoin-Qt, shown with --help. */
     class HelpMessageBox : public QMessageBox
     {
