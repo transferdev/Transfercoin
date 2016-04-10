@@ -1234,6 +1234,15 @@ public:
         file = NULL;
     }
 
+    /** Get wrapped FILE* without transfer of ownership.
+     * @note Ownership of the FILE* will remain with this class. Use this only if the scope of the
+     * CAutoFile outlives use of the passed pointer.
+     */
+    FILE* Get() const           { return file; }
+
+    /** Return true if the wrapped FILE* is NULL, false otherwise.
+     */
+    bool IsNull() const         { return (file == NULL); }
     FILE* release()             { FILE* ret = file; file = NULL; return ret; }
     operator FILE*()            { return file; }
     FILE* operator->()          { return file; }
