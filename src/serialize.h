@@ -1234,6 +1234,12 @@ public:
         file = NULL;
     }
 
+    /** Get wrapped FILE* with transfer of ownership.
+     * @note This will invalidate the CAutoFile object, and makes it the responsibility of the caller
+     * of this function to clean up the returned FILE*.
+     */
+    FILE* release()             { FILE* ret = file; file = NULL; return ret; }
+
     /** Get wrapped FILE* without transfer of ownership.
      * @note Ownership of the FILE* will remain with this class. Use this only if the scope of the
      * CAutoFile outlives use of the passed pointer.
@@ -1243,13 +1249,6 @@ public:
     /** Return true if the wrapped FILE* is NULL, false otherwise.
      */
     bool IsNull() const         { return (file == NULL); }
-    FILE* release()             { FILE* ret = file; file = NULL; return ret; }
-    operator FILE*()            { return file; }
-    FILE* operator->()          { return file; }
-    FILE& operator*()           { return *file; }
-    FILE** operator&()          { return &file; }
-    FILE* operator=(FILE* pnew) { return file = pnew; }
-
 
     //
     // Stream subset
