@@ -56,7 +56,13 @@ private slots:
     void showEvent(QShowEvent *event);
     void hideEvent(QHideEvent *event);
     /** Show custom context menu on Peers tab */
-    void showMenu(const QPoint& point);
+    void showPeersTableContextMenu(const QPoint& point);
+    /** Show custom context menu on Bans tab */
+    void showBanTableContextMenu(const QPoint& point);
+    /** Hides ban table if no bans are present */
+    void showOrHideBanTableIfRequired();
+    /** clear the selected node */
+    void clearSelectedNode();
     /** clear traffic graph */
     void on_btnClearTrafficGraph_clicked();
     /** paste clipboard to line */
@@ -83,6 +89,10 @@ public slots:
     void peerLayoutChanged();
    /** Disconnect a selected node on the Peers tab */
     void disconnectSelectedNode();
+    /** Ban a selected node on the Peers tab */
+    void banSelectedNode(int bantime);
+    /** Unban a selected node on the Bans tab */
+    void unbanSelectedNode();
     /** Show folder with wallet backups in default browser */
     void showBackups();
 signals:
@@ -101,7 +111,10 @@ private:
     {
         ADDRESS_COLUMN_WIDTH = 200,
         SUBVERSION_COLUMN_WIDTH = 100,
-        PING_COLUMN_WIDTH = 80
+        PING_COLUMN_WIDTH = 80,
+        BANSUBNET_COLUMN_WIDTH = 200,
+        BANTIME_COLUMN_WIDTH = 250
+
     };
 
     Ui::RPCConsole *ui;
@@ -109,7 +122,8 @@ private:
     QStringList history;
     int historyPtr;
     NodeId cachedNodeid;
-    QMenu *contextMenu;
+    QMenu *peersTableContextMenu;
+    QMenu *banTableContextMenu;
 
 };
 

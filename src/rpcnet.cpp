@@ -13,6 +13,7 @@
 #include "protocol.h"
 #include "sync.h"
 #include "timedata.h"
+#include "ui_interface.h"
 #include "util.h"
 
 #include <boost/foreach.hpp>
@@ -381,6 +382,8 @@ Value setban(const Array& params, bool fHelp)
     }
 
     DumpBanlist(); //store banlist to disk
+    uiInterface.BannedListChanged();
+
     return Value::null;
 }
 
@@ -427,6 +430,7 @@ Value clearbanned(const Array& params, bool fHelp)
 
     CNode::ClearBanned();
     DumpBanlist(); //store banlist to disk
+    uiInterface.BannedListChanged();
 
     return Value::null;
 }
