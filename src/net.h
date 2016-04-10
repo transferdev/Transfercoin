@@ -192,6 +192,64 @@ public:
     int readData(const char *pch, unsigned int nBytes);
 };
 
+typedef enum BanReason
+{
+    BanReasonUnknown          = 0,
+    BanReasonNodeMisbehaving  = 1,
+    BanReasonManuallyAdded    = 2
+} BanReason;
+
+class CBanEntry
+{
+public:
+    static const int CURRENT_VERSION=1;
+    int nVersion;
+    int64_t nCreateTime;
+    int64_t nBanUntil;
+    uint8_t banReason;
+
+    CBanEntry()
+    {
+        SetNull();
+    }
+
+    CBanEntry(int64_t nCreateTimeIn)
+    {
+        SetNull();
+        nCreateTime = nCreateTimeIn;
+    }
+  
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(this->nVersion);
+        nVersion = this->nVersion;
+        READWRITE(nCreateTime);
+        READWRITE(nBanUntil);
+        READWRITE(banReason);
+    )
+
+    void SetNull()
+    {
+        nVersion = CBanEntry::CURRENT_VERSION;
+        nCreateTime = 0;
+        nBanUntil = 0;
+        banReason = BanReasonUnknown;
+    }
+
+    std::string banReasonToString()
+    {
+        switch (banReason) {
+        case BanReasonNodeMisbehaving:
+            return "node misbehabing";
+        case BanReasonManuallyAdded:
+            return "manually added";
+        default:
+            return "unknown";
+        }
+    }
+};
+  
+typedef std::map<CSubNet, CBanEntry> banmap_t;
 
 class SecMsgNode
 {
@@ -272,7 +330,7 @@ protected:
 
     // Denial-of-service detection/prevention
     // Key is IP address, value is banned-until-time
-    static std::map<CSubNet, int64_t> setBanned;
+    static banmap_t setBanned;
     static CCriticalSection cs_setBanned;
     static bool setBannedIsDirty;
 
@@ -777,12 +835,12 @@ template<typename T1, typename T2, typename T3, typename T4, typename T5, typena
     static void ClearBanned(); // needed for unit testing
     static bool IsBanned(CNetAddr ip);
     static bool IsBanned(CSubNet subnet);
-    static void Ban(const CNetAddr &ip, int64_t bantimeoffset = 0, bool sinceUnixEpoch = false);
-    static void Ban(const CSubNet &subNet, int64_t bantimeoffset = 0, bool sinceUnixEpoch = false);
+    static void Ban(const CNetAddr &ip, const BanReason &banReason, int64_t bantimeoffset = 0, bool sinceUnixEpoch = false);
+    static void Ban(const CSubNet &subNet, const BanReason &banReason, int64_t bantimeoffset = 0, bool sinceUnixEpoch = false);
     static bool Unban(const CNetAddr &ip);
     static bool Unban(const CSubNet &ip);
-    static void GetBanned(std::map<CSubNet, int64_t> &banmap);
-    static void SetBanned(const std::map<CSubNet, int64_t> &banmap);
+    static void GetBanned(banmap_t &banmap);
+    static void SetBanned(const banmap_t &banmap);
 
     //!check is the banlist has unwritten changes
     static bool BannedSetIsDirty();
@@ -834,8 +892,8 @@ private:
     boost::filesystem::path pathBanlist;
 public:
     CBanDB();
-    bool Write(const std::map<CSubNet, int64_t>& banSet);
-    bool Read(std::map<CSubNet, int64_t>& banSet);
+    bool Write(const banmap_t& banSet);
+    bool Read(banmap_t& banSet);
 };
 
 void DumpBanlist();
