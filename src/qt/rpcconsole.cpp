@@ -16,6 +16,7 @@
 #include <QTime>
 #include <QThread>
 #include <QKeyEvent>
+#include <QMenu>
 #include <QUrl>
 #include <QScrollBar>
 
@@ -198,7 +199,8 @@ RPCConsole::RPCConsole(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::RPCConsole),
     historyPtr(0),
-    cachedNodeid(-1)
+    cachedNodeid(-1),
+    contextMenu(0)
 {
 
     ui->setupUi(this);
@@ -289,9 +291,21 @@ void RPCConsole::setClientModel(ClientModel *model)
         ui->peerWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
         ui->peerWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
         ui->peerWidget->setSelectionMode(QAbstractItemView::SingleSelection);
+        ui->peerWidget->setContextMenuPolicy(Qt::CustomContextMenu);
         ui->peerWidget->setColumnWidth(PeerTableModel::Address, ADDRESS_COLUMN_WIDTH);
         ui->peerWidget->setColumnWidth(PeerTableModel::Subversion, SUBVERSION_COLUMN_WIDTH);
         ui->peerWidget->setColumnWidth(PeerTableModel::Ping, PING_COLUMN_WIDTH);
+
+        // create context menu actions
+        QAction* disconnectAction = new QAction(tr("&Disconnect Node"), this);
+
+        // create context menu
+        contextMenu = new QMenu();
+        contextMenu->addAction(disconnectAction);
+
+        // context menu signals
+        connect(ui->peerWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showMenu(const QPoint&)));
+        connect(disconnectAction, SIGNAL(triggered()), this, SLOT(disconnectSelectedNode()));
 
         // connect the peerWidget's selection model to our peerSelected() handler
         QItemSelectionModel *peerSelectModel = ui->peerWidget->selectionModel();
@@ -621,6 +635,7 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
     ui->peerBytesRecv->setText(FormatBytes(stats->nodeStats.nRecvBytes));
     ui->peerConnTime->setText(GUIUtil::formatDurationStr(GetTime() - stats->nodeStats.nTimeConnected));
     ui->peerPingTime->setText(GUIUtil::formatPingTime(stats->nodeStats.dPingTime));
+    ui->timeoffset->setText(GUIUtil::formatTimeOffset(stats->nodeStats.nTimeOffset));
     ui->peerVersion->setText(QString("%1").arg(stats->nodeStats.nVersion));
     ui->peerSubversion->setText(QString::fromStdString(stats->nodeStats.cleanSubVer));
     ui->peerDirection->setText(stats->nodeStats.fInbound ? tr("Inbound") : tr("Outbound"));
@@ -665,4 +680,22 @@ void RPCConsole::hideEvent(QHideEvent *event)
 
     // stop PeerTableModel auto refresh
     clientModel->getPeerTableModel()->stopAutoRefresh();
+}
+
+void RPCConsole::showMenu(const QPoint& point)
+{
+    QModelIndex index = ui->peerWidget->indexAt(point);
+    if (index.isValid())
+        contextMenu->exec(QCursor::pos());
+}
+
+void RPCConsole::disconnectSelectedNode()
+{
+    // Get currently selected peer address
+    QString strNode = GUIUtil::getEntryData(ui->peerWidget, 0, PeerTableModel::Address);
+    // Find the node, disconnect it and clear the selected node
+    if (CNode *bannedNode = FindNode(strNode.toStdString())) {
+        bannedNode->CloseSocketDisconnect();
+        ui->peerWidget->selectionModel()->clearSelection();
+    }
 }
