@@ -5,6 +5,8 @@
 
 class OptionsModel;
 class AddressTableModel;
+class BanTableModel;
+class PeerTableModel;
 class TransactionTableModel;
 class CWallet;
 
@@ -23,6 +25,8 @@ public:
     ~ClientModel();
 
     OptionsModel *getOptionsModel();
+    PeerTableModel *getPeerTableModel();
+    BanTableModel *getBanTableModel();
 
     int getNumConnections() const;
     QString getMasternodeCountString() const;
@@ -51,6 +55,8 @@ public:
 
 private:
     OptionsModel *optionsModel;
+    PeerTableModel *peerTableModel;
+    BanTableModel *banTableModel;
 
     int cachedNumBlocks;
     int numBlocksAtStartup;
@@ -80,6 +86,7 @@ public slots:
     void updateMnTimer();
     void updateNumConnections(int numConnections);
     void updateAlert(const QString &hash, int status);
+    void updateBanlist();
 };
 
 #endif // CLIENTMODEL_H

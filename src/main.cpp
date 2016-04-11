@@ -3269,8 +3269,8 @@ bool LoadExternalBlockFile(FILE* fileIn)
                 boost::this_thread::interruption_point();
                 unsigned char pchData[65536];
                 do {
-                    fseek(blkdat, nPos, SEEK_SET);
-                    int nRead = fread(pchData, 1, sizeof(pchData), blkdat);
+                    fseek(blkdat.Get(), nPos, SEEK_SET);
+                    int nRead = fread(pchData, 1, sizeof(pchData), blkdat.Get());
                     if (nRead <= 8)
                     {
                         nPos = (unsigned int)-1;
@@ -3292,7 +3292,7 @@ bool LoadExternalBlockFile(FILE* fileIn)
                 } while(true);
                 if (nPos == (unsigned int)-1)
                     break;
-                fseek(blkdat, nPos, SEEK_SET);
+                fseek(blkdat.Get(), nPos, SEEK_SET);
                 unsigned int nSize;
                 blkdat >> nSize;
                 if (nSize > 0 && nSize <= MAX_BLOCK_SIZE)
@@ -3642,12 +3642,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->nVersion = 300;
         if (!vRecv.empty())
             vRecv >> addrFrom >> nNonce;
-        if (!vRecv.empty())
+        if (!vRecv.empty()) {
             vRecv >> pfrom->strSubVer;
+            pfrom->cleanSubVer = SanitizeString(pfrom->strSubVer);
+        }
         if (!vRecv.empty())
             vRecv >> pfrom->nStartingHeight;
-
-        pfrom->cleanSubVer = SanitizeString(pfrom->strSubVer);
 
         // Disconnect if we connected to ourself
         if (nNonce == nLocalHostNonce && nNonce > 1)
@@ -4010,6 +4010,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         bool fMissingInputs = false;
 
+        pfrom->setAskFor.erase(inv.hash);
         mapAlreadyAskedFor.erase(inv);
 
         if (AcceptToMemoryPool(mempool, tx, true, &fMissingInputs, false, ignoreFees))
@@ -4491,7 +4492,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                 LogPrintf("Warning: not banning local node %s!\n", pto->addr.ToString().c_str());
             else {
                 pto->fDisconnect = true;
-                CNode::Ban(pto->addr);
+                CNode::Ban(pto->addr, BanReasonNodeMisbehaving);
             }
             state.fShouldBan = false;
         }
@@ -4595,6 +4596,9 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     vGetData.clear();
                 }
                 mapAlreadyAskedFor[inv] = nNow;
+            } else {
+                //If we're not going to ask, don't expect a response.
+                pto->setAskFor.erase(inv.hash);
             }
             pto->mapAskFor.erase(pto->mapAskFor.begin());
         }
