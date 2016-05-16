@@ -196,6 +196,7 @@ public:
     void unlockCoin(COutPoint& output);
     void listLockedCoins(std::vector<COutPoint>& vOutpts);
     bool processingQueuedTransactions() { return fProcessingQueuedTransactions; }
+    CWallet* getWallet();
 
 private:
     CWallet *wallet;

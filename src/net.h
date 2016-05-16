@@ -525,7 +525,7 @@ public:
         }
     }
 
-    void AskFor(const CInv& inv)
+    void AskFor(const CInv& inv, bool fImmediateRetry = false)
     {
         if (mapAskFor.size() > MAPASKFOR_MAX_SZ || setAskFor.size() > SETASKFOR_MAX_SZ)
             return;
@@ -545,8 +545,11 @@ public:
         nNow = std::max(nNow, nLastTime);
         nLastTime = nNow;
 
-        // Each retry is 2 minutes after the last
-        nRequestTime = std::max(nRequestTime + 2 * 60 * 1000000, nNow);
+        // Retry immediately during initial sync otherwise retry 2 minutes after the last
+        if (fImmediateRetry)
+        	nRequestTime = nNow;
+        else
+            nRequestTime = std::max(nRequestTime + 2 * 60 * 1000000, nNow);
         mapAskFor.insert(std::make_pair(nRequestTime, inv));
     }
 
