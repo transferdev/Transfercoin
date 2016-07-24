@@ -862,7 +862,7 @@ Value movecmd(const Array& params, bool fHelp)
     credit.nTime = nNow;
     credit.strOtherAccount = strFrom;
     credit.strComment = strComment;
-    pwalletMain->AddAccountingEntry(debit, walletdb);
+    pwalletMain->AddAccountingEntry(credit, walletdb);
 
     if (!walletdb.TxnCommit())
         throw JSONRPCError(RPC_DATABASE_ERROR, "database error");
