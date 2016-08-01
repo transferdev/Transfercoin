@@ -15,6 +15,8 @@
 
 #ifdef WIN32
 #include <string.h>
+#else
+#include <fcntl.h>
 #endif
 
 #ifdef USE_UPNP
@@ -23,6 +25,8 @@
 #include <miniupnpc/upnpcommands.h>
 #include <miniupnpc/upnperrors.h>
 #endif
+
+#include <boost/filesystem.hpp>
 
 // Dump addresses to peers.dat every 15 minutes (900s)
 #define DUMP_ADDRESSES_INTERVAL 900
@@ -816,7 +820,7 @@ void ThreadSocketHandler()
                     if (pnode->fInbound)
                         nInbound++;
             }
-            int nMaxOutbound = min(MAX_OUTBOUND_CONNECTIONS, (int)GetArg("-maxconnections", 25));
+            int nMaxOutbound = min(MAX_OUTBOUND_CONNECTIONS, (int)GetArg("-maxconnections", 125));
             if (hSocket == INVALID_SOCKET)
             {
                 int nErr = WSAGetLastError();
@@ -1654,7 +1658,7 @@ void StartNode(boost::thread_group& threadGroup)
 {
     if (semOutbound == NULL) {
         // initialize semaphore
-        int nMaxOutbound = min(MAX_OUTBOUND_CONNECTIONS, (int)GetArg("-maxconnections", 25));
+        int nMaxOutbound = min(MAX_OUTBOUND_CONNECTIONS, (int)GetArg("-maxconnections", 125));
         semOutbound = new CSemaphore(nMaxOutbound);
     }
 
