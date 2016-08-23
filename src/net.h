@@ -12,6 +12,7 @@
 #include "mruset.h"
 #include "netbase.h"
 #include "protocol.h"
+#include "sync.h"
 #include "uint256.h"
 #include "util.h"
 
@@ -361,6 +362,7 @@ public:
         nStartingHeight = -1;
         fStartSync = false;
         fGetAddr = false;
+        fRelayTxes = false;
         hashCheckpointKnown = 0;
         setInventoryKnown.max_size(SendBufferSize() / 1000);
         nPingNonceSent = 0;
