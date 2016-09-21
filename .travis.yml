@@ -26,7 +26,6 @@ addons:
     - qttools5-dev-tools
 before_install:
   - chmod 755 src/leveldb/build_detect_platform
-  - sudo sed -i 's/us-central1.gce/us-central1.gce.clouds/' /etc/apt/sources.list && sudo apt-get update
 script:
   - qmake -qt=qt5 USE_UPNP=-
   - make
