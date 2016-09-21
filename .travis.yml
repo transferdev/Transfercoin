@@ -1,4 +1,4 @@
-sudo: false
+sudo: true
 os:
   - linux
 cache: 
@@ -32,7 +32,7 @@ addons:
     - qttools5-dev-tools
 before_install:
   - chmod 755 src/leveldb/build_detect_platform
-  - add-apt-repository --yes ppa:ubuntu-sdk-team/ppa
+  - sudo add-apt-repository --yes ppa:ubuntu-sdk-team/ppa
 script:
   - qmake -qt=qt5 USE_UPNP=-
   - make
