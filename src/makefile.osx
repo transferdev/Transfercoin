@@ -26,6 +26,7 @@ LIBPATHS= \
 
 USE_UPNP:=1
 USE_WALLET:=1
+USE_IPV6:=1
 
 LIBS= -dead_strip
 
@@ -95,7 +96,6 @@ OBJS= \
     obj/rpcblockchain.o \
     obj/rpcrawtransaction.o \
     obj/rpcsmessage.o \
-    obj/timedata.o \
     obj/script.o \
     obj/scrypt.o \
     obj/sync.o \
@@ -159,6 +159,10 @@ ifdef STATIC
 else
 	LIBS += -lminiupnpc
 endif
+endif
+
+ifneq (${USE_IPV6}, -)
+	DEFS += -DUSE_IPV6=$(USE_IPV6)
 endif
 
 all: transferd
