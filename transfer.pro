@@ -485,7 +485,7 @@ FORMS += \
     src/qt/forms/tradingdialog.ui \
     src/qt/forms/multisigaddressentry.ui \
     src/qt/forms/multisiginputentry.ui \
-    src/qt/forms/multisigdialog.ui
+    src/qt/forms/multisigdialog.ui \
     src/qt/plugins/mrichtexteditor/mrichtextedit.ui
 
 contains(USE_QRCODE, 1) {
