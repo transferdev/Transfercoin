@@ -14,6 +14,7 @@ class OverviewPage;
 class AddressBookPage;
 class SendCoinsDialog;
 class SignVerifyMessageDialog;
+class MultisigDialog;
 class Notificator;
 class RPCConsole;
 class MasternodeManager;
@@ -77,6 +78,7 @@ private:
     AddressBookPage *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
     SignVerifyMessageDialog *signVerifyMessageDialog;
+    MultisigDialog *multisigPage;
     MasternodeManager *masternodeManagerPage;
     MessagePage *messagePage;
     QLabel* netLabel;
@@ -98,6 +100,7 @@ private:
     QAction *addressBookAction;
     QAction *signMessageAction;
     QAction *verifyMessageAction;
+    QAction *multisigAction;
     QAction *aboutAction;
     QAction *receiveCoinsAction;
     QAction *optionsAction;
@@ -169,6 +172,8 @@ public slots:
     */
     void askFee(qint64 nFeeRequired, bool *payFee);
     void handleURI(QString strURI);
+
+    void gotoMultisigPage();
 
 private slots:
     /** Switch to overview (home) page */
