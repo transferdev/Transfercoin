@@ -1,13 +1,6 @@
 sudo: true
 os:
   - linux
-cache: 
-  apt: true
-  directories:
-  - $HOME/transferdev/Transfercoin/src/leveldb
-  - $HOME/transferdev/Transfercoin/src/secp256k1
-  - $HOME/Infernoman/Transfercoin/src/leveldb
-  - $HOME/Infernoman/Transfercoin/src/secp256k1
 addons:
   apt:
     sources:
@@ -33,7 +26,6 @@ addons:
 before_install:
   - chmod 755 src/leveldb/build_detect_platform
   - sudo sed -i 's/us-central1.gce/us-central1.gce.clouds/' /etc/apt/sources.list && sudo apt-get update
-  - sudo add-apt-repository --yes ppa:ubuntu-sdk-team/ppa
 script:
   - qmake -qt=qt5 USE_UPNP=-
   - make
