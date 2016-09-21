@@ -4656,7 +4656,6 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     pto->PushMessage("getdata", vGetData);
                     vGetData.clear();
                 }
-                mapAlreadyAskedFor[inv] = nNow;
             } else {
                 //If we're not going to ask, don't expect a response.
                 pto->setAskFor.erase(inv.hash);
