@@ -3831,7 +3831,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     if (inv.type == MSG_BLOCK)
                         AddBlockToQueue(pfrom->GetId(), inv.hash);
                     else
-                        pfrom->AskFor(inv);
+                        pfrom->AskFor(inv, IsInitialBlockDownload());
                 }
             } else if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash)) {
                 PushGetBlocks(pfrom, pindexBest, GetOrphanRoot(inv.hash));
