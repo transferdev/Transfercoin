@@ -12,7 +12,6 @@
 #include "netbase.h"
 #include "protocol.h"
 #include "sync.h"
-#include "timedata.h"
 #include "ui_interface.h"
 #include "util.h"
 
