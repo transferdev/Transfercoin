@@ -1,5 +1,5 @@
 ---
-name: "transfer-deps"
+name: "ion-deps"
 suites:
 - "trusty"
 architectures:
@@ -135,4 +135,4 @@ script: |
   #done
   #
   cd $INSTALLPREFIX
-  find include lib | sort | zip -X@ $OUTDIR/transfer-deps-osx-gitian.zip
+  find include lib | sort | zip -X@ $OUTDIR/ion-deps-osx-gitian.zip

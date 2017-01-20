@@ -1,5 +1,5 @@
 ---
-name: "transfer-osx-qt"
+name: "ion-osx-qt"
 suites:
 - "trusty"
 architectures:
@@ -22,7 +22,7 @@ reference_datetime: "2011-01-30 00:00:00"
 remotes: []
 files:
 - "qt-everywhere-opensource-src-5.5.0.tar.xz"
-- "transfer-deps-osx-gitian.zip"
+- "ion-deps-osx-gitian.zip"
 - "flex-2.5.38.tar.gz"
 - "osxcross.tar.xz"
 script: |
@@ -66,9 +66,9 @@ script: |
   make install
   cd ..
   #
-  # Need mingw-compiled openssl from transfer-deps:
+  # Need mingw-compiled openssl from ion-deps:
   cd $DEPSDIR
-  unzip -o $BUILDDIR/transfer-deps-osx-gitian.zip
+  unzip -o $BUILDDIR/ion-deps-osx-gitian.zip
   tar xf $BUILDDIR/osxcross.tar.xz
   #
   cd $BUILDDIR

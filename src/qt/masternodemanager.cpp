@@ -137,7 +137,7 @@ void MasternodeManager::updateNodeList()
         pubkey =GetScriptForDestination(mn.pubkey.GetID());
         CTxDestination address1;
         ExtractDestination(pubkey, address1);
-        CTransfercoinAddress address2(address1);
+        CIonAddress address2(address1);
         QTableWidgetItem *pubkeyItem = new QTableWidgetItem(QString::fromStdString(address2.ToString()));
 
         ui->tableWidget->setItem(mnRow, 0, addressItem);

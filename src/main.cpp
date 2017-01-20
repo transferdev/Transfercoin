@@ -78,7 +78,7 @@ map<uint256, set<uint256> > mapOrphanTransactionsByPrev;
 // Constant stuff for coinbase transactions we create:
 CScript COINBASE_FLAGS;
 
-const string strMessageMagic = "Transfer Signed Message:\n";
+const string strMessageMagic = "Ion Signed Message:\n";
 
 std::set<uint256> setValidatedTx;
 
@@ -1453,30 +1453,36 @@ static CBigNum GetProofOfStakeLimit(int nHeight)
 // miner's coin base reward
 int64_t GetProofOfWorkReward(int nHeight, int64_t nFees)
 {
-    int64_t nSubsidy = 300 * COIN;
+	if(nHeight == 1) {
+		return (16030000 * COIN);
+	}
 
-    return nSubsidy + nFees;
-
+    return (0 * COIN);
 }
 
 // miner's coin stake reward
 int64_t GetProofOfStakeReward(const CBlockIndex* pindexPrev, int64_t nCoinAge, int64_t nFees)
 {
-    int64_t nSubsidy = STATIC_POS_REWARD;
+    int64_t nSubsidy = 0.2 * COIN;
 
-    if(pindexPrev->nHeight <= 15000)
-    {
-        nSubsidy = 300 * COIN;
-    }
-    else if(pindexPrev->nHeight < 57000)
-    {
-        nSubsidy = 15 * COIN;
-    }
+	if(pindexPrev->nHeight < 525600) {
+            nSubsidy = 23 * COIN;
+	} else if(pindexPrev->nHeight < 1051200) {
+            nSubsidy = 17 * COIN;
+	} else if(pindexPrev->nHeight < 1576800) {
+            nSubsidy = 11.5 * COIN;
+	} else if(pindexPrev->nHeight < 2102400) {
+            nSubsidy = 5.75 * COIN;
+	} else if(pindexPrev->nHeight < 2628000) {
+            nSubsidy = 1.85 * COIN;
+	} else {
+            nSubsidy = 0.2 * COIN;
+	}
 
     return nSubsidy + nFees;
 }
 
-static int64_t nTargetTimespan = 10 * 60;  // 10 mins
+static int64_t nTargetTimespan = 64;  // 10 mins
 
 // ppcoin: find last block index up to pindex
 const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfStake)
@@ -2637,7 +2643,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 
                     CTxDestination address1;
                     ExtractDestination(payee, address1);
-                    CTransfercoinAddress address2(address1);
+                    CIonAddress address2(address1);
 
                     if(!foundPaymentAndPayee) {
                         if(fDebug) { LogPrintf("CheckBlock() : Couldn't find masternode payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), pindexBest->nHeight+1); }
@@ -3332,7 +3338,7 @@ struct CImportingNow
 
 void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
 {
-    RenameThread("transfer-loadblk");
+    RenameThread("ion-loadblk");
 
     CImportingNow imp;
 

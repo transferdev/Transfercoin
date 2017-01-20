@@ -115,7 +115,7 @@ public:
             obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
             Array a;
             BOOST_FOREACH(const CTxDestination& addr, addresses)
-                a.push_back(CTransfercoinAddress(addr).ToString());
+                a.push_back(CIonAddress(addr).ToString());
             obj.push_back(Pair("addresses", a));
             if (whichType == TX_MULTISIG)
                 obj.push_back(Pair("sigsrequired", nRequired));
@@ -135,10 +135,10 @@ Value validateaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "validateaddress <transferaddress>\n"
-            "Return information about <transferaddress>.");
+            "validateaddress <ionaddress>\n"
+            "Return information about <ionaddress>.");
 
-    CTransfercoinAddress address(params[0].get_str());
+    CIonAddress address(params[0].get_str());
     bool isValid = address.IsValid();
 
     Object ret;
@@ -167,8 +167,8 @@ Value validatepubkey(const Array& params, bool fHelp)
 {
     if (fHelp || !params.size() || params.size() > 2)
         throw runtime_error(
-            "validatepubkey <transferpubkey>\n"
-            "Return information about <transferpubkey>.");
+            "validatepubkey <ionpubkey>\n"
+            "Return information about <ionpubkey>.");
 
     std::vector<unsigned char> vchPubKey = ParseHex(params[0].get_str());
     CPubKey pubKey(vchPubKey);
@@ -177,7 +177,7 @@ Value validatepubkey(const Array& params, bool fHelp)
     bool isCompressed = pubKey.IsCompressed();
     CKeyID keyID = pubKey.GetID();
 
-    CTransfercoinAddress address;
+    CIonAddress address;
     address.Set(keyID);
 
     Object ret;
@@ -207,14 +207,14 @@ Value verifymessage(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 3)
         throw runtime_error(
-            "verifymessage <transferaddress> <signature> <message>\n"
+            "verifymessage <ionaddress> <signature> <message>\n"
             "Verify a signed message");
 
     string strAddress  = params[0].get_str();
     string strSign     = params[1].get_str();
     string strMessage  = params[2].get_str();
 
-    CTransfercoinAddress addr(strAddress);
+    CIonAddress addr(strAddress);
     if (!addr.IsValid())
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 

@@ -161,7 +161,7 @@ login again:
 $ ssh debian@localhost -p 22222
 
 $ git clone https://github.com/devrandom/gitian-builder.git
-$ git clone https://github.com/SCDeveloper/Transfer.git transfer
+$ git clone https://github.com/SCDeveloper/Ion.git ion
 
 $ cd gitian-builder
 
@@ -170,7 +170,7 @@ $ ./bin/make-base-vm --lxc --arch i386 --suite trusty
 
 $ mkdir inputs;
 $ cd inputs;
-$ cp ../../transfer/libs/secp256k1-master.zip .
+$ cp ../../ion/libs/secp256k1-master.zip .
 $ wget http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20151008.tar.gz -Ominiupnpc-1.9.20151008.tar.gz;
 $ wget http://download.icu-project.org/files/icu4c/55.1/icu4c-55_1-src.tgz;
 $ wget http://download.oracle.com/berkeley-db/db-6.1.26.NC.tar.gz;
@@ -193,20 +193,20 @@ $ wget http://download.qt.io/archive/qt/5.5/5.5.0/single/qt-everywhere-opensourc
 $ cd ~/gitian-builder;
 $ LXC_EXECUTE=lxc-execute; PATH="$(pwd)/libexec/:$PATH";
 
-$ ./bin/gbuild --commit transfer=HEAD ../transfer/contrib/gitian-descriptors/deps-linux.yml
-$ mv build/out/transfer-deps-*.zip inputs/
+$ ./bin/gbuild --commit ion=HEAD ../ion/contrib/gitian-descriptors/deps-linux.yml
+$ mv build/out/ion-deps-*.zip inputs/
 
-$ ./bin/gbuild --commit transfer=HEAD ../transfer/contrib/gitian-descriptors/gitian-linux.yml
+$ ./bin/gbuild --commit ion=HEAD ../ion/contrib/gitian-descriptors/gitian-linux.yml
 $ mkdir -p ../compiled/linux
 $ mv build/out/* ../compiled/linux/
 
-$ ./bin/gbuild --commit transfer=HEAD ../transfer/contrib/gitian-descriptors/deps-win.yml
-$ mv build/out/transfer-deps-*.zip inputs/
+$ ./bin/gbuild --commit ion=HEAD ../ion/contrib/gitian-descriptors/deps-win.yml
+$ mv build/out/ion-deps-*.zip inputs/
 
-$ ./bin/gbuild --commit transfer=HEAD ../transfer/contrib/gitian-descriptors/qt-win.yml
+$ ./bin/gbuild --commit ion=HEAD ../ion/contrib/gitian-descriptors/qt-win.yml
 $ mv build/out/qt-win*.zip inputs/
 
-$ ./bin/gbuild --commit transfer=HEAD ../transfer/contrib/gitian-descriptors/gitian-win.yml
+$ ./bin/gbuild --commit ion=HEAD ../ion/contrib/gitian-descriptors/gitian-win.yml
 $ mkdir -p ../compiled/win
 $ mv build/out/* ../compiled/win/
 

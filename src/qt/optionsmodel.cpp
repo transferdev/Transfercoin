@@ -51,11 +51,11 @@ void OptionsModel::Init()
     if (!settings.contains("nDarksendRounds"))
         settings.setValue("nDarksendRounds", 2);
 
-    if (!settings.contains("nAnonymizeTransferAmount"))
-        settings.setValue("nAnonymizeTransferAmount", 1000);
+    if (!settings.contains("nAnonymizeIonAmount"))
+        settings.setValue("nAnonymizeIonAmount", 1000);
 
     nDarksendRounds = settings.value("nDarksendRounds").toLongLong();
-    nAnonymizeTransferAmount = settings.value("nAnonymizeTransferAmount").toLongLong();
+    nAnonymizeIonAmount = settings.value("nAnonymizeIonAmount").toLongLong();
 
     // These are shared with core Bitcoin; we want
     // command-line options to override the GUI settings:
@@ -68,8 +68,8 @@ void OptionsModel::Init()
 
     if (settings.contains("nDarksendRounds"))
         SoftSetArg("-darksendrounds", settings.value("nDarksendRounds").toString().toStdString());
-    if (settings.contains("nAnonymizeTransferAmount"))
-        SoftSetArg("-anonymizetransferamount", settings.value("nAnonymizeTransferAmount").toString().toStdString());
+    if (settings.contains("nAnonymizeIonAmount"))
+        SoftSetArg("-anonymizeionamount", settings.value("nAnonymizeIonAmount").toString().toStdString());
 }
 
 int OptionsModel::rowCount(const QModelIndex & parent) const
@@ -120,8 +120,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return QVariant(fCoinControlFeatures);
         case DarksendRounds:
             return QVariant(nDarksendRounds);
-        case AnonymizeTransferAmount:
-            return QVariant(nAnonymizeTransferAmount);
+        case AnonymizeIonAmount:
+            return QVariant(nAnonymizeIonAmount);
         case UseBlackTheme:
             return QVariant(fUseBlackTheme);
         default:
@@ -212,10 +212,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             settings.setValue("nDarksendRounds", nDarksendRounds);
             emit darksendRoundsChanged(nDarksendRounds);
             break;
-        case AnonymizeTransferAmount:
-            nAnonymizeTransferAmount = value.toInt();
-            settings.setValue("nAnonymizeTransferAmount", nAnonymizeTransferAmount);
-            emit AnonymizeTransferAmountChanged(nAnonymizeTransferAmount);
+        case AnonymizeIonAmount:
+            nAnonymizeIonAmount = value.toInt();
+            settings.setValue("nAnonymizeIonAmount", nAnonymizeIonAmount);
+            emit AnonymizeIonAmountChanged(nAnonymizeIonAmount);
             break;
         default:
             break;

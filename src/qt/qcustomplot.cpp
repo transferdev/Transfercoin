@@ -1235,7 +1235,7 @@ QRect QCPLayerable::clipRect() const
   returned a value greater than 0 and less than the selection tolerance of the parent QCustomPlot).
   The \a details data you output from \ref selectTest is fed back via \a details here. You may
   use it to transport any kind of information from the selectTest to the possibly subsequent
-  selectEvent. Usually \a details is used to transfer which part was clicked, if it is a layerable
+  selectEvent. Usually \a details is used to ion which part was clicked, if it is a layerable
   that has multiple individually selectable parts (like QCPAxis). This way selectEvent doesn't need
   to do the calculation again to find out which part was actually clicked.
   
@@ -5927,7 +5927,7 @@ void QCPAxis::draw(QCPPainter *painter)
         subTickPositions.append(coordToPixel(mSubTickVector.at(i)));
     }
   }
-  // transfer all properties of this axis to QCPAxisPainterPrivate which it needs to draw the axis.
+  // ion all properties of this axis to QCPAxisPainterPrivate which it needs to draw the axis.
   // Note that some axis painter properties are already set by direct feed-through with QCPAxis setters
   mAxisPainter->type = mAxisType;
   mAxisPainter->basePen = getBasePen();
@@ -6132,7 +6132,7 @@ int QCPAxis::calculateMargin()
         tickLabels.append(mTickVectorLabels.at(i));
     }
   }
-  // transfer all properties of this axis to QCPAxisPainterPrivate which it needs to calculate the size.
+  // ion all properties of this axis to QCPAxisPainterPrivate which it needs to calculate the size.
   // Note that some axis painter properties are already set by direct feed-through with QCPAxis setters
   mAxisPainter->type = mAxisType;
   mAxisPainter->labelFont = getLabelFont();
@@ -8998,7 +8998,7 @@ QCP::Interaction QCPAbstractItem::selectionCategory() const
   \li Avoid repeatedly setting the complete data set with \ref QCPGraph::setData. Use \ref QCPGraph::addData instead, if most
   data points stay unchanged, e.g. in a running measurement.
   \li Set the \a copy parameter of the setData functions to false, so only pointers get
-  transferred. (Relevant only if preparing data maps with a large number of points, i.e. over 10000)
+  ionred. (Relevant only if preparing data maps with a large number of points, i.e. over 10000)
   
   \section mainpage-flags Preprocessor Define Flags
   
@@ -14186,15 +14186,15 @@ void QCPColorScale::setType(QCPAxis::AxisType type)
   if (mType != type)
   {
     mType = type;
-    QCPRange rangeTransfer(0, 6);
-    double logBaseTransfer = 10;
-    QString labelTransfer;
+    QCPRange rangeIon(0, 6);
+    double logBaseIon = 10;
+    QString labelIon;
     // revert some settings on old axis:
     if (mColorAxis)
     {
-      rangeTransfer = mColorAxis.data()->range();
-      labelTransfer = mColorAxis.data()->label();
-      logBaseTransfer = mColorAxis.data()->scaleLogBase();
+      rangeIon = mColorAxis.data()->range();
+      labelIon = mColorAxis.data()->label();
+      logBaseIon = mColorAxis.data()->scaleLogBase();
       mColorAxis.data()->setLabel("");
       disconnect(mColorAxis.data(), SIGNAL(rangeChanged(QCPRange)), this, SLOT(setDataRange(QCPRange)));
       disconnect(mColorAxis.data(), SIGNAL(scaleTypeChanged(QCPAxis::ScaleType)), this, SLOT(setDataScaleType(QCPAxis::ScaleType)));
@@ -14206,10 +14206,10 @@ void QCPColorScale::setType(QCPAxis::AxisType type)
     }
     // set new mColorAxis pointer:
     mColorAxis = mAxisRect.data()->axis(mType);
-    // transfer settings to new axis:
-    mColorAxis.data()->setRange(rangeTransfer); // transfer range of old axis to new one (necessary if axis changes from vertical to horizontal or vice versa)
-    mColorAxis.data()->setLabel(labelTransfer);
-    mColorAxis.data()->setScaleLogBase(logBaseTransfer); // scaleType is synchronized among axes in realtime via signals (connected in QCPColorScale ctor), so we only need to take care of log base here
+    // ion settings to new axis:
+    mColorAxis.data()->setRange(rangeIon); // ion range of old axis to new one (necessary if axis changes from vertical to horizontal or vice versa)
+    mColorAxis.data()->setLabel(labelIon);
+    mColorAxis.data()->setScaleLogBase(logBaseIon); // scaleType is synchronized among axes in realtime via signals (connected in QCPColorScale ctor), so we only need to take care of log base here
     connect(mColorAxis.data(), SIGNAL(rangeChanged(QCPRange)), this, SLOT(setDataRange(QCPRange)));
     connect(mColorAxis.data(), SIGNAL(scaleTypeChanged(QCPAxis::ScaleType)), this, SLOT(setDataScaleType(QCPAxis::ScaleType)));
     mAxisRect.data()->setRangeDragAxes(QCPAxis::orientation(mType) == Qt::Horizontal ? mColorAxis.data() : 0,
@@ -14551,7 +14551,7 @@ QCPColorScaleAxisRectPrivate::QCPColorScaleAxisRectPrivate(QCPColorScale *parent
   connect(axis(QCPAxis::atBottom), SIGNAL(scaleTypeChanged(QCPAxis::ScaleType)), axis(QCPAxis::atTop), SLOT(setScaleType(QCPAxis::ScaleType)));
   connect(axis(QCPAxis::atTop), SIGNAL(scaleTypeChanged(QCPAxis::ScaleType)), axis(QCPAxis::atBottom), SLOT(setScaleType(QCPAxis::ScaleType)));
   
-  // make layer transfers of color scale transfer to axis rect and axes
+  // make layer ions of color scale ion to axis rect and axes
   // the axes must be set after axis rect, such that they appear above color gradient drawn by axis rect:
   connect(parentColorScale, SIGNAL(layerChanged(QCPLayer*)), this, SLOT(setLayer(QCPLayer*)));
   foreach (QCPAxis::AxisType type, QList<QCPAxis::AxisType>() << QCPAxis::atBottom << QCPAxis::atTop << QCPAxis::atLeft << QCPAxis::atRight)
@@ -16099,7 +16099,7 @@ void QCPGraph::getPreparedData(QVector<QCPData> *lineData, QVector<QCPData> *sca
       } else if (currentIntervalStart.value().value > valueMinRange && currentIntervalStart.value().value < valueMaxRange)
         scatterData->append(currentIntervalStart.value());
     }
-  } else // don't use adaptive sampling algorithm, transfer points one-to-one from the map into the output parameters
+  } else // don't use adaptive sampling algorithm, ion points one-to-one from the map into the output parameters
   {
     QVector<QCPData> *dataVector = 0;
     if (lineData)
