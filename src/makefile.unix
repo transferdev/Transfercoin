@@ -159,6 +159,7 @@ OBJS= \
     obj/crypto/sha256.o \
     obj/crypto/sha512.o \
     obj/smessage.o    \
+    obj/irc.o \
     obj/cubehash.o \
     obj/luffa.o \
     obj/aes_helper.o \
