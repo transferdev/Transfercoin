@@ -104,7 +104,7 @@ public:
         genesis.nNonce   = 28808749;
 
 		hashGenesisBlock = genesis.GetHash();
-		if (true) { MineGenesis(genesis, bnProofOfWorkLimit); }
+		if (false) { MineGenesis(genesis, bnProofOfWorkLimit); }
         
         assert(hashGenesisBlock == uint256("0x000000155401cff78dfb639ef23224d2d7eb71d299a474b02772073f71464d53"));
         assert(genesis.hashMerkleRoot == uint256("0x516674d4dbfddf30e3fe2707445a77869fa4537b6b3d09a88d1fb16618573e3c"));
