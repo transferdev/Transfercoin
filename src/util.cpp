@@ -1077,7 +1077,7 @@ boost::filesystem::path GetDefaultDataDir()
     // Unix: ~/.ion
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Ion";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "IonX";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -1089,10 +1089,10 @@ boost::filesystem::path GetDefaultDataDir()
     // Mac
     pathRet /= "Library/Application Support";
     fs::create_directory(pathRet);
-    return pathRet / "Ion";
+    return pathRet / "IonX";
 #else
     // Unix
-    return pathRet / ".ion";
+    return pathRet / ".ionx";
 #endif
 #endif
 }
