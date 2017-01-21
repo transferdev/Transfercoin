@@ -82,7 +82,7 @@ static bool Send(SOCKET hSocket, const char* pszSend)
 
 bool RecvLineIRC(SOCKET hSocket, string& strLine)
 {
-    loop
+    while (!ShutdownRequested())
     {
         bool fRet = RecvLine(hSocket, strLine);
         if (fRet)
@@ -105,7 +105,7 @@ bool RecvLineIRC(SOCKET hSocket, string& strLine)
 
 int RecvUntil(SOCKET hSocket, const char* psz1, const char* psz2=NULL, const char* psz3=NULL, const char* psz4=NULL)
 {
-    loop
+    while (!ShutdownRequested())
     {
         string strLine;
         strLine.reserve(10000);
@@ -140,7 +140,7 @@ bool Wait(int nSeconds)
 bool RecvCodeLine(SOCKET hSocket, const char* psz1, string& strRet)
 {
     strRet.clear();
-    loop
+    while (!ShutdownRequested())
     {
         string strLine;
         if (!RecvLineIRC(hSocket, strLine))
@@ -230,7 +230,7 @@ void ThreadIRCSeed2(void* parg)
     int nRetryWait = 10;
     int nNameRetry = 0;
 
-    loop
+    while (!ShutdownRequested())
     {
         CService addrConnect("94.125.182.253", 6667); // irc.atw-inter.net
 

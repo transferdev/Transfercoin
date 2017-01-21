@@ -43,7 +43,6 @@ static const int64_t CENT = 1000000;
 
 typedef int64_t CAmount;
 
-#define loop                for (;;)
 
 #define BEGIN(a)            ((char*)&(a))
 #define END(a)              ((char*)&((&(a))[1]))
