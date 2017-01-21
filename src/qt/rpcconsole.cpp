@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2014 The Bitcoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include "rpcconsole.h"
 #include "ui_rpcconsole.h"
 
@@ -7,14 +11,16 @@
 #include "rpcserver.h"
 #include "rpcclient.h"
 
-#include <QClipboard>
-#include <QTime>
-#include <QThread>
-#include <QKeyEvent>
-#include <QUrl>
-#include <QScrollBar>
-
+#include "json/json_spirit_value.h"
 #include <openssl/crypto.h>
+#include <QKeyEvent>
+#include <QScrollBar>
+#include <QThread>
+#include <QTime>
+
+#if QT_VERSION < 0x050000
+#include <QUrl>
+#endif
 
 // TODO: add a scrollback limit, as there is currently none
 // TODO: make it possible to filter out categories (esp debug messages when implemented)
@@ -43,7 +49,6 @@ class RPCExecutor : public QObject
     Q_OBJECT
 
 public slots:
-    void start();
     void request(const QString &command);
 
 signals:
@@ -52,13 +57,8 @@ signals:
 
 #include "rpcconsole.moc"
 
-void RPCExecutor::start()
-{
-   // Nothing to do
-}
-
 /**
- * Split ion command line into a list of arguments. Aims to emulate \c bash and friends.
+ * Split shell command line into a list of arguments. Aims to emulate \c bash and friends.
  *
  * - Arguments are delimited with whitespace
  * - Extra whitespace at the beginning and end and between arguments will be ignored
@@ -192,18 +192,21 @@ void RPCExecutor::request(const QString &command)
 RPCConsole::RPCConsole(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RPCConsole),
+    clientModel(0),
     historyPtr(0)
 {
     ui->setupUi(this);
 
 #ifndef Q_OS_MAC
     ui->openDebugLogfileButton->setIcon(QIcon(":/icons/export"));
-    ui->showCLOptionsButton->setIcon(QIcon(":/icons/options"));
 #endif
 
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);
     ui->messagesWidget->installEventFilter(this);
+
+    connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
+    connect(ui->btnClearTrafficGraph, SIGNAL(clicked()), ui->trafficGraph, SLOT(clear()));
 
     // set OpenSSL version label
     ui->openSSLVersion->setText(SSLeay_version(SSLEAY_VERSION));
@@ -262,7 +265,8 @@ void RPCConsole::setClientModel(ClientModel *model)
     ui->trafficGraph->setClientModel(model);
     if(model)
     {
-        // Subscribe to information, replies, messages, errors
+        // Keep up to date with client
+        setNumConnections(model->getNumConnections());
         connect(model, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
 
         setNumBlocks(model->getNumBlocks());
@@ -270,7 +274,7 @@ void RPCConsole::setClientModel(ClientModel *model)
 
         setMasternodeCount(model->getMasternodeCountString());
         connect(model, SIGNAL(strMasternodesChanged(QString)), this, SLOT(setMasternodeCount(QString)));
-
+        
         updateTrafficStats(model->getTotalBytesRecv(), model->getTotalBytesSent());
         connect(model, SIGNAL(bytesChanged(quint64,quint64)), this, SLOT(updateTrafficStats(quint64, quint64)));
 
@@ -280,8 +284,7 @@ void RPCConsole::setClientModel(ClientModel *model)
         ui->buildDate->setText(model->formatBuildDate());
         ui->startupTime->setText(model->formatClientStartupTime());
 
-        setNumConnections(model->getNumConnections());
-        ui->isTestNet->setChecked(model->isTestNet());
+        ui->networkName->setText(model->getNetworkName());
     }
 }
 
@@ -318,15 +321,26 @@ void RPCConsole::clear()
     ui->messagesWidget->document()->setDefaultStyleSheet(
                 "table { }"
                 "td.time { color: #808080; padding-top: 3px; } "
-                "td.message { font-family: Monospace; font-size: 12px; } "
-                "td.cmd-request { color: #00C0C0; } "
+                "td.message { font-family: monospace; font-size: 12px; } " // Todo: Remove fixed font-size
+                "td.cmd-request { color: #006060; } "
                 "td.cmd-error { color: red; } "
-                "b { color: #00C0C0; } "
+                "b { color: #006060; } "
                 );
-
+                
     message(CMD_REPLY, (tr("Welcome to the Ion RPC console.") + "<br>" +
                         tr("Use up and down arrows to navigate history, and <b>Ctrl-L</b> to clear screen.") + "<br>" +
-                        tr("Type <b>help</b> for an overview of available commands.")), true);
+                        tr("Type <b>help</b> for an overview of available commands.")) +
+                        "<br><span class=\"secwarning\">" +
+                        tr("WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramification of a command.") +
+                        "</span>",
+                        true);
+}
+
+void RPCConsole::reject()
+{
+    // Ignore escape keypress if this is not a seperate window
+    if(windowType() != Qt::Widget)
+        QDialog::reject();
 }
 
 void RPCConsole::message(int category, const QString &message, bool html)
@@ -347,7 +361,12 @@ void RPCConsole::message(int category, const QString &message, bool html)
 
 void RPCConsole::setNumConnections(int count)
 {
-    ui->numberOfConnections->setText(QString::number(count));
+	ui->numberOfConnections->setText(QString::number(count));
+}
+
+void RPCConsole::setMasternodeCount(const QString &strMasternodes)
+{
+    ui->masternodeCount->setText(strMasternodes);
 }
 
 void RPCConsole::setNumBlocks(int count)
@@ -355,11 +374,6 @@ void RPCConsole::setNumBlocks(int count)
     ui->numberOfBlocks->setText(QString::number(count));
     if(clientModel)
         ui->lastBlockTime->setText(clientModel->getLastBlockDate().toString());
-}
-
-void RPCConsole::setMasternodeCount(const QString &strMasternodes)
-{
-    ui->masternodeCount->setText(strMasternodes);
 }
 
 void RPCConsole::on_lineEdit_returnPressed()
@@ -371,8 +385,8 @@ void RPCConsole::on_lineEdit_returnPressed()
     {
         message(CMD_REQUEST, cmd);
         emit cmdRequest(cmd);
-        // Remove command, if already in history
-        history.removeOne(cmd);
+        // Truncate history from current position
+        history.erase(history.begin() + historyPtr, history.end());
         // Append command to history
         history.append(cmd);
         // Enforce maximum history size
@@ -400,16 +414,15 @@ void RPCConsole::browseHistory(int offset)
 
 void RPCConsole::startExecutor()
 {
-    QThread* thread = new QThread;
+    QThread *thread = new QThread;
     RPCExecutor *executor = new RPCExecutor();
     executor->moveToThread(thread);
 
-    // Notify executor when thread started (in executor thread)
-    connect(thread, SIGNAL(started()), executor, SLOT(start()));
     // Replies from executor object must go to this object
     connect(executor, SIGNAL(reply(int,QString)), this, SLOT(message(int,QString)));
     // Requests from this object must go to executor
     connect(this, SIGNAL(cmdRequest(QString)), executor, SLOT(request(QString)));
+
     // On stopExecutor signal
     // - queue executor for deletion (in execution thread)
     // - quit the Qt event loop in the execution thread
@@ -440,12 +453,6 @@ void RPCConsole::scrollToEnd()
 {
     QScrollBar *scrollbar = ui->messagesWidget->verticalScrollBar();
     scrollbar->setValue(scrollbar->maximum());
-}
-
-void RPCConsole::on_showCLOptionsButton_clicked()
-{
-    GUIUtil::HelpMessageBox help;
-    help.exec();
 }
 
 void RPCConsole::on_sldGraphRange_valueChanged(int value)
@@ -483,28 +490,8 @@ void RPCConsole::setTrafficGraphRange(int mins)
     }
 }
 
-void RPCConsole::on_copyButton_clicked()
-{
-    GUIUtil::setClipboard(ui->lineEdit->text());
-}
-
-void RPCConsole::on_pasteButton_clicked()
-{
-	ui->lineEdit->setText(QApplication::clipboard()->text());
-}
-
 void RPCConsole::updateTrafficStats(quint64 totalBytesIn, quint64 totalBytesOut)
 {
     ui->lblBytesIn->setText(FormatBytes(totalBytesIn));
     ui->lblBytesOut->setText(FormatBytes(totalBytesOut));
-}
-
-void RPCConsole::on_btnClearTrafficGraph_clicked()
-{
-    ui->trafficGraph->clear();
-}
-
-void RPCConsole::showBackups()
-{
-    GUIUtil::showBackups();
 }
