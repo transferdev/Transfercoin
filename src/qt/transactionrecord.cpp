@@ -1,7 +1,7 @@
 #include "transactionrecord.h"
 
 #include "base58.h"
-#include "timedata.h"
+#include "util.h"
 #include "wallet.h"
 #include "darksend.h"
 #include "instantx.h"

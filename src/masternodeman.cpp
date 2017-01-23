@@ -56,7 +56,7 @@ bool CMasternodeDB::Write(const CMasternodeMan& mnodemanToSave)
     // open output file, and associate with CAutoFile
     FILE *file = fopen(pathMN.string().c_str(), "wb");
     CAutoFile fileout = CAutoFile(file, SER_DISK, CLIENT_VERSION);
-    if (!fileout)
+    if (fileout.IsNull())
         return error("%s : Failed to open file %s", __func__, pathMN.string());
 
     // Write and commit header, data
@@ -66,7 +66,7 @@ bool CMasternodeDB::Write(const CMasternodeMan& mnodemanToSave)
     catch (std::exception &e) {
         return error("%s : Serialize or I/O error - %s", __func__, e.what());
     }
-    FileCommit(fileout);
+    FileCommit(fileout.Get());
     fileout.fclose();
 
     LogPrintf("Written info to mncache.dat  %dms\n", GetTimeMillis() - nStart);
@@ -81,7 +81,7 @@ CMasternodeDB::ReadResult CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
     // open input file, and associate with CAutoFile
     FILE *file = fopen(pathMN.string().c_str(), "rb");
     CAutoFile filein = CAutoFile(file, SER_DISK, CLIENT_VERSION);
-    if (!filein)
+    if (filein.IsNull())
     {
         error("%s : Failed to open file %s", __func__, pathMN.string());
         return FileError;

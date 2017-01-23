@@ -7,7 +7,7 @@
 #include "main.h"
 #include "paymentserver.h"
 #include "transactionrecord.h"
-#include "timedata.h"
+#include "util.h"
 #include "ui_interface.h"
 #include "wallet.h"
 #include "txdb.h"
