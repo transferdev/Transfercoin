@@ -24,9 +24,6 @@ class CValidationState;
 static const int64_t DARKSEND_COLLATERAL = (0.01*COIN);
 static const int64_t DARKSEND_POOL_MAX = (9999.99*COIN);
 
-static const int64_t TARGET_SPACING_FORK = 64;
-static const int64_t TARGET_SPACING = 64;
-
 static const signed int HARD_FORK_BLOCK = 1;
 static const signed int HARD_FORK_BLOCK2 = 2;
 
@@ -91,7 +88,6 @@ extern CTxMemPool mempool;
 extern std::map<uint256, CBlockIndex*> mapBlockIndex;
 extern std::set<std::pair<COutPoint, unsigned int> > setStakeSeen;
 extern CBlockIndex* pindexGenesisBlock;
-extern int nStakeMinConfirmations;
 extern unsigned int nStakeMinAge;
 extern unsigned int nNodeLifespan;
 extern int nCoinbaseMaturity;
@@ -105,6 +101,7 @@ extern uint64_t nLastBlockSize;
 extern int64_t nLastCoinStakeSearchInterval;
 extern const std::string strMessageMagic;
 extern int64_t nTimeBestReceived;
+extern int64_t nTargetSpacing;
 extern bool fImporting;
 extern bool fReindex;
 struct COrphanBlock;

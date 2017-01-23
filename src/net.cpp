@@ -45,6 +45,7 @@ struct LocalServiceInfo {
 // Global state variables
 //
 bool fDiscover = true;
+bool enableIRC = false; // To be tested on a later date
 uint64_t nLocalServices = NODE_NETWORK;
 static CCriticalSection cs_mapLocalHost;
 static map<CNetAddr, LocalServiceInfo> mapLocalHost;
@@ -1678,9 +1679,11 @@ void StartNode(boost::thread_group& threadGroup)
     MapPort(GetBoolArg("-upnp", USE_UPNP));
 #endif
 
-    // Get addresses from IRC and advertise ours (depreciated) TODO: REMOVE ASAP
-    threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "irc", &ThreadIRCSeed));
-
+    if(!enableIRC) {
+		// Get addresses from IRC and advertise ours (depreciated) TODO: REMOVE ASAP
+		threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "irc", &ThreadIRCSeed));
+	}
+	
     // Send and receive from sockets, accept connections
     threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "net", &ThreadSocketHandler));
 
