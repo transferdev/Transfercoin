@@ -336,7 +336,7 @@ void ThreadIRCSeed2()
         if (!fNoListen && GetLocal(addrLocal, &addrIPv4) && nNameRetry<3)
             strMyName = EncodeAddress(GetLocalAddress(&addrConnect));
         if (strMyName == "")
-            strMyName = strprintf("x%"PRIu64"", GetRand(1000000000));
+            strMyName = strprintf("x%" PRIu64 "", GetRand(1000000000));
 
         Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());
         Send(hSocket, strprintf("USER %s 8 * : %s\r", strMyName.c_str(), strMyName.c_str()).c_str());
