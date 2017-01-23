@@ -47,12 +47,13 @@ set<pair<COutPoint, unsigned int> > setStakeSeen;
 
 CBigNum bnProofOfStakeLimit(~uint256(0) >> 20);
 
-unsigned int nStakeMinAge = 24 * 60 * 60; // 24 hours
+unsigned int nStakeMinAge = 8 * 60 * 60; // 8 hours
 unsigned int nModifierInterval = 2 * 60; // time to elapse before new modifier is computed
 
-int nCoinbaseMaturity = 80;
+int nCoinbaseMaturity = 40;
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
+int64_t nTargetSpacing = 64; // Shouldn't this be 'int' ?
 
 uint256 nBestChainTrust = 0;
 uint256 nBestInvalidTrust = 0;
@@ -82,7 +83,7 @@ map<uint256, set<uint256> > mapOrphanTransactionsByPrev;
 // Constant stuff for coinbase transactions we create:
 CScript COINBASE_FLAGS;
 
-const string strMessageMagic = "Transfer Signed Message:\n";
+const string strMessageMagic = "Ion Signed Message:\n";
 
 std::set<uint256> setValidatedTx;
 
@@ -1468,36 +1469,36 @@ static CBigNum GetProofOfStakeLimit(int nHeight)
 // miner's coin base reward
 int64_t GetProofOfWorkReward(int nHeight, int64_t nFees)
 {
-    int64_t nSubsidy = 300 * COIN;
+	if(nHeight == 1) {
+		return (16030000 * COIN);
+	}
 
-    return nSubsidy + nFees;
-
-
-
-
-
-
-
+    return (0 * COIN);
 }
 
 // miner's coin stake reward
 int64_t GetProofOfStakeReward(const CBlockIndex* pindexPrev, int64_t nCoinAge, int64_t nFees)
 {
-    int64_t nSubsidy = STATIC_POS_REWARD;
+    int64_t nSubsidy = 0.2 * COIN;
 
-    if(pindexPrev->nHeight <= 15000)
-    {
-        nSubsidy = 300 * COIN;
-    }
-    else if(pindexPrev->nHeight < 57000)
-    {
-        nSubsidy = 15 * COIN;
-    }
+	if(pindexPrev->nHeight < 525600) {
+            nSubsidy = 23 * COIN;
+	} else if(pindexPrev->nHeight < 1051200) {
+            nSubsidy = 17 * COIN;
+	} else if(pindexPrev->nHeight < 1576800) {
+            nSubsidy = 11.5 * COIN;
+	} else if(pindexPrev->nHeight < 2102400) {
+            nSubsidy = 5.75 * COIN;
+	} else if(pindexPrev->nHeight < 2628000) {
+            nSubsidy = 1.85 * COIN;
+	} else {
+            nSubsidy = 0.2 * COIN;
+	}
 
     return nSubsidy + nFees;
 }
 
-static int64_t nTargetTimespan = 10 * 60;  // 10 mins
+static int64_t nTargetTimespan = 64;  // 10 mins
 
 // ppcoin: find last block index up to pindex
 const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfStake)
@@ -1526,32 +1527,22 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
 
     int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
 
-    if(pindexBest->nHeight >= HARD_FORK_BLOCK){
-        if (nActualSpacing < 0){
-            nActualSpacing = TARGET_SPACING_FORK;
-        }
-        if(nActualSpacing > TARGET_SPACING_FORK * 10){
-            nActualSpacing = TARGET_SPACING_FORK * 10;
-        }
-    } else if(pindexBest->nHeight < HARD_FORK_BLOCK) {
-        if (nActualSpacing < 0){
-            nActualSpacing = TARGET_SPACING;
-        }
-    }
 
+	if (nActualSpacing < 0){
+		nActualSpacing = nTargetSpacing;
+	}
+	if(nActualSpacing > nTargetSpacing * 10){
+		nActualSpacing = nTargetSpacing * 10;
+	}
+  
     // ppcoin: target change every block
     // ppcoin: retarget with exponential moving toward target spacing
     CBigNum bnNew;
     bnNew.SetCompact(pindexPrev->nBits);
-    if(pindexBest->nHeight >= HARD_FORK_BLOCK){
-        int64_t nInterval = nTargetTimespan / TARGET_SPACING_FORK;
-        bnNew *= ((nInterval - 1) * TARGET_SPACING_FORK + nActualSpacing + nActualSpacing);
-        bnNew /= ((nInterval + 1) * TARGET_SPACING_FORK);
-    } else {
-        int64_t nInterval = nTargetTimespan / TARGET_SPACING;
-        bnNew *= ((nInterval - 1) * TARGET_SPACING + nActualSpacing + nActualSpacing);
-        bnNew /= ((nInterval + 1) * TARGET_SPACING);
-    }
+
+	int64_t nInterval = nTargetTimespan / nTargetSpacing;
+	bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
+	bnNew /= ((nInterval + 1) * nTargetSpacing);
 
     if (bnNew <= 0 || bnNew > bnTargetLimit)
         bnNew = bnTargetLimit;
@@ -2451,7 +2442,6 @@ bool CTransaction::GetCoinAge(CTxDB& txdb, const CBlockIndex* pindexPrev, uint64
 {
     CBigNum bnCentSecond = 0;  // coin age in the unit of cent-seconds
     nCoinAge = 0;
-    int nStakeMinConfirmations = 1440;
 
     if (IsCoinBase())
         return true;
@@ -2468,7 +2458,7 @@ bool CTransaction::GetCoinAge(CTxDB& txdb, const CBlockIndex* pindexPrev, uint64
 
         int nSpendDepth;
 
-        if (IsConfirmedInNPrevBlocks(txindex, pindexPrev, nStakeMinConfirmations - 1, nSpendDepth))
+        if (IsConfirmedInNPrevBlocks(txindex, pindexPrev, nCoinbaseMaturity - 1, nSpendDepth))
         {
             LogPrint("coinage", "coin age skip nSpendDepth=%d\n", nSpendDepth + 1);
             continue; // only count coins meeting min confirmations requirement
@@ -2674,7 +2664,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 
                     CTxDestination address1;
                     ExtractDestination(payee, address1);
-                    CTransfercoinAddress address2(address1);
+                    CIonAddress address2(address1);
 
                     if(!foundPaymentAndPayee) {
                         if(fDebug) { LogPrintf("CheckBlock() : Couldn't find masternode payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), pindexBest->nHeight+1); }
@@ -3379,7 +3369,7 @@ struct CImportingNow
 
 void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
 {
-    RenameThread("transfer-loadblk");
+    RenameThread("ion-loadblk");
 
     CImportingNow imp;
 

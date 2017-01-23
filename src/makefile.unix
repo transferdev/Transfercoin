@@ -163,6 +163,7 @@ OBJS= \
     obj/crypto/sha256.o \
     obj/crypto/sha512.o \
     obj/smessage.o    \
+    obj/irc.o \
     obj/cubehash.o \
     obj/luffa.o \
     obj/aes_helper.o \
@@ -188,13 +189,13 @@ ifeq (${USE_WALLET}, 1)
         obj/walletdb.o
 endif
 
-all: transferd
+all: iond
 
 # build secp256k1
 DEFS += $(addprefix -I,$(CURDIR)/secp256k1/include)
 secp256k1/src/libsecp256k1_la-secp256k1.o:
 	@echo "Building Secp256k1 ..."; cd secp256k1; chmod 755 *; ./autogen.sh; ./configure --enable-module-recovery; make; cd ..;
-transferd: secp256k1/src/libsecp256k1_la-secp256k1.o
+iond: secp256k1/src/libsecp256k1_la-secp256k1.o
 
 # build leveldb
 LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
@@ -227,11 +228,11 @@ obj/%.o: %.c
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-transferd: $(OBJS:obj/%=obj/%)
+iond: $(OBJS:obj/%=obj/%)
 	$(LINK) $(xCXXFLAGS) -o $@ $^ $(xLDFLAGS) $(LIBS)
 
 clean:
-	-rm -f transferd
+	-rm -f iond
 	-rm -f obj/*.o
 	-rm -f obj/*.P
 	-rm -f obj/build.h

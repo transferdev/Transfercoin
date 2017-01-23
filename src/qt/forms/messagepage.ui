@@ -159,7 +159,7 @@
        <item>
         <widget class="QPushButton" name="sendButton">
          <property name="toolTip">
-          <string>Sign a message to prove you own a Transfer address</string>
+          <string>Sign a message to prove you own a Ion address</string>
          </property>
          <property name="text">
           <string>&amp;Send</string>

@@ -1,5 +1,5 @@
 ---
-name: "transfer-deps"
+name: "ion-deps"
 suites:
 - "trusty"
 architectures:
@@ -135,5 +135,5 @@ script: |
   #
   #
   cd $STAGING
-  find include lib bin host | sort | zip -X@ $OUTDIR/transfer-deps-linux${GBUILD_BITS}-gitian.zip
+  find include lib bin host | sort | zip -X@ $OUTDIR/ion-deps-linux${GBUILD_BITS}-gitian.zip
 

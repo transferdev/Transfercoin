@@ -65,19 +65,15 @@ void OptionsModel::Init()
     // Dark Send
     if (!settings.contains("nDarksendRounds"))
         settings.setValue("nDarksendRounds", 2);
+
     nDarksendRounds = settings.value("nDarksendRounds").toLongLong();
-    if (!settings.contains("nAnonymizeTransferAmount"))
-        settings.setValue("nAnonymizeTransferAmount", 1000);
-    nAnonymizeTransferAmount = settings.value("nAnonymizeTransferAmount").toLongLong();
+    if (!settings.contains("nAnonymizeIonAmount"))
+        settings.setValue("nAnonymizeIonAmount", 1000);
+    nAnonymizeIonAmount = settings.value("nAnonymizeIonAmount").toLongLong();
     if (settings.contains("nDarksendRounds"))
         SoftSetArg("-darksendrounds", settings.value("nDarksendRounds").toString().toStdString());
-    if (settings.contains("nAnonymizeTransferAmount"))
-        SoftSetArg("-anonymizetransferamount", settings.value("nAnonymizeTransferAmount").toString().toStdString());
-
-
-
-
-
+    if (settings.contains("nAnonymizeIonAmount"))
+        SoftSetArg("-anonymizeionamount", settings.value("nAnonymizeIonAmount").toString().toStdString());
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
@@ -125,9 +121,6 @@ void OptionsModel::Init()
         settings.setValue("language", "");
     if (!SoftSetArg("-lang", settings.value("language").toString().toStdString()))
         addOverriddenOption("-lang");
-
-
-
 
     language = settings.value("language").toString();
 }
@@ -206,8 +199,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return fCoinControlFeatures;
         case DarksendRounds:
             return QVariant(nDarksendRounds);
-        case AnonymizeTransferAmount:
-            return QVariant(nAnonymizeTransferAmount);
+        case AnonymizeIonAmount:
+            return QVariant(nAnonymizeIonAmount);
         case UseBlackTheme:
             return QVariant(fUseBlackTheme);
         default:
@@ -318,10 +311,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             settings.setValue("nDarksendRounds", nDarksendRounds);
             emit darksendRoundsChanged(nDarksendRounds);
             break;
-        case AnonymizeTransferAmount:
-            nAnonymizeTransferAmount = value.toInt();
-            settings.setValue("nAnonymizeTransferAmount", nAnonymizeTransferAmount);
-            emit AnonymizeTransferAmountChanged(nAnonymizeTransferAmount);
+        case AnonymizeIonAmount:
+            nAnonymizeIonAmount = value.toInt();
+            settings.setValue("nAnonymizeIonAmount", nAnonymizeIonAmount);
+            emit AnonymizeIonAmountChanged(nAnonymizeIonAmount);
             break;
         default:
             break;

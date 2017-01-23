@@ -3,22 +3,22 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
-        <source>About Transfer</source>
-        <translation>O Transferu</translation>
+        <source>About Ion</source>
+        <translation>O Ionu</translation>
     </message>
     <message>
         <location line="+39"/>
-        <source>&lt;b&gt;Transfer&lt;/b&gt; version</source>
-        <translation>Verze &lt;b&gt;Transferu&lt;/b&gt; </translation>
+        <source>&lt;b&gt;Ion&lt;/b&gt; version</source>
+        <translation>Verze &lt;b&gt;Ionu&lt;/b&gt; </translation>
     </message>
     <message>
         <location line="+41"/>
         <source>Copyright © 2009-2014 The Bitcoin developers
 Copyright © 2012-2014 The NovaCoin developers
-Copyright © 2014 The Transfer developers</source>
+Copyright © 2014 The Ion developers</source>
         <translation>Copyright © 2009-2014 The Bitcoin developers
 Copyright © 2012-2014 The NovaCoin developers
-Copyright © 2014 The Transfer developers</translation>
+Copyright © 2014 The Ion developers</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -60,8 +60,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="-43"/>
-        <source>These are your Transfer addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
-        <translation>Tato jsou tvé Transfer adresy pro příjem plateb. Každému odesílateli můžeš dát jinou adresu, aby jsi mohl sledovat, kdo ti platí.</translation>
+        <source>These are your Ion addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
+        <translation>Tato jsou tvé Ion adresy pro příjem plateb. Každému odesílateli můžeš dát jinou adresu, aby jsi mohl sledovat, kdo ti platí.</translation>
     </message>
     <message>
         <location line="+53"/>
@@ -75,8 +75,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+7"/>
-        <source>Sign a message to prove you own a Transfer address</source>
-        <translation>Podepiš zprávu, aby jsi dokázal, že vlastníš tuto Transfer adresu.</translation>
+        <source>Sign a message to prove you own a Ion address</source>
+        <translation>Podepiš zprávu, aby jsi dokázal, že vlastníš tuto Ion adresu.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -90,8 +90,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="-10"/>
-        <source>Verify a message to ensure it was signed with a specified Transfer address</source>
-        <translation>Ověř zprávu, aby jsi zajistil, že byla podepsaná určitou Transfer adresou.</translation>
+        <source>Verify a message to ensure it was signed with a specified Ion address</source>
+        <translation>Ověř zprávu, aby jsi zajistil, že byla podepsaná určitou Ion adresou.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -258,8 +258,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+82"/>
-        <source>Transfer will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your coins from being stolen by malware infecting your computer.</source>
-        <translation>Pro dokončení procesu šifrování se Transfer nyní zavře, Pamatuj, že zašifrování tvé peněženky nemůže plně ochránit tvé mince před krádeží, pokud máš počítač infikován malwerem.</translation>
+        <source>Ion will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your coins from being stolen by malware infecting your computer.</source>
+        <translation>Pro dokončení procesu šifrování se Ion nyní zavře, Pamatuj, že zašifrování tvé peněženky nemůže plně ochránit tvé mince před krádeží, pokud máš počítač infikován malwerem.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -352,8 +352,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+4"/>
-        <source>Show information about Transfer</source>
-        <translation>Zobraz informace a Transferu</translation>
+        <source>Show information about Ion</source>
+        <translation>Zobraz informace a Ionu</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -392,13 +392,13 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="-55"/>
-        <source>Send coins to a Transfer address</source>
-        <translation>Odešli mince na Transfer adresu</translation>
+        <source>Send coins to a Ion address</source>
+        <translation>Odešli mince na Ion adresu</translation>
     </message>
     <message>
         <location line="+39"/>
-        <source>Modify configuration options for Transfer</source>
-        <translation>Uprav možnosti konfigurace pro Transfer</translation>
+        <source>Modify configuration options for Ion</source>
+        <translation>Uprav možnosti konfigurace pro Ion</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -438,8 +438,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-214"/>
         <location line="+551"/>
-        <source>Transfer</source>
-        <translation>Transfer</translation>
+        <source>Ion</source>
+        <translation>Ion</translation>
     </message>
     <message>
         <location line="-551"/>
@@ -448,8 +448,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+193"/>
-        <source>&amp;About Transfer</source>
-        <translation>&amp;O Transferu</translation>
+        <source>&amp;About Ion</source>
+        <translation>&amp;O Ionu</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -500,13 +500,13 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+0"/>
         <location line="+58"/>
-        <source>Transfer client</source>
-        <translation>Transfer klient</translation>
+        <source>Ion client</source>
+        <translation>Ion klient</translation>
     </message>
     <message numerus="yes">
         <location line="+70"/>
-        <source>%n active connection(s) to Transfer network</source>
-        <translation><numerusform>%n aktivní spojení do Transfer sítě</numerusform><numerusform>%n aktivních spojení do Transfer sítě</numerusform><numerusform>%n aktivních spojení do Transfer sítě</numerusform></translation>
+        <source>%n active connection(s) to Ion network</source>
+        <translation><numerusform>%n aktivní spojení do Ion sítě</numerusform><numerusform>%n aktivních spojení do Ion sítě</numerusform><numerusform>%n aktivních spojení do Ion sítě</numerusform></translation>
     </message>
     <message>
         <location line="+488"/>
@@ -600,8 +600,8 @@ Adresa: %4
     <message>
         <location line="-15"/>
         <location line="+15"/>
-        <source>URI can not be parsed! This can be caused by an invalid Transfer address or malformed URI parameters.</source>
-        <translation>URI nejde rozparsovat! To může být způsobeno neplatnou Transfer adresou nebo chybnými URI parametry.</translation>
+        <source>URI can not be parsed! This can be caused by an invalid Ion address or malformed URI parameters.</source>
+        <translation>URI nejde rozparsovat! To může být způsobeno neplatnou Ion adresou nebo chybnými URI parametry.</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -723,8 +723,8 @@ Adresa: %4
     </message>
     <message>
         <location filename="../bitcoin.cpp" line="+104"/>
-        <source>A fatal error occurred. Transfer can no longer continue safely and will quit.</source>
-        <translation>Došlo k závažné chybě. Transfer již nemůže dále bezpečně pokračovat a bude ukončen.</translation>
+        <source>A fatal error occurred. Ion can no longer continue safely and will quit.</source>
+        <translation>Došlo k závažné chybě. Ion již nemůže dále bezpečně pokračovat a bude ukončen.</translation>
     </message>
 </context>
 <context>
@@ -1057,8 +1057,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location line="-5"/>
-        <source>The entered address &quot;%1&quot; is not a valid Transfer address.</source>
-        <translation>Zadaná adresa &quot;%1&quot; není platná Transfer adresa.</translation>
+        <source>The entered address &quot;%1&quot; is not a valid Ion address.</source>
+        <translation>Zadaná adresa &quot;%1&quot; není platná Ion adresa.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1076,8 +1076,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     <message>
         <location filename="../guiutil.cpp" line="+426"/>
         <location line="+12"/>
-        <source>Transfer-Qt</source>
-        <translation>Transfer-Qt</translation>
+        <source>Ion-Qt</source>
+        <translation>Ion-Qt</translation>
     </message>
     <message>
         <location line="-12"/>
@@ -1149,13 +1149,13 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location line="+31"/>
-        <source>Automatically start Transfer after logging in to the system.</source>
-        <translation>Automaticky spustit Transfer po přihlášení do systému.</translation>
+        <source>Automatically start Ion after logging in to the system.</source>
+        <translation>Automaticky spustit Ion po přihlášení do systému.</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>&amp;Start Transfer on system login</source>
-        <translation>&amp;Spustit Transfer při přihlášení do systému</translation>
+        <source>&amp;Start Ion on system login</source>
+        <translation>&amp;Spustit Ion při přihlášení do systému</translation>
     </message>
     <message>
         <location line="+21"/>
@@ -1164,8 +1164,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location line="+6"/>
-        <source>Automatically open the Transfer client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Automaticky otevřít port Transfer klienta na routeru. Funguje to jen tehdy, když router podporuje UPnP a je povoleno.</translation>
+        <source>Automatically open the Ion client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Automaticky otevřít port Ion klienta na routeru. Funguje to jen tehdy, když router podporuje UPnP a je povoleno.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1174,8 +1174,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location line="+7"/>
-        <source>Connect to the Transfer network through a SOCKS proxy (e.g. when connecting through Tor).</source>
-        <translation>Připoj se do sítě Transfer přes SOCKS proxy (např. při připojení přes Tor)</translation>
+        <source>Connect to the Ion network through a SOCKS proxy (e.g. when connecting through Tor).</source>
+        <translation>Připoj se do sítě Ion přes SOCKS proxy (např. při připojení přes Tor)</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1249,8 +1249,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location line="+13"/>
-        <source>The user interface language can be set here. This setting will take effect after restarting Transfer.</source>
-        <translation>Zde můžeš nastavit jazyk uživatelského rozhraní. Nastavení se projeví až po restartu Transferu.</translation>
+        <source>The user interface language can be set here. This setting will take effect after restarting Ion.</source>
+        <translation>Zde můžeš nastavit jazyk uživatelského rozhraní. Nastavení se projeví až po restartu Ionu.</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -1316,8 +1316,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     <message>
         <location line="-9"/>
         <location line="+9"/>
-        <source>This setting will take effect after restarting Transfer.</source>
-        <translation>Nastavení se projeví až po restartu Transferu.</translation>
+        <source>This setting will take effect after restarting Ion.</source>
+        <translation>Nastavení se projeví až po restartu Ionu.</translation>
     </message>
     <message>
         <location line="+29"/>
@@ -1335,8 +1335,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     <message>
         <location line="+46"/>
         <location line="+247"/>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Transfer network after a connection is established, but this process has not completed yet.</source>
-        <translation>Zobrazené informace můžou být zastaralé. Tvá peněženka se automaticky synchronizuje s Transfer sítí po navázaní spojení, ale tento proces ještě není dokončený.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Ion network after a connection is established, but this process has not completed yet.</source>
+        <translation>Zobrazené informace můžou být zastaralé. Tvá peněženka se automaticky synchronizuje s Ion sítí po navázaní spojení, ale tento proces ještě není dokončený.</translation>
     </message>
     <message>
         <location line="-173"/>
@@ -1409,7 +1409,7 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     <name>PaymentServer</name>
     <message>
         <location filename="../paymentserver.cpp" line="+107"/>
-        <source>Cannot start transfer: click-to-pay handler</source>
+        <source>Cannot start ion: click-to-pay handler</source>
         <translation type="unfinished"/>
     </message>
 </context>
@@ -1577,8 +1577,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location line="+7"/>
-        <source>Show the Transfer-Qt help message to get a list with possible Transfer command-line options.</source>
-        <translation>Zobrazit Transfer-Qt nápovědu pro zobrazení seznam dostupným možností příkazového řádku.</translation>
+        <source>Show the Ion-Qt help message to get a list with possible Ion command-line options.</source>
+        <translation>Zobrazit Ion-Qt nápovědu pro zobrazení seznam dostupným možností příkazového řádku.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1597,13 +1597,13 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location line="-104"/>
-        <source>Transfer - Debug window</source>
-        <translation>Transfer - Ladící okno</translation>
+        <source>Ion - Debug window</source>
+        <translation>Ion - Ladící okno</translation>
     </message>
     <message>
         <location line="+25"/>
-        <source>Transfer Core</source>
-        <translation>Jádro Transferu</translation>
+        <source>Ion Core</source>
+        <translation>Jádro Ionu</translation>
     </message>
     <message>
         <location line="+256"/>
@@ -1612,8 +1612,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location line="+7"/>
-        <source>Open the Transfer debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Otevři logovací soubor Transferu z aktuálního datového adresáře. Pro velké logy to může trvat několik sekund.</translation>
+        <source>Open the Ion debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Otevři logovací soubor Ionu z aktuálního datového adresáře. Pro velké logy to může trvat několik sekund.</translation>
     </message>
     <message>
         <location line="+102"/>
@@ -1622,8 +1622,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="+325"/>
-        <source>Welcome to the Transfer RPC console.</source>
-        <translation>Vítej v Transfer RPC konzoli.</translation>
+        <source>Welcome to the Ion RPC console.</source>
+        <translation>Vítej v Ion RPC konzoli.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1731,8 +1731,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
         <location line="+86"/>
         <location line="+86"/>
         <location line="+32"/>
-        <source>0.00 TX</source>
-        <translation>123.456 TX {0.00 ?}</translation>
+        <source>0.00 ION</source>
+        <translation>123.456 ION {0.00 ?}</translation>
     </message>
     <message>
         <location line="-191"/>
@@ -1816,8 +1816,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="-173"/>
-        <source>Enter a Transfer address (e.g. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
-        <translation>Napiš Transfer adresu (např. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</translation>
+        <source>Enter a Ion address (e.g. ioNrqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation>Napiš Ion adresu (např. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -1916,8 +1916,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location line="+247"/>
-        <source>WARNING: Invalid Transfer address</source>
-        <translation>UPOZORNĚNÍ: Neplatná Transfer adresa</translation>
+        <source>WARNING: Invalid Ion address</source>
+        <translation>UPOZORNĚNÍ: Neplatná Ion adresa</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1949,7 +1949,7 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location line="+34"/>
-        <source>The address to send the payment to (e.g. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <source>The address to send the payment to (e.g. ioNrqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1990,8 +1990,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a Transfer address (e.g. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
-        <translation>Zadej Transfer adresu (např. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</translation>
+        <source>Enter a Ion address (e.g. ioNrqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation>Zadej Ion adresu (např. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</translation>
     </message>
 </context>
 <context>
@@ -2014,7 +2014,7 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location line="+18"/>
-        <source>The address to sign the message with (e.g. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <source>The address to sign the message with (e.g. ioNrqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
         <translation>Adresa pro podepsání zprávy (např. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</translation>
     </message>
     <message>
@@ -2051,8 +2051,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location line="+21"/>
-        <source>Sign the message to prove you own this Transfer address</source>
-        <translation>Podepiš zprávu jako důkaz, že vlastníš tuto Transfer adresu</translation>
+        <source>Sign the message to prove you own this Ion address</source>
+        <translation>Podepiš zprávu jako důkaz, že vlastníš tuto Ion adresu</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -2078,13 +2078,13 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location line="+21"/>
-        <source>The address the message was signed with (e.g. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <source>The address the message was signed with (e.g. ioNrqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
         <translation>Adresa kterou byla zpráva podepsána (např. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</translation>
     </message>
     <message>
         <location line="+40"/>
-        <source>Verify the message to ensure it was signed with the specified Transfer address</source>
-        <translation>Ověř zprávu, aby ses ujistil, že byla podepsána danou Transfer adresou</translation>
+        <source>Verify the message to ensure it was signed with the specified Ion address</source>
+        <translation>Ověř zprávu, aby ses ujistil, že byla podepsána danou Ion adresou</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -2094,8 +2094,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a Transfer address (e.g. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
-        <translation>Zadej Transfer adresu (např. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</translation>
+        <source>Enter a Ion address (e.g. ioNrqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation>Zadej Ion adresu (např. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</translation>
     </message>
     <message>
         <location line="-2"/>
@@ -2104,8 +2104,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Enter Transfer signature</source>
-        <translation>Zadej Transfer podpis</translation>
+        <source>Enter Ion signature</source>
+        <translation>Zadej Ion podpis</translation>
     </message>
     <message>
         <location line="+82"/>
@@ -2683,8 +2683,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     <name>bitcoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="+173"/>
-        <source>Transfer version</source>
-        <translation>Verze Transferu</translation>
+        <source>Ion version</source>
+        <translation>Verze Ionu</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2693,8 +2693,8 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Send command to -server or transferd</source>
-        <translation>Pošli příkaz na -server nebo transferd</translation>
+        <source>Send command to -server or iond</source>
+        <translation>Pošli příkaz na -server nebo iond</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2713,13 +2713,13 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Specify configuration file (default: transfer.conf)</source>
-        <translation>Urči konfigurační soubor (výchozí: transfer.conf)</translation>
+        <source>Specify configuration file (default: ion.conf)</source>
+        <translation>Urči konfigurační soubor (výchozí: ion.conf)</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Specify pid file (default: transferd.pid)</source>
-        <translation>Urči pid soubor (výchozí: transferd.pid)</translation>
+        <source>Specify pid file (default: iond.pid)</source>
+        <translation>Urči pid soubor (výchozí: iond.pid)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2736,13 +2736,13 @@ To znamená, že je potřebný poplatek ve výši nejméně %2.</translation>
         <source>%s, you must set a rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
-rpcuser=transferrpc
+rpcuser=ionrpc
 rpcpassword=%s
 (you do not need to remember this password)
 The username and password MUST NOT be the same.
 If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s &quot;Transfer Alert&quot; admin@foo.com
+for example: alertnotify=echo %%s | mail -s &quot;Ion Alert&quot; admin@foo.com
 </source>
         <translation type="unfinished"/>
     </message>
@@ -2848,8 +2848,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Transfer Alert&quot; admin@foo
     </message>
     <message>
         <location line="-103"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Transfer will not work properly.</source>
-        <translation>Upozornění: Zkontroluj prosím datum a čas tvého počítače! Pokud jdou tvé hodiny špatně, tak Transfer nebude pracovat správně. </translation>
+        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Ion will not work properly.</source>
+        <translation>Upozornění: Zkontroluj prosím datum a čas tvého počítače! Pokud jdou tvé hodiny špatně, tak Ion nebude pracovat správně. </translation>
     </message>
     <message>
         <location line="+132"/>
@@ -3155,7 +3155,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Transfer Alert&quot; admin@foo
     </message>
     <message>
         <location line="+10"/>
-        <source>Initialization sanity check failed. Transfer is shutting down.</source>
+        <source>Initialization sanity check failed. Ion is shutting down.</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -3220,13 +3220,13 @@ for example: alertnotify=echo %%s | mail -s &quot;Transfer Alert&quot; admin@foo
     </message>
     <message>
         <location line="+4"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of Transfer</source>
-        <translation>Chyba načítání wallet.dat: Peněženka vyžaduje novější verzi Transferu</translation>
+        <source>Error loading wallet.dat: Wallet requires newer version of Ion</source>
+        <translation>Chyba načítání wallet.dat: Peněženka vyžaduje novější verzi Ionu</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Wallet needed to be rewritten: restart Transfer to complete</source>
-        <translation>Peněženka by potřebovala být přepsána: restartuj Transfer pro dokončení</translation>
+        <source>Wallet needed to be rewritten: restart Ion to complete</source>
+        <translation>Peněženka by potřebovala být přepsána: restartuj Ion pro dokončení</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3290,8 +3290,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Transfer Alert&quot; admin@foo
     </message>
     <message>
         <location line="+125"/>
-        <source>Unable to bind to %s on this computer. Transfer is probably already running.</source>
-        <translation>Nemůžu se svázat s %s na tomto počítači. Transfer nejspíše již běží.</translation>
+        <source>Unable to bind to %s on this computer. Ion is probably already running.</source>
+        <translation>Nemůžu se svázat s %s na tomto počítači. Ion nejspíše již běží.</translation>
     </message>
     <message>
         <location line="-101"/>
@@ -3330,7 +3330,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Transfer Alert&quot; admin@foo
     </message>
     <message>
         <location line="+3"/>
-        <source>Cannot obtain a lock on data directory %s. Transfer is probably already running.</source>
+        <source>Cannot obtain a lock on data directory %s. Ion is probably already running.</source>
         <translation type="unfinished"/>
     </message>
     <message>

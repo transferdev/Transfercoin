@@ -1172,7 +1172,7 @@ public:
 
 
 
-/** Internal transfers.
+/** Internal ions.
  * Database key is acentry<account><counter>.
  */
 class CAccountingEntry

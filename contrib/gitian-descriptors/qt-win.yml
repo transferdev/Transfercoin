@@ -15,8 +15,8 @@ reference_datetime: "2013-06-01 00:00:00"
 remotes: []
 files:
 - "qt-everywhere-opensource-src-5.5.0.tar.xz"
-- "transfer-deps-win32-gitian.zip"
-- "transfer-deps-win64-gitian.zip"
+- "ion-deps-win32-gitian.zip"
+- "ion-deps-win64-gitian.zip"
 script: |
   # Defines
   export TZ=UTC
@@ -31,8 +31,8 @@ script: |
   #  For now luckily there is a test mode that forces a fixed seed.
   export QT_RCC_TEST=1
   # Integrity Check
-  echo "c603942b866f8a8ffff441c0d3e8c69d29a45e0bd3e48d386e7dc27d03237178  transfer-deps-win32-gitian.zip"  | sha256sum -c
-  echo "1cb5e1b498e86917db690bc07ee73c9d6ffc23cf3509607d4f79aba53e87ecff  transfer-deps-win64-gitian.zip"  | sha256sum -c
+  echo "c603942b866f8a8ffff441c0d3e8c69d29a45e0bd3e48d386e7dc27d03237178  ion-deps-win32-gitian.zip"  | sha256sum -c
+  echo "1cb5e1b498e86917db690bc07ee73c9d6ffc23cf3509607d4f79aba53e87ecff  ion-deps-win64-gitian.zip"  | sha256sum -c
   echo "7ea2a16ecb8088e67db86b0835b887d5316121aeef9565d5d19be3d539a2c2af  qt-everywhere-opensource-src-5.5.0.tar.xz"  | sha256sum -c
   for BITS in 32 64; do # for architectures
     #
@@ -47,9 +47,9 @@ script: |
     #
     mkdir -p $INSTALLPREFIX $INSTALLPREFIX/host/bin $DEPSDIR $BUILDDIR
     #
-    # Need mingw-compiled openssl from transfer-deps:
+    # Need mingw-compiled openssl from ion-deps:
     cd $DEPSDIR
-    unzip -o $INDIR/transfer-deps-win${BITS}-gitian.zip
+    unzip -o $INDIR/ion-deps-win${BITS}-gitian.zip
     #
     cd $BUILDDIR
     #

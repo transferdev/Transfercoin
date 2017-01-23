@@ -1,5 +1,5 @@
 ---
-name: "transfer-deps"
+name: "ion-deps"
 suites:
 - "trusty"
 architectures:
@@ -204,5 +204,5 @@ script: |
     #
     cd $INSTALLPREFIX
     find -print0 | xargs -r0 touch # fix up timestamps before packaging
-    find include lib | sort | zip -X@ $OUTDIR/transfer-deps-win$BITS-gitian.zip
+    find include lib | sort | zip -X@ $OUTDIR/ion-deps-win$BITS-gitian.zip
   done # for BITS in

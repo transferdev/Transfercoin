@@ -127,11 +127,7 @@ Value getstakinginfo(const Array& params, bool fHelp)
 
     uint64_t nNetworkWeight = GetPoSKernelPS();
     bool staking = nLastCoinStakeSearchInterval && nWeight;
-    if(pindexBest->nHeight <= HARD_FORK_BLOCK){
-        nExpectedTime = staking ? (TARGET_SPACING_FORK * nNetworkWeight / nWeight) : 0;
-    } else {
-        nExpectedTime = staking ? (TARGET_SPACING * nNetworkWeight / nWeight) : 0;
-    }
+	nExpectedTime = staking ? (nTargetSpacing * nNetworkWeight / nWeight) : 0;
 
     Object obj;
 
@@ -168,11 +164,11 @@ Value checkkernel(const Array& params, bool fHelp)
     bool fCreateBlockTemplate = params.size() > 1 ? params[1].get_bool() : false;
 
     if (vNodes.empty())
-        throw JSONRPCError(-9, "Transfer is not connected!");
-
+        throw JSONRPCError(-9, "Ion is not connected!");
+/*
     if (IsInitialBlockDownload())
-        throw JSONRPCError(-10, "Transfer is downloading blocks...");
-
+        throw JSONRPCError(-10, "Ion is downloading blocks...");
+*/
     COutPoint kernel;
     CBlockIndex* pindexPrev = pindexBest;
     unsigned int nBits = GetNextTargetRequired(pindexPrev, true);
@@ -249,11 +245,11 @@ Value getworkex(const Array& params, bool fHelp)
         );
 
     if (vNodes.empty())
-        throw JSONRPCError(-9, "Transfer is not connected!");
-
+        throw JSONRPCError(-9, "Ion is not connected!");
+/*
     if (IsInitialBlockDownload())
-        throw JSONRPCError(-10, "Transfer is downloading blocks...");
-
+        throw JSONRPCError(-10, "Ion is downloading blocks...");
+*/
     if (pindexBest->nHeight >= Params().LastPOWBlock())
         throw JSONRPCError(RPC_MISC_ERROR, "No more PoW blocks");
 
@@ -383,11 +379,11 @@ Value getwork(const Array& params, bool fHelp)
             "If [data] is specified, tries to solve the block and returns true if it was successful.");
 
     if (vNodes.empty())
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Transfer is not connected!");
-
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Ion is not connected!");
+/*
     if (IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Transfer is downloading blocks...");
-
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Ion is downloading blocks...");
+*/
     if (pindexBest->nHeight >= Params().LastPOWBlock())
         throw JSONRPCError(RPC_MISC_ERROR, "No more PoW blocks");
 
@@ -535,10 +531,10 @@ Value getblocktemplate(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
 
     if (vNodes.empty())
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Transfer is not connected!");
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Ion is not connected!");
 
     //if (IsInitialBlockDownload())
-    //    throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Transfer is downloading blocks...");
+    //    throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Ion is downloading blocks...");
 
     if (pindexBest->nHeight >= Params().LastPOWBlock())
         throw JSONRPCError(RPC_MISC_ERROR, "No more PoW blocks");

@@ -204,7 +204,7 @@ std::string getOutputs(std::string txid)
         const CTxOut& txout = tx.vout[i];
         CTxDestination source;
         ExtractDestination(txout.scriptPubKey, source);
-        CTransfercoinAddress addressSource(source);
+        CIonAddress addressSource(source);
         std::string lol7 = addressSource.ToString();
         double buffer = convertCoins(txout.nValue);
 		std::ostringstream ss;
@@ -213,7 +213,7 @@ std::string getOutputs(std::string txid)
         str.append(lol7);
         str.append(": ");
         str.append(amount);
-        str.append(" TX");
+        str.append(" ION");
         str.append("\n");
     }
 
@@ -249,7 +249,7 @@ std::string getInputs(std::string txid)
 
         CTxDestination source;
         ExtractDestination(wtxPrev.vout[vin.prevout.n].scriptPubKey, source);
-        CTransfercoinAddress addressSource(source);
+        CIonAddress addressSource(source);
         std::string lol6 = addressSource.ToString();
         const CScript target = wtxPrev.vout[vin.prevout.n].scriptPubKey;
         double buffer = convertCoins(getInputValue(wtxPrev, target));
@@ -259,7 +259,7 @@ std::string getInputs(std::string txid)
         str.append(lol6);
         str.append(": ");
         str.append(amount);
-        str.append(" TX");
+        str.append(" ION");
         str.append("\n");
     }
 
@@ -404,11 +404,11 @@ void BlockBrowser::updateExplorer(bool block)
         QString QOutputs = QString::fromUtf8(outputs.c_str());
         QString QInputs = QString::fromUtf8(inputs.c_str());
         QString QFees = QString::number(fees, 'f', 6);
-        ui->valueBox->setText(QValue + " TX");
+        ui->valueBox->setText(QValue + " ION");
         ui->txID->setText(QID);
         ui->outputBox->setText(QOutputs);
         ui->inputBox->setText(QInputs);
-        ui->feesBox->setText(QFees + " TX");
+        ui->feesBox->setText(QFees + " ION");
     }
 }
 

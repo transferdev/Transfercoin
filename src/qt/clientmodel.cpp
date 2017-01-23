@@ -218,6 +218,14 @@ void ClientModel::updateBanlist()
     banTableModel->refresh();
 }
 
+QString ClientModel::getNetworkName() const
+{
+    QString netname(QString::fromStdString(Params().DataDir()));
+    if(netname.isEmpty())
+        netname = "main";
+    return netname;
+}
+ 
 // Handlers for core signals
 static void ShowProgress(ClientModel *clientmodel, const std::string &title, int nProgress)
 {
