@@ -618,7 +618,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        bool isLocal = addr.IsRFC1918() || addr.IsLocal();
+        bool isIPV4 = addr.IsIPv4() && IsReachable(addr) && addr.IsRoutable();
         //if(RegTest()) isLocal = false;
 
         std::string vchPubKey(pubkey.begin(), pubkey.end());
@@ -664,6 +664,10 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             Misbehaving(pfrom->GetId(), 100);
             return;
         }
+
+        if(Params().NetworkID() == CChainParams::MAIN){
+            if(addr.GetPort() != 17170) return;
+        } else if(addr.GetPort() == 17170) return;
 
         //search existing masternode list, this is where we update existing masternodes with new dsee broadcasts
         CMasternode* pmn = this->Find(vin);
@@ -765,7 +769,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                 activeMasternode.EnableHotColdMasterNode(vin, addr);
             }
 
-            if(count == -1 && !isLocal)
+            if(count == -1 && isIPV4)
                 mnodeman.RelayMasternodeEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion, donationAddress, donationPercentage);
 
         } else {
