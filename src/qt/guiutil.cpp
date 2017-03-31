@@ -7,6 +7,7 @@
 #include "walletmodel.h"
 
 #include "init.h"
+#include "protocol.h"
 #include "util.h"
 
 #ifdef WIN32
@@ -200,6 +201,19 @@ void copyEntryData(QAbstractItemView *view, int column, int role)
         // Copy first item
         setClipboard(selection.at(0).data(role).toString());
     }
+}
+
+QString getEntryData(QAbstractItemView *view, int column, int role)
+{
+    if(!view || !view->selectionModel())
+        return QString();
+    QModelIndexList selection = view->selectionModel()->selectedRows(column);
+
+    if(!selection.isEmpty()) {
+        // Return first item
+        return (selection.at(0).data(role).toString());
+    }
+    return QString();
 }
 
 QString getSaveFileName(QWidget *parent, const QString &caption,
@@ -771,5 +785,63 @@ QString boostPathToQString(const boost::filesystem::path &path)
     return QString::fromStdString(path.string());
 }
 #endif
+
+QString formatDurationStr(int secs)
+{
+    QStringList strList;
+    int days = secs / 86400;
+    int hours = (secs % 86400) / 3600;
+    int mins = (secs % 3600) / 60;
+    int seconds = secs % 60;
+
+    if (days)
+        strList.append(QString(QObject::tr("%1 d")).arg(days));
+    if (hours)
+        strList.append(QString(QObject::tr("%1 h")).arg(hours));
+    if (mins)
+        strList.append(QString(QObject::tr("%1 m")).arg(mins));
+    if (seconds || (!days && !hours && !mins))
+        strList.append(QString(QObject::tr("%1 s")).arg(seconds));
+
+    return strList.join(" ");
+}
+
+QString formatServicesStr(uint64_t mask)
+{
+    QStringList strList;
+
+    // Just scan the last 8 bits for now.
+    for (int i=0; i < 8; i++) {
+        uint64_t check = 1 << i;
+        if (mask & check)
+        {
+            switch (check)
+            {
+            case NODE_NETWORK:
+                strList.append(QObject::tr("NETWORK"));
+                break;
+            default:
+                strList.append(QString("%1[%2]").arg(QObject::tr("UNKNOWN")).arg(check));
+            }
+        }
+    }
+
+    if (strList.size())
+        return strList.join(" & ");
+    else
+        return QObject::tr("None");
+
+}
+
+QString formatPingTime(double dPingTime)
+{
+    return dPingTime == 0 ? QObject::tr("N/A") : QString(QObject::tr("%1 s")).arg(QString::number(dPingTime, 'f', 3));
+}
+
+QString formatTimeOffset(int64_t nTimeOffset)
+{
+  return QString(QObject::tr("%1 s")).arg(QString::number((int)nTimeOffset, 10));
+}
+
 
 } // namespace GUIUtil

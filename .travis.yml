@@ -1,13 +1,7 @@
-sudo: false
+sudo: required
+dist: trusty
 os:
   - linux
-cache: 
-  apt: true
-  directories:
-  - $HOME/transferdev/Transfercoin/src/leveldb
-  - $HOME/transferdev/Transfercoin/src/secp256k1
-  - $HOME/Infernoman/Transfercoin/src/leveldb
-  - $HOME/Infernoman/Transfercoin/src/secp256k1
 addons:
   apt:
     sources:

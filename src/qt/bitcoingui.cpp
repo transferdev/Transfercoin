@@ -13,6 +13,7 @@
 #include "addressbookpage.h"
 #include "sendcoinsdialog.h"
 #include "signverifymessagedialog.h"
+#include "multisigdialog.h"
 #include "optionsdialog.h"
 #include "aboutdialog.h"
 #include "clientmodel.h"
@@ -143,6 +144,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     signVerifyMessageDialog = new SignVerifyMessageDialog(this);
 
+    multisigPage = new MultisigDialog(this);
+
     masternodeManagerPage = new MasternodeManager(this);
     messagePage = new MessagePage(this);
 
@@ -243,7 +246,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Double-clicking on a transaction on the transaction history page shows details
     connect(transactionView, SIGNAL(doubleClicked(QModelIndex)), transactionView, SLOT(showDetails()));
 
-    rpcConsole = new RPCConsole(this);
+    rpcConsole = new RPCConsole(0);
     connect(openRPCConsoleAction, SIGNAL(triggered()), rpcConsole, SLOT(show()));
 
     // clicking on automatic backups shows details
@@ -267,6 +270,8 @@ BitcoinGUI::~BitcoinGUI()
 #ifdef Q_OS_MAC
     delete appMenuBar;
 #endif
+
+    delete rpcConsole;
 }
 
 void BitcoinGUI::createActions()
@@ -326,6 +331,9 @@ void BitcoinGUI::createActions()
     TradingAction->setProperty("objectName","TradingAction");
     tabGroup->addAction(TradingAction);
 
+    multisigAction = new QAction(QIcon(":/icons/send"), tr("Multisig"), this);
+    tabGroup->addAction(multisigAction);
+
     showBackupsAction = new QAction(QIcon(":/icons/browse"), tr("Show Auto&Backups"), this);
     showBackupsAction->setStatusTip(tr("S"));
 
@@ -345,6 +353,8 @@ void BitcoinGUI::createActions()
     connect(masternodeManagerAction, SIGNAL(triggered()), this, SLOT(gotoMasternodeManagerPage()));
     connect(messageAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(messageAction, SIGNAL(triggered()), this, SLOT(gotoMessagePage()));
+    connect(multisigAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(multisigAction, SIGNAL(triggered()), this, SLOT(gotoMultisigPage()));
 
     quitAction = new QAction(tr("E&xit"), this);
     quitAction->setToolTip(tr("Quit application"));
@@ -406,6 +416,7 @@ void BitcoinGUI::createMenuBar()
     file->addAction(exportAction);
     file->addAction(signMessageAction);
     file->addAction(verifyMessageAction);
+    file->addAction(multisigAction);
     file->addSeparator();
     file->addAction(quitAction);
 
@@ -553,6 +564,7 @@ void BitcoinGUI::setWalletModel(WalletModel *walletModel)
         signVerifyMessageDialog->setModel(walletModel);
         blockBrowser->setModel(walletModel);
         tradingDialogPage->setModel(walletModel);
+        multisigPage->setModel(walletModel);
 
         setEncryptionStatus(walletModel->getEncryptionStatus());
         connect(walletModel, SIGNAL(encryptionStatusChanged(int)), this, SLOT(setEncryptionStatus(int)));
@@ -606,6 +618,7 @@ void BitcoinGUI::createTrayIcon()
     trayIconMenu->addAction(toggleHideAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(receiveCoinsAction);
+    trayIconMenu->addAction(multisigAction);
     trayIconMenu->addAction(sendCoinsAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(signMessageAction);
@@ -829,6 +842,9 @@ void BitcoinGUI::closeEvent(QCloseEvent *event)
         if(!clientModel->getOptionsModel()->getMinimizeToTray() &&
            !clientModel->getOptionsModel()->getMinimizeOnClose())
         {
+            // close rpcConsole in case it was open to make some space for the shutdown window
+            rpcConsole->close();
+
             qApp->quit();
         }
 #endif
@@ -1024,6 +1040,12 @@ void BitcoinGUI::gotoMessagePage()
     exportAction->setEnabled(true);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
     connect(exportAction, SIGNAL(triggered()), messagePage, SLOT(exportClicked()));
+}
+
+void BitcoinGUI::gotoMultisigPage()
+{
+    multisigPage->show();
+    multisigPage->setFocus();
 }
 
 void BitcoinGUI::dragEnterEvent(QDragEnterEvent *event)

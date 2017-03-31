@@ -5,42 +5,64 @@
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
-#include <deque>
-#include <boost/array.hpp>
-#include <boost/foreach.hpp>
-#include <boost/signals2/signal.hpp>
-#include <openssl/rand.h>
+#include "compat.h"
+#include "core.h"
+#include "hash.h"
+#include "limitedmap.h"
+#include "mruset.h"
+#include "netbase.h"
+#include "protocol.h"
+#include "sync.h"
+#include "uint256.h"
+#include "util.h"
 
+#include <deque>
+#include <stdint.h>
 
 #ifndef WIN32
 #include <arpa/inet.h>
 #endif
 
-#include "mruset.h"
-#include "netbase.h"
-#include "protocol.h"
-#include "addrman.h"
-#include "hash.h"
-#include "core.h"
+#include <boost/array.hpp>
+#include <boost/foreach.hpp>
+#include <boost/signals2/signal.hpp>
+#include <openssl/rand.h>
 
-class CNode;
+class CAddrMan;
 class CBlockIndex;
 extern int nBestHeight;
+
+class CNode;
+
+namespace boost {
+    class thread_group;
+}
 
 
 /** Time between pings automatically sent out for latency probing and keepalive (in seconds). */
 static const int PING_INTERVAL = 1 * 60;
 /** Time after which to disconnect, after waiting for a ping response (or inactivity). */
 static const int TIMEOUT_INTERVAL = 20 * 60;
+/** Maximum length of strSubVer in `version` message */
+static const unsigned int MAX_SUBVERSION_LENGTH = 256;
+/** The maximum number of entries in an 'inv' protocol message */
+static const unsigned int MAX_INV_SZ = 50000;
+/** The maximum number of entries in mapAskFor */
+static const size_t MAPASKFOR_MAX_SZ = MAX_INV_SZ;
+/** The maximum number of entries in setAskFor (larger due to getdata latency)*/
+static const size_t SETASKFOR_MAX_SZ = 2 * MAX_INV_SZ;
+/** The maximum number of new addresses to accumulate before announcing. */
+static const unsigned int MAX_ADDR_TO_SEND = 1000;
 
-inline unsigned int ReceiveFloodSize() { return 2000*GetArg("-maxreceivebuffer", 5*1000); }
-inline unsigned int SendBufferSize() { return 5000*GetArg("-maxsendbuffer", 1*1000); }
+inline unsigned int ReceiveFloodSize() { return 1000*GetArg("-maxreceivebuffer", 5*1000); }
+inline unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 1*1000); }
 
 void AddOneShot(std::string strDest);
 bool RecvLine(SOCKET hSocket, std::string& strLine);
 void AddressCurrentlyConnected(const CService& addr);
 CNode* FindNode(const CNetAddr& ip);
-CNode* FindNode(const std::string& addrName);
+CNode* FindNode(const CSubNet& subNet);
+CNode* FindNode(std::string addrName);
 CNode* FindNode(const CService& ip);
 CNode* ConnectNode(CAddress addrConnect, const char *strDest = NULL, bool darkSendMaster=false);
 void MapPort(bool fUseUPnP);
@@ -110,13 +132,14 @@ extern bool fDiscover;
 extern uint64_t nLocalServices;
 extern uint64_t nLocalHostNonce;
 extern CAddrMan addrman;
+extern int nMaxConnections;
 
 extern std::vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
 extern std::map<CInv, CDataStream> mapRelay;
 extern std::deque<std::pair<int64_t, CInv> > vRelayExpiration;
 extern CCriticalSection cs_mapRelay;
-extern std::map<CInv, int64_t> mapAlreadyAskedFor;
+extern limitedmap<CInv, int64_t> mapAlreadyAskedFor;
 
 extern std::vector<std::string> vAddedNodes;
 extern CCriticalSection cs_vAddedNodes;
@@ -126,6 +149,16 @@ extern CCriticalSection cs_nLastNodeId;
 
 extern NodeId nLastNodeId;
 extern CCriticalSection cs_nLastNodeId;
+struct LocalServiceInfo {
+    int nScore;
+    int nPort;
+};
+
+extern CCriticalSection cs_mapLocalHost;
+extern map<CNetAddr, LocalServiceInfo> mapLocalHost;
+
+/** Subversion as sent to the P2P network in `version` messages */
+extern std::string strSubVersion;
 
 class CNodeStats
 {
@@ -164,14 +197,11 @@ public:
     CDataStream vRecv;              // received message data
     unsigned int nDataPos;
 
-    int64_t nTime;                  // time (in microseconds) of message receipt.
-
     CNetMessage(int nTypeIn, int nVersionIn) : hdrbuf(nTypeIn, nVersionIn), vRecv(nTypeIn, nVersionIn) {
         hdrbuf.resize(24);
         in_data = false;
         nHdrPos = 0;
         nDataPos = 0;
-        nTime = 0;
     }
 
     bool complete() const
@@ -191,6 +221,64 @@ public:
     int readData(const char *pch, unsigned int nBytes);
 };
 
+typedef enum BanReason
+{
+    BanReasonUnknown          = 0,
+    BanReasonNodeMisbehaving  = 1,
+    BanReasonManuallyAdded    = 2
+} BanReason;
+
+class CBanEntry
+{
+public:
+    static const int CURRENT_VERSION=1;
+    int nVersion;
+    int64_t nCreateTime;
+    int64_t nBanUntil;
+    uint8_t banReason;
+
+    CBanEntry()
+    {
+        SetNull();
+    }
+
+    CBanEntry(int64_t nCreateTimeIn)
+    {
+        SetNull();
+        nCreateTime = nCreateTimeIn;
+    }
+  
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(this->nVersion);
+        nVersion = this->nVersion;
+        READWRITE(nCreateTime);
+        READWRITE(nBanUntil);
+        READWRITE(banReason);
+    )
+
+    void SetNull()
+    {
+        nVersion = CBanEntry::CURRENT_VERSION;
+        nCreateTime = 0;
+        nBanUntil = 0;
+        banReason = BanReasonUnknown;
+    }
+
+    std::string banReasonToString()
+    {
+        switch (banReason) {
+        case BanReasonNodeMisbehaving:
+            return "node misbehabing";
+        case BanReasonManuallyAdded:
+            return "manually added";
+        default:
+            return "unknown";
+        }
+    }
+};
+  
+typedef std::map<CSubNet, CBanEntry> banmap_t;
 
 class SecMsgNode
 {
@@ -241,6 +329,7 @@ public:
 
     int64_t nLastSend;
     int64_t nLastRecv;
+    int64_t nLastSendEmpty;
     int64_t nTimeConnected;
     int64_t nTimeOffset;
     CAddress addr;
@@ -271,9 +360,9 @@ protected:
 
     // Denial-of-service detection/prevention
     // Key is IP address, value is banned-until-time
-    static std::map<CNetAddr, int64_t> setBanned;
+    static banmap_t setBanned;
     static CCriticalSection cs_setBanned;
-
+    static bool setBannedIsDirty;
 
     std::vector<std::string> vecRequestsFulfilled; //keep track of what client has asked for
 
@@ -295,6 +384,7 @@ public:
     mruset<CInv> setInventoryKnown;
     std::vector<CInv> vInventoryToSend;
     CCriticalSection cs_inventory;
+    std::set<uint256> setAskFor;
     std::multimap<int64_t, CInv> mapAskFor;
 
     SecMsgNode smsgData;
@@ -318,6 +408,7 @@ public:
         nLastRecv = 0;
         nSendBytes = 0;
         nRecvBytes = 0;
+        nLastSendEmpty = GetTime();
         nTimeConnected = GetTime();
         nTimeOffset = 0;
         addr = addrIn;
@@ -339,6 +430,7 @@ public:
         nStartingHeight = -1;
         fStartSync = false;
         fGetAddr = false;
+        fRelayTxes = false;
         hashCheckpointKnown = 0;
         setInventoryKnown.max_size(SendBufferSize() / 1000);
         nPingNonceSent = 0;
@@ -432,8 +524,13 @@ public:
         // Known checking here is only to save space from duplicates.
         // SendMessages will filter it again for knowns that were added
         // after addresses were pushed.
-        if (addr.IsValid() && !setAddrKnown.count(addr))
-            vAddrToSend.push_back(addr);
+        if (addr.IsValid() && !setAddrKnown.count(addr)) {
+            if (vAddrToSend.size() >= MAX_ADDR_TO_SEND) {
+                vAddrToSend[insecure_rand() % vAddrToSend.size()] = addr;
+            } else {
+                vAddrToSend.push_back(addr);
+            }
+        }
     }
 
 
@@ -454,12 +551,24 @@ public:
         }
     }
 
-    void AskFor(const CInv& inv)
+    void AskFor(const CInv& inv, bool fImmediateRetry = false)
     {
+        if (mapAskFor.size() > MAPASKFOR_MAX_SZ)
+            return;
+        // a peer may not have multiple non-responded queue positions for a single inv item
+        if (!setAskFor.insert(inv.hash).second)
+            return;
+
+
         // We're using mapAskFor as a priority queue,
         // the key is the earliest time the request can be sent
-        int64_t& nRequestTime = mapAlreadyAskedFor[inv];
-        LogPrint("net", "askfor %s   %d (%s)\n", inv.ToString(), nRequestTime, DateTimeStrFormat("%H:%M:%S", nRequestTime/1000000));
+        int64_t nRequestTime;
+        limitedmap<CInv, int64_t>::const_iterator it = mapAlreadyAskedFor.find(inv);
+        if (it != mapAlreadyAskedFor.end())
+            nRequestTime = it->second;
+        else
+            nRequestTime = 0;
+        LogPrint("net", "askfor %s   %d (%s)\n", inv.ToString().c_str(), nRequestTime, DateTimeStrFormat("%H:%M:%S", nRequestTime/1000000).c_str());
 
         // Make sure not to reuse time indexes to keep things in the same order
         int64_t nNow = GetTimeMicros() - 1000000;
@@ -468,8 +577,15 @@ public:
         nNow = std::max(nNow, nLastTime);
         nLastTime = nNow;
 
-        // Each retry is 2 minutes after the last
-        nRequestTime = std::max(nRequestTime + 2 * 60 * 1000000, nNow);
+        // Retry immediately during initial sync otherwise retry 2 minutes after the last
+        if (fImmediateRetry)
+        	nRequestTime = nNow;
+        else
+            nRequestTime = std::max(nRequestTime + 2 * 60 * 1000000, nNow);
+        if (it != mapAlreadyAskedFor.end())
+            mapAlreadyAskedFor.update(it, nRequestTime);
+        else
+            mapAlreadyAskedFor.insert(std::make_pair(inv, nRequestTime));
         mapAskFor.insert(std::make_pair(nRequestTime, inv));
     }
 
@@ -497,7 +613,10 @@ public:
     // TODO: Document the precondition of this function.  Is cs_vSend locked?
     void EndMessage() UNLOCK_FUNCTION(cs_vSend)
     {
-        if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
+        // The -*messagestest options are intentionally not documented in the help message,
+        // since they are only used during development to debug the networking code and are
+        // not intended for end-users.
+        if (mapArgs.count("-dropmessagestest") && GetRand(GetArg("-dropmessagestest", 2)) == 0)
         {
             LogPrint("net", "dropmessages DROPPING SEND MESSAGE\n");
             AbortMessage();
@@ -754,10 +873,12 @@ template<typename T1, typename T2, typename T3, typename T4, typename T5, typena
         vecRequestsFulfilled.push_back(strRequest);
     }
 
+
     bool IsSubscribed(unsigned int nChannel);
     void Subscribe(unsigned int nChannel, unsigned int nHops=0);
     void CancelSubscribe(unsigned int nChannel);
     void CloseSocketDisconnect();
+
 
     // Denial-of-service detection/prevention
     // The idea is to detect peers that are behaving
@@ -775,7 +896,21 @@ template<typename T1, typename T2, typename T3, typename T4, typename T5, typena
     // new code.
     static void ClearBanned(); // needed for unit testing
     static bool IsBanned(CNetAddr ip);
-    static bool Ban(const CNetAddr &ip);
+    static bool IsBanned(CSubNet subnet);
+    static void Ban(const CNetAddr &ip, const BanReason &banReason, int64_t bantimeoffset = 0, bool sinceUnixEpoch = false);
+    static void Ban(const CSubNet &subNet, const BanReason &banReason, int64_t bantimeoffset = 0, bool sinceUnixEpoch = false);
+    static bool Unban(const CNetAddr &ip);
+    static bool Unban(const CSubNet &ip);
+    static void GetBanned(banmap_t &banmap);
+    static void SetBanned(const banmap_t &banmap);
+
+    //!check is the banlist has unwritten changes
+    static bool BannedSetIsDirty();
+    //!set the "dirty" flag for the banlist
+    static void SetBannedSetDirty(bool dirty=true);
+    //!clean unused entires (if bantime has expired)
+    static void SweepBanned();
+
     void copyStats(CNodeStats &stats);
 
     // Network stats
@@ -811,5 +946,18 @@ public:
     bool Write(const CAddrMan& addr);
     bool Read(CAddrMan& addr);
 };
+
+/** Access to the banlist database (banlist.dat) */
+class CBanDB
+{
+private:
+    boost::filesystem::path pathBanlist;
+public:
+    CBanDB();
+    bool Write(const banmap_t& banSet);
+    bool Read(banmap_t& banSet);
+};
+
+void DumpBanlist();
 
 #endif
