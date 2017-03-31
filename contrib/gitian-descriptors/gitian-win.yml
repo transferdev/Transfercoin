@@ -1,5 +1,5 @@
 ---
-name: "transfer"
+name: "ion"
 suites:
 - "trusty"
 architectures:
@@ -19,13 +19,13 @@ packages:
 - "bsdmainutils"
 reference_datetime: "2013-06-01 00:00:00"
 remotes:
-- "url": "https://github.com/rynomster/transfer.git"
-  "dir": "transfer"
+- "url": "https://github.com/rynomster/ion.git"
+  "dir": "ion"
 files:
 - "qt-win32-5.5.0-gitian.zip"
 - "qt-win64-5.5.0-gitian.zip"
-- "transfer-deps-win32-gitian.zip"
-- "transfer-deps-win64-gitian.zip"
+- "ion-deps-win32-gitian.zip"
+- "ion-deps-win64-gitian.zip"
 script: |
   # Defines
   export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
@@ -36,8 +36,8 @@ script: |
   TEMPDIR="$HOME/tempdir"
   echo "2d4fafbd04d5e233416c83c618dda2f111891f995eba585cc0a2ea637d0b3be2  qt-win32-5.5.0-gitian.zip"      | sha256sum -c
   echo "130685a66c344e53b131aa7cfac77f7796c6e113563bfd37eeb3cfd7c7fb4f08  qt-win64-5.5.0-gitian.zip"      | sha256sum -c
-  echo "1cf99b3e264725580fd0f22ef36afbf96d3da0d5f659057e7100089b96a18ece  transfer-deps-win32-gitian.zip" | sha256sum -c
-  echo "76e769fc3147dc819c4495839b7a5270fd058658bf1ef1adba22394b4f465ccb  transfer-deps-win64-gitian.zip" | sha256sum -c
+  echo "1cf99b3e264725580fd0f22ef36afbf96d3da0d5f659057e7100089b96a18ece  ion-deps-win32-gitian.zip" | sha256sum -c
+  echo "76e769fc3147dc819c4495839b7a5270fd058658bf1ef1adba22394b4f465ccb  ion-deps-win64-gitian.zip" | sha256sum -c
   NEEDDIST=1
   # Qt: workaround for determinism in resource ordering
   #  Qt5's rcc uses a QHash to store the files for the resource.
@@ -69,25 +69,25 @@ script: |
     cd $STAGING
     unzip -o $INDIR/qt-win${BITS}-5.5.0-gitian.zip
     cd $DEPSDIR
-    unzip -o $INDIR/transfer-deps-win${BITS}-gitian.zip
+    unzip -o $INDIR/ion-deps-win${BITS}-gitian.zip
     #
     cd $BUILDDIR
-    cp -r ../build/transfer .
-    cd transfer
+    cp -r ../build/ion .
+    cd ion
     mkdir -p $OUTDIR/src
     git archive HEAD | tar -x -C $OUTDIR/src
     cp $OUTDIR/src/doc/README_windows.txt $OUTDIR/readme.txt
     cp $OUTDIR/src/COPYING $OUTDIR/COPYING.txt
     #
     cd src
-    make -f makefile.linux-mingw HOST="$HOST" DEPSDIR="$DEPSDIR" CURDIR="$BUILDDIR/transfer/src" STATIC=1 $MAKEOPTS USE_UPNP=1 BOOST_LIB_SUFFIX="-mt-s" USE_WALLET=1 DEBUGFLAGS= 
-    cp transferd.exe $BINDIR/
+    make -f makefile.linux-mingw HOST="$HOST" DEPSDIR="$DEPSDIR" CURDIR="$BUILDDIR/ion/src" STATIC=1 $MAKEOPTS USE_UPNP=1 BOOST_LIB_SUFFIX="-mt-s" USE_WALLET=1 DEBUGFLAGS= 
+    cp iond.exe $BINDIR/
     cd ..
     #
     #$DEPSDIR/qt/host/bin/qmake -spec unsupported/win32-g++-cross MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/lib BOOST_INCLUDE_PATH=$HOME/build/include BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.1h OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.1h/include INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=bitcoin USE_BUILD_INFO=1
-    $STAGING/host/bin/qmake -xplatform win32-g++ RELEASE=1 QMAKE_LRELEASE="$STAGING/host/bin/lrelease" MINIUPNPC_LIB_PATH="$DEPSDIR/lib" MINIUPNPC_INCLUDE_PATH="$DEPSDIR/include" BDB_LIB_PATH="$DEPSDIR/lib" BDB_INCLUDE_PATH="$DEPSDIR/include" BOOST_LIB_PATH="$DEPSDIR/lib" BOOST_INCLUDE_PATH="$DEPSDIR/include" BOOST_LIB_SUFFIX="-mt-s" BOOST_THREAD_LIB_SUFFIX="_win32-mt-s" OPENSSL_LIB_PATH="$DEPSDIR/lib" OPENSSL_INCLUDE_PATH="$DEPSDIR/include" INCLUDEPATH="$DEPSDIR/include" DEFINES="BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 USE_BUILD_INFO=1 USE_NATIVE_I2P=1 USE_QRENCODE=1" QMAKE_CXXFLAGS=-frandom-seed=transfer
+    $STAGING/host/bin/qmake -xplatform win32-g++ RELEASE=1 QMAKE_LRELEASE="$STAGING/host/bin/lrelease" MINIUPNPC_LIB_PATH="$DEPSDIR/lib" MINIUPNPC_INCLUDE_PATH="$DEPSDIR/include" BDB_LIB_PATH="$DEPSDIR/lib" BDB_INCLUDE_PATH="$DEPSDIR/include" BOOST_LIB_PATH="$DEPSDIR/lib" BOOST_INCLUDE_PATH="$DEPSDIR/include" BOOST_LIB_SUFFIX="-mt-s" BOOST_THREAD_LIB_SUFFIX="_win32-mt-s" OPENSSL_LIB_PATH="$DEPSDIR/lib" OPENSSL_INCLUDE_PATH="$DEPSDIR/include" INCLUDEPATH="$DEPSDIR/include" DEFINES="BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 USE_BUILD_INFO=1 USE_NATIVE_I2P=1 USE_QRENCODE=1" QMAKE_CXXFLAGS=-frandom-seed=ion
     make $MAKEOPTS
-    cp release/Transfer.exe $BINDIR/
+    cp release/Ion.exe $BINDIR/
     #
     unset LD_PRELOAD
     unset FAKETIME
@@ -99,5 +99,5 @@ script: |
   mkdir -p $TEMPDIR
   cd $TEMPDIR
   cd $BINDIR
-  #tar -xvf $HOME/build/transfer/$DISTNAME | sort | tar --no-recursion -cT /dev/stdin --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 --mtime="$REFERENCE_DATETIME" | gzip -n > $OUTDIR/src/$DISTNAME
-  find | sort | zip -X@ $OUTDIR/transfer_$DISTNAME.zip
+  #tar -xvf $HOME/build/ion/$DISTNAME | sort | tar --no-recursion -cT /dev/stdin --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 --mtime="$REFERENCE_DATETIME" | gzip -n > $OUTDIR/src/$DISTNAME
+  find | sort | zip -X@ $OUTDIR/ion_$DISTNAME.zip

@@ -174,7 +174,7 @@ public:
 
         bool isValid() const { return valid; }
 
-        // Copy operator and constructor transfer the context
+        // Copy operator and constructor ion the context
         UnlockContext(const UnlockContext& obj) { CopyFrom(obj); }
         UnlockContext& operator=(const UnlockContext& rhs) { CopyFrom(rhs); return *this; }
     private:
@@ -196,6 +196,7 @@ public:
     void unlockCoin(COutPoint& output);
     void listLockedCoins(std::vector<COutPoint>& vOutpts);
     bool processingQueuedTransactions() { return fProcessingQueuedTransactions; }
+    CWallet* getWallet();
 
 private:
     CWallet *wallet;

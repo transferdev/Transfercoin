@@ -24,11 +24,8 @@ class CValidationState;
 static const int64_t DARKSEND_COLLATERAL = (0.01*COIN);
 static const int64_t DARKSEND_POOL_MAX = (9999.99*COIN);
 
-static const int64_t STATIC_POS_REWARD = 1 * COIN; //Constant reward of 1 TX per COIN i.e. 8%
-static const int64_t TARGET_SPACING_FORK = 60;
-static const int64_t TARGET_SPACING = 69;
-static const signed int HARD_FORK_BLOCK = 90000;
-static const signed int HARD_FORK_BLOCK2 = 140000;
+static const signed int HARD_FORK_BLOCK = 1;
+static const signed int HARD_FORK_BLOCK2 = 2;
 
 #define INSTANTX_SIGNATURES_REQUIRED           10
 #define INSTANTX_SIGNATURES_TOTAL              15
@@ -60,8 +57,6 @@ static const unsigned int MAX_TX_SIGOPS = MAX_BLOCK_SIGOPS/5;
 static const unsigned int MAX_ORPHAN_TRANSACTIONS = MAX_BLOCK_SIZE/100;
 /** Default for -maxorphanblocks, maximum number of orphan blocks kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_BLOCKS = 10000;
-/** The maximum number of entries in an 'inv' protocol message */
-static const unsigned int MAX_INV_SZ = 50000;
 /** Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) */
 static const int64_t MIN_TX_FEE = 0.0001*COIN;
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying) */
@@ -83,7 +78,7 @@ inline int64_t FutureDrift(int64_t nTime) { return nTime + DRIFT; }
 /** "reject" message codes **/
 static const unsigned char REJECT_INVALID = 0x10;
 
-inline int64_t GetMNCollateral(int nHeight) { return nHeight>=57000 ? 10000 : 100000; }
+inline int64_t GetMNCollateral(int nHeight) { return 20000; }
 
 extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
@@ -91,7 +86,6 @@ extern CTxMemPool mempool;
 extern std::map<uint256, CBlockIndex*> mapBlockIndex;
 extern std::set<std::pair<COutPoint, unsigned int> > setStakeSeen;
 extern CBlockIndex* pindexGenesisBlock;
-extern int nStakeMinConfirmations;
 extern unsigned int nStakeMinAge;
 extern unsigned int nNodeLifespan;
 extern int nCoinbaseMaturity;
@@ -105,6 +99,7 @@ extern uint64_t nLastBlockSize;
 extern int64_t nLastCoinStakeSearchInterval;
 extern const std::string strMessageMagic;
 extern int64_t nTimeBestReceived;
+extern int64_t nTargetSpacing;
 extern bool fImporting;
 extern bool fReindex;
 struct COrphanBlock;
@@ -358,11 +353,11 @@ public:
     bool ReadFromDisk(CDiskTxPos pos, FILE** pfileRet=NULL)
     {
         CAutoFile filein = CAutoFile(OpenBlockFile(pos.nFile, 0, pfileRet ? "rb+" : "rb"), SER_DISK, CLIENT_VERSION);
-        if (!filein)
+        if (filein.IsNull())
             return error("CTransaction::ReadFromDisk() : OpenBlockFile failed");
 
         // Read transaction
-        if (fseek(filein, pos.nTxPos, SEEK_SET) != 0)
+        if (fseek(filein.Get(), pos.nTxPos, SEEK_SET) != 0)
             return error("CTransaction::ReadFromDisk() : fseek failed");
 
         try {
@@ -375,7 +370,7 @@ public:
         // Return file pointer
         if (pfileRet)
         {
-            if (fseek(filein, pos.nTxPos, SEEK_SET) != 0)
+            if (fseek(filein.Get(), pos.nTxPos, SEEK_SET) != 0)
                 return error("CTransaction::ReadFromDisk() : second fseek failed");
             *pfileRet = filein.release();
         }
@@ -718,7 +713,7 @@ public:
 
     uint256 GetPoWHash() const
     {
-     return Hash9(BEGIN(nVersion), END(nNonce));
+		return Hash(BEGIN(nVersion), END(nNonce));
     }
 
     int64_t GetBlockTime() const
@@ -817,7 +812,7 @@ public:
     {
         // Open history file to append
         CAutoFile fileout = CAutoFile(AppendBlockFile(nFileRet), SER_DISK, CLIENT_VERSION);
-        if (!fileout)
+        if (fileout.IsNull())
             return error("CBlock::WriteToDisk() : AppendBlockFile failed");
 
         // Write index header
@@ -825,16 +820,16 @@ public:
         fileout << FLATDATA(Params().MessageStart()) << nSize;
 
         // Write block
-        long fileOutPos = ftell(fileout);
+        long fileOutPos = ftell(fileout.Get());
         if (fileOutPos < 0)
             return error("CBlock::WriteToDisk() : ftell failed");
         nBlockPosRet = fileOutPos;
         fileout << *this;
 
         // Flush stdio buffers and commit to disk before returning
-        fflush(fileout);
+        fflush(fileout.Get());
         if (!IsInitialBlockDownload() || (nBestHeight+1) % 500 == 0)
-            FileCommit(fileout);
+            FileCommit(fileout.Get());
 
         return true;
     }
@@ -845,7 +840,7 @@ public:
 
         // Open history file to read
         CAutoFile filein = CAutoFile(OpenBlockFile(nFile, nBlockPos, "rb"), SER_DISK, CLIENT_VERSION);
-        if (!filein)
+        if (filein.IsNull())
             return error("CBlock::ReadFromDisk() : OpenBlockFile failed");
         if (!fReadTransactions)
             filein.nType |= SER_BLOCKHEADERONLY;

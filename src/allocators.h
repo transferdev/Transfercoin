@@ -2,8 +2,8 @@
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef TRANSFER_ALLOCATORS_H
-#define TRANSFER_ALLOCATORS_H
+#ifndef ION_ALLOCATORS_H
+#define ION_ALLOCATORS_H
 
 #include "support/cleanse.h"
 #include <boost/thread/mutex.hpp>

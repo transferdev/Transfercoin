@@ -96,6 +96,10 @@ public:
 
     /** Show progress e.g. for verifychain */
     boost::signals2::signal<void (const std::string &title, int nProgress)> ShowProgress;
+
+    /** Banlist did change. */
+    boost::signals2::signal<void (void)> BannedListChanged;
+
 };
 
 extern CClientUIInterface uiInterface;

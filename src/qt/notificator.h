@@ -18,7 +18,7 @@ class Notificator: public QObject
 
 public:
     /** Create a new notificator.
-       @note Ownership of trayIcon is not transferred to this object.
+       @note Ownership of trayIcon is not ionred to this object.
     */
     Notificator(const QString &programName=QString(), QSystemTrayIcon *trayIcon=0, QWidget *parent=0);
     ~Notificator();

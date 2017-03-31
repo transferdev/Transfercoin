@@ -4,6 +4,7 @@
 
 USE_UPNP:=0
 USE_WALLET:=1
+USE_IPV6:=1
 
 BOOST_SUFFIX?=-mgw49-mt-s-1_57
 
@@ -51,6 +52,10 @@ ifneq (${USE_UPNP}, -)
  DEFS += -DMINIUPNP_STATICLIB -DUSE_UPNP=$(USE_UPNP)
 endif
 
+ifneq (${USE_IPV6}, -)
+	DEFS += -DUSE_IPV6=$(USE_IPV6)
+endif
+
 LIBS += -l mingwthrd -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l winmm -l shell32 -l comctl32 -l ole32 -l oleaut32 -l uuid -l rpcrt4 -l advapi32 -l ws2_32 -l mswsock -l shlwapi
 
 # TODO: make the mingw builds smarter about dependencies, like the linux/osx builds are
@@ -84,7 +89,6 @@ OBJS= \
     obj/rpcblockchain.o \
     obj/rpcrawtransaction.o \
     obj/rpcsmessage.o \
-    obj/timedata.o \
     obj/script.o \
     obj/scrypt.o \
     obj/sync.o \
@@ -113,6 +117,7 @@ OBJS= \
     obj/crypto/sha256.o \
     obj/crypto/sha512.o \
     obj/smessage.o \
+    obj/irc.o \
     obj/cubehash.o \
     obj/luffa.o \
     obj/aes_helper.o \
@@ -138,7 +143,7 @@ ifeq (${USE_WALLET}, 1)
         obj/walletdb.o
 endif
 
-all: transferd.exe
+all: iond.exe
 
 LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/include)
@@ -154,12 +159,12 @@ obj/%.o: %.cpp $(HEADERS)
 obj/%.o: %.c $(HEADERS)
 	$(CXX) -c $(CFLAGS) -fpermissive -o $@ $<
 
-transferd.exe: $(OBJS:obj/%=obj/%)
+iond.exe: $(OBJS:obj/%=obj/%)
 	g++ $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 clean:
 	-rm -f obj/*.o
-	-rm -f transferd.exe
+	-rm -f iond.exe
 	-rm -f obj/build.h
 	cd leveldb && TARGET_OS=NATIVE_WINDOWS $(MAKE) clean && cd ..
 

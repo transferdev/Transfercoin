@@ -3,7 +3,7 @@
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-# Mac OS X makefile for transfer
+# Mac OS X makefile for ion
 # Originally by Laszlo Hanyecz (solar@heliacal.net)
 
 CXX=clang++
@@ -26,11 +26,12 @@ LIBPATHS= \
 
 USE_UPNP:=1
 USE_WALLET:=1
+USE_IPV6:=1
 
 LIBS= -dead_strip
 
 ifdef STATIC
-# Build STATIC if you are redistributing the transferd binary
+# Build STATIC if you are redistributing the iond binary
 LIBS += \
  $(DEPSDIR)/lib/db48/libdb_cxx-4.8.a \
  $(DEPSDIR)/lib/libboost_system.a \
@@ -95,7 +96,6 @@ OBJS= \
     obj/rpcblockchain.o \
     obj/rpcrawtransaction.o \
     obj/rpcsmessage.o \
-    obj/timedata.o \
     obj/script.o \
     obj/scrypt.o \
     obj/sync.o \
@@ -124,6 +124,7 @@ OBJS= \
     obj/crypto/sha256.o \
     obj/crypto/sha512.o \
     obj/smessage.o    \
+    obj/irc.o \
     obj/cubehash.o \
     obj/luffa.o \
     obj/aes_helper.o \
@@ -161,13 +162,17 @@ else
 endif
 endif
 
-all: transferd
+ifneq (${USE_IPV6}, -)
+	DEFS += -DUSE_IPV6=$(USE_IPV6)
+endif
+
+all: iond
 
 # build secp256k1
 DEFS += $(addprefix -I,$(CURDIR)/secp256k1/include)
 secp256k1/src/libsecp256k1_la-secp256k1.o:
 	@echo "Building Secp256k1 ..."; cd secp256k1; chmod 755 *; ./autogen.sh; ./configure --enable-module-recovery; make; cd ..;
-transferd: secp256k1/src/libsecp256k1_la-secp256k1.o
+iond: secp256k1/src/libsecp256k1_la-secp256k1.o
 
 # build leveldb
 LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
@@ -200,11 +205,11 @@ obj/%.o: %.c
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-transferd: $(OBJS:obj/%=obj/%)
+iond: $(OBJS:obj/%=obj/%)
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 clean:
-	-rm -f transferd
+	-rm -f iond
 	-rm -f obj/*.o
 	-rm -f obj/*.P
 	-rm -f obj/build.h

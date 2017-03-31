@@ -1,7 +1,7 @@
 #include "transactionrecord.h"
 
 #include "base58.h"
-#include "timedata.h"
+#include "util.h"
 #include "wallet.h"
 #include "darksend.h"
 #include "instantx.h"
@@ -55,7 +55,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 {
                     // Received by Bitcoin Address
                     sub.type = TransactionRecord::RecvWithAddress;
-                    sub.address = CTransfercoinAddress(address).ToString();
+                    sub.address = CIonAddress(address).ToString();
                 }
                 else
                 {
@@ -144,7 +144,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 if (ExtractDestination(wtx.vout[0].scriptPubKey, address))
                 {
                     // Sent to Dash Address
-                    sub.address = CTransfercoinAddress(address).ToString();
+                    sub.address = CIonAddress(address).ToString();
                 }
                 else
                 {
@@ -199,7 +199,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 {
                     // Sent to Bitcoin Address
                     sub.type = TransactionRecord::SendToAddress;
-                    sub.address = CTransfercoinAddress(address).ToString();
+                    sub.address = CIonAddress(address).ToString();
                 }
                 else
                 {

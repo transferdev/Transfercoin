@@ -1,10 +1,14 @@
+debug
 build
 Makefile.Release
 Makefile.Debug
 Makefile
 object_script.transfer-qt.Debug
 object_script.transfer-qt.Release
-transfer.pro.user
-transfer-qt_plugin_import.cpp
+ion.pro.user
+ion-qt_plugin_import.cpp
 src/qt/locale/*.qm
 release
+ion-qt.*
+Ion-Qt.*
+-qt*
