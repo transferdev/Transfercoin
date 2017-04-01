@@ -59,7 +59,7 @@ void CActiveMasternode::ManageStatus()
             return;
         }
         if(Params().NetworkID() == CChainParams::MAIN){
-            if(!service.IsRoutable()) {
+            if(!(service.IsIPv4() && service.IsRoutable())) {
                 notCapableReason = "Invalid IP address (IPV4 ONLY)" + service.ToString();
                 status = MASTERNODE_NOT_CAPABLE;
                 LogPrintf("CActiveMasternode::ManageStatus() - not capable: %s\n", notCapableReason.c_str());
