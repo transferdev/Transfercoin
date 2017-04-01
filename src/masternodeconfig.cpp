@@ -44,7 +44,7 @@ bool CMasternodeConfig::read(boost::filesystem::path path) {
             return false;
         }
 
-        if (!(!CService(ip).IsIPv4() && CService(ip).IsRoutable())) {
+        if (!(CService(ip).IsIPv4() && CService(ip).IsRoutable())) {
             LogPrintf("Invalid Address detected in masternode.conf: %s (IPV4 ONLY) \n", line.c_str());
             streamConfig.close();
             return false;
