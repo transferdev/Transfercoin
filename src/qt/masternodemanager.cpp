@@ -196,7 +196,7 @@ void MasternodeManager::updateListConc() {
 			ui->tableWidget->setItem(mnRow, 4, lastSeenItem);
 			ui->tableWidget->setItem(mnRow, 5, pubkeyItem);
 		}
-		ui->countLabel->setText(QString::number(ui->tableWidget_3->rowCount()));
+		ui->countLabel->setText(QString::number(ui->tableWidget->rowCount()));
 		on_UpdateButton_clicked();
 		ui->tableWidget_3->setVisible(0);
 		ui->tableWidget->setVisible(1);
@@ -225,7 +225,7 @@ void MasternodeManager::updateNodeList()
 	nTimeListUpdated = GetTime();
     fFilterUpdated = false;
 	if (f1.isFinished())
-		f1 = QtConcurrent::run(this,MasternodeManager::updateListConc);   
+		f1 = QtConcurrent::run(this,&MasternodeManager::updateListConc);   
 	
 }
 
