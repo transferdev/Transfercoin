@@ -69,11 +69,6 @@ static const int64_t MAX_MONEY = 4000000000u * COIN; // 1M PoW coins
 inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 /** Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp. */
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
-/** Number of blocks that can be requested at any given time from a single peer. */
-static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 128;
-/** Timeout in seconds before considering a block download peer unresponsive. */
-static const unsigned int BLOCK_DOWNLOAD_TIMEOUT = 60;
-
 
 static const int64_t DRIFT = 600;
 inline int64_t FutureDrift(int64_t nTime) { return nTime + DRIFT; }
@@ -184,9 +179,6 @@ int GetIXConfirmations(uint256 nTXHash);
 bool AbortNode(const std::string &msg, const std::string &userMessage="");
 /** Get statistics from node state */
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
-/** Increase a node's misbehavior score. */
-void Misbehaving(NodeId nodeid, int howmuch);
-
 
 int64_t GetMasternodePayment(int nHeight, int64_t blockValue);
 
@@ -347,8 +339,8 @@ public:
         Note that lightweight clients may not know anything besides the hash of previous transactions,
         so may not be able to calculate this.
 
-        @param[in] mapInputs    Map of previous transactions that have outputs we're spending
-        @return Sum of value of all inputs (scriptSigs)
+        @param[in] mapInputs	Map of previous transactions that have outputs we're spending
+        @return	Sum of value of all inputs (scriptSigs)
         @see CTransaction::FetchInputs
      */
     int64_t GetValueIn(const MapPrevTx& mapInputs) const;
@@ -421,13 +413,13 @@ public:
 
     /** Fetch from memory and/or disk. inputsRet keys are transaction hashes.
 
-     @param[in] txdb    Transaction database
-     @param[in] mapTestPool List of pending changes to the transaction index database
-     @param[in] fBlock  True if being called to add a new best-block to the chain
-     @param[in] fMiner  True if being called by CreateNewBlock
-     @param[out] inputsRet  Pointers to this transaction's inputs
-     @param[out] fInvalid   returns true if transaction is invalid
-     @return    Returns true if all inputs are in txdb or mapTestPool
+     @param[in] txdb	Transaction database
+     @param[in] mapTestPool	List of pending changes to the transaction index database
+     @param[in] fBlock	True if being called to add a new best-block to the chain
+     @param[in] fMiner	True if being called by CreateNewBlock
+     @param[out] inputsRet	Pointers to this transaction's inputs
+     @param[out] fInvalid	returns true if transaction is invalid
+     @return	Returns true if all inputs are in txdb or mapTestPool
      */
     bool FetchInputs(CTxDB& txdb, const std::map<uint256, CTxIndex>& mapTestPool,
                      bool fBlock, bool fMiner, MapPrevTx& inputsRet, bool& fInvalid);
@@ -435,12 +427,12 @@ public:
     /** Sanity check previous transactions, then, if all checks succeed,
         mark them as spent by this transaction.
 
-        @param[in] inputs   Previous transactions (from FetchInputs)
-        @param[out] mapTestPool Keeps track of inputs that need to be updated on disk
-        @param[in] posThisTx    Position of this transaction on disk
+        @param[in] inputs	Previous transactions (from FetchInputs)
+        @param[out] mapTestPool	Keeps track of inputs that need to be updated on disk
+        @param[in] posThisTx	Position of this transaction on disk
         @param[in] pindexBlock
-        @param[in] fBlock   true if called from ConnectBlock
-        @param[in] fMiner   true if called from CreateNewBlock
+        @param[in] fBlock	true if called from ConnectBlock
+        @param[in] fMiner	true if called from CreateNewBlock
         @return Returns true if all checks succeed
      */
     bool ConnectInputs(CTxDB& txdb, MapPrevTx inputs,
@@ -471,7 +463,7 @@ public:
 };
 
 /** Check for standard transaction types
-    @param[in] mapInputs    Map of previous transactions that have outputs we're spending
+    @param[in] mapInputs	Map of previous transactions that have outputs we're spending
     @return True if all inputs (scriptSigs) use only standard transaction forms
     @see CTransaction::FetchInputs
 */
@@ -485,7 +477,7 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx);
 
 /** Count ECDSA signature operations in pay-to-script-hash inputs.
 
-    @param[in] mapInputs    Map of previous transactions that have outputs we're spending
+    @param[in] mapInputs	Map of previous transactions that have outputs we're spending
     @return maximum number of sigops required to validate this transaction's inputs
     @see CTransaction::FetchInputs
  */
@@ -952,8 +944,6 @@ public:
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
-    // (memory only) Sequencial id assigned to distinguish order in which blocks are received.
-    uint32_t nSequenceId;
 
     CBlockIndex()
     {
@@ -972,7 +962,6 @@ public:
         hashProof = 0;
         prevoutStake.SetNull();
         nStakeTime = 0;
-        nSequenceId = 0;
 
         nVersion       = 0;
         hashMerkleRoot = 0;
@@ -996,7 +985,6 @@ public:
         nStakeModifier = 0;
         bnStakeModifierV2 = 0;
         hashProof = 0;
-        nSequenceId = 0;
         if (block.IsProofOfStake())
         {
             SetProofOfStake();

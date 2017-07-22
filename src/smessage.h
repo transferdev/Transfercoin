@@ -40,6 +40,7 @@ const unsigned int SMSG_MAX_MSG_WORST = LZ4_COMPRESSBOUND(SMSG_MAX_MSG_BYTES+SMS
 
 
 extern bool fSecMsgEnabled;
+extern void Misbehaving(NodeId nodeid, int howmuch);
 
 class SecMsgStored;
 
