@@ -128,30 +128,56 @@ void MultisigDialog::on_createAddressButton_clicked()
     std::vector<CPubKey> pubkeys;
     pubkeys.resize(ui->pubkeyEntries->count());
     unsigned int required = ui->requiredSignatures->text().toUInt();
+    CWallet *pwalletMain = model->getWallet();
 
     for(int i = 0; i < ui->pubkeyEntries->count(); i++)
     {
         MultisigAddressEntry *entry = qobject_cast<MultisigAddressEntry *>(ui->pubkeyEntries->itemAt(i)->widget());
-
-        if(!entry->validate())
-            return;
-
-        QString str = entry->getPubkey();
-
-        CPubKey vchPubKey(ParseHex(str.toStdString().c_str()));
-        CPubKey pubkey(vchPubKey);
-
-        if(!vchPubKey.IsValid())
-            return;
+        std::string strAddressEntered = entry->getPubkey().toUtf8().constData();
+        CTransfercoinAddress address(strAddressEntered);
+        if(pwalletMain && address.IsValid())
+        {
+            bool fError = false;
+            CKeyID keyID;
+            if (!address.GetKeyID(keyID))
+                QMessageBox::critical(this, tr("Multisig: Public key does not refer to a key!"), tr("Invalid public key: %1").arg(strAddressEntered.c_str()));
+            CPubKey vchPubKey;
+            if (!pwalletMain->GetPubKey(keyID, vchPubKey))
+                QMessageBox::critical(this, tr("Multisig: No full public key for this address!"), tr("Invalid public key: %1").arg(strAddressEntered.c_str()));
+            if (!vchPubKey.IsFullyValid())
+            {
+                QMessageBox::critical(this, tr("Multisig: Invalid Public Key Entered 1!"), tr("Invalid public key: %1").arg(strAddressEntered.c_str()));
+                fError = true;
+            }
+            if (fError)
+                return;
+            else
+                pubkeys[i] = vchPubKey;
+        } else {
+            if (IsHex(strAddressEntered))
+            {
+                CPubKey vchPubKey(ParseHex(strAddressEntered));
+                if (!vchPubKey.IsFullyValid())
+                    QMessageBox::critical(this, tr("Multisig: Invalid Public Key Entered 2!"), tr("Invalid public key: %1").arg(strAddressEntered.c_str()));
+                pubkeys[i] = vchPubKey;
+            } else {
+                QMessageBox::critical(this, tr("Multisig: Invalid Public Key Entered 3!"), tr("Invalid public key: %1").arg(strAddressEntered.c_str()));
+            }
+        }
     }
 
     if((required == 0) || (required > pubkeys.size()))
         return;
 
-    CScript script;
-    script.SetMultisig(required, pubkeys);
+    CScript script = GetScriptForMultisig(required, pubkeys);
     CScriptID scriptID = script.GetID();
     CTransfercoinAddress address(scriptID);
+
+    LOCK(pwalletMain->cs_wallet);
+    if(!pwalletMain->HaveCScript(scriptID))
+        pwalletMain->AddCScript(script);
+    if(!pwalletMain->mapAddressBook.count(address.Get()))
+        pwalletMain->SetAddressBookName(address.Get(), label);
 
     ui->multisigAddress->setText(address.ToString().c_str());
     ui->redeemScript->setText(HexStr(script.begin(), script.end()).c_str());
@@ -165,46 +191,6 @@ void MultisigDialog::on_copyMultisigAddressButton_clicked()
 void MultisigDialog::on_copyRedeemScriptButton_clicked()
 {
     QApplication::clipboard()->setText(ui->redeemScript->text());
-}
-
-void MultisigDialog::on_saveRedeemScriptButton_clicked()
-{
-    if(!model)
-        return;
-
-    CWallet *wallet = model->getWallet();
-    std::string redeemScript = ui->redeemScript->text().toStdString();
-    std::vector<unsigned char> scriptData(ParseHex(redeemScript));
-    CScript script(scriptData.begin(), scriptData.end());
-    CScriptID scriptID = script.GetID();
-
-    LOCK(wallet->cs_wallet);
-    if(!wallet->HaveCScript(scriptID))
-        wallet->AddCScript(script);
-}
-
-void MultisigDialog::on_saveMultisigAddressButton_clicked()
-{
-    if(!model)
-        return;
-
-    CWallet *wallet = model->getWallet();
-    std::string redeemScript = ui->redeemScript->text().toStdString();
-    std::string address = ui->multisigAddress->text().toStdString();
-    std::string label("multisig");
-
-    if(!model->validateAddress(QString(address.c_str())))
-        return;
-
-    std::vector<unsigned char> scriptData(ParseHex(redeemScript));
-    CScript script(scriptData.begin(), scriptData.end());
-    CScriptID scriptID = script.GetID();
-
-    LOCK(wallet->cs_wallet);
-    if(!wallet->HaveCScript(scriptID))
-        wallet->AddCScript(script);
-    if(!wallet->mapAddressBook.count(CTransfercoinAddress(address).Get()))
-        wallet->SetAddressBookName(CTransfercoinAddress(address).Get(), label);
 }
 
 void MultisigDialog::clear()

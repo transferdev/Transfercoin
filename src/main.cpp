@@ -4015,7 +4015,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             inv = CInv(MSG_DSTX, tx.GetHash());
             RelayInventory(inv);
         }
-        if (tx.nDoS) Misbehaving(pfrom->GetId(), tx.nDos);
+        if (tx.nDoS) Misbehaving(pfrom->GetId(), tx.nDoS);
     }
 
 
@@ -4034,7 +4034,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         if (ProcessBlock(pfrom, &block))
             mapAlreadyAskedFor.erase(inv);
-        if (block.nDoS) Misbehaving(pfrom->GetId(), block.nDos);
+        if (block.nDoS) Misbehaving(pfrom->GetId(), block.nDoS);
         if (fSecMsgEnabled)
             SecureMsgScanBlock(block);
     }
