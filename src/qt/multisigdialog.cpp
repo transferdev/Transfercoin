@@ -172,6 +172,7 @@ void MultisigDialog::on_createAddressButton_clicked()
     CScript script = GetScriptForMultisig(required, pubkeys);
     CScriptID scriptID = script.GetID();
     CTransfercoinAddress address(scriptID);
+    std::string label("multisig");
 
     LOCK(pwalletMain->cs_wallet);
     if(!pwalletMain->HaveCScript(scriptID))
