@@ -10,6 +10,8 @@ public:
     CTxDestination destChange;
     bool useDarkSend;
     bool useInstantX;
+    bool fSplitBlock;
+    int nSplitBlock;
 
     CCoinControl()
     {
@@ -22,6 +24,8 @@ public:
         setSelected.clear();
         useInstantX = false;
         useDarkSend = true;
+        fSplitBlock = false;
+        nSplitBlock = 1;
     }
     
     bool HasSelected() const
