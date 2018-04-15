@@ -3543,6 +3543,8 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     }
 
     CScript payee;
+    CScript payeerewardaddress = CScript();
+    int payeerewardpercent = 0;
     CTxIn vin;
     bool hasPayment = true;
 
