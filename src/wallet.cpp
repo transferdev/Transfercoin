@@ -2393,6 +2393,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
 
                     BOOST_FOREACH (const PAIRTYPE(CScript, CAmount)& s, vecSend)
                     {
+                        CTxOut txout(s.second, s.first);
                         if(txout.IsNull() || (!txout.IsEmpty() && txout.nValue == 0))
                         {
                             txnouttype whichType;
