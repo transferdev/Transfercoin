@@ -32,6 +32,8 @@ public:
     int nBlockHeight;
     CTxIn vin;
     CScript payee;
+    CScript donationAddress;
+    int donationPercentage;
     std::vector<unsigned char> vchSig;
     uint64_t score;
 

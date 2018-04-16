@@ -115,9 +115,22 @@ void CActiveMasternode::ManageStatus()
             	return;
             }
 
-            /* donations are not supported in transfer.conf */
             CScript donationAddress = CScript();
             int donationPercentage = 0;
+            CTransfercoinAddress address;
+            LogPrintf("ActiveMasternode::Register - Donation address %s\n", strDonationAddress);
+            if (strDonationAddress != "")
+            {
+                address.SetString(strDonationAddress);
+                donationAddress.SetDestination(address.Get());
+            }
+            try {
+                donationPercentage = boost::lexical_cast<int>( strDonationPercentage );
+            } catch( boost::bad_lexical_cast const& ) {
+                LogPrintf("ActiveMasternode::Register - Invalid Donation Percentage (Couldn't cast) %s\n", strDonationPercentage);
+                return;
+            }
+            LogPrintf("Check Donation adress %s and percentage %s\n", strDonationAddress, strDonationPercentage);
 
             if(!Register(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, donationAddress, donationPercentage, errorMessage)) {
                 LogPrintf("CActiveMasternode::ManageStatus() - Error on Register: %s\n", errorMessage.c_str());

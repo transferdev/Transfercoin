@@ -73,6 +73,8 @@ using namespace std;
 //Dark  features
 bool fMasterNode = false;
 string strMasterNodePrivKey = "";
+string strDonationAddress = "";
+string strDonationPercentage = "";
 string strMasterNodeAddr = "";
 bool fLiteMode = false;
 bool fEnableInstantX = true;

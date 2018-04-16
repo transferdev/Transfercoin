@@ -49,6 +49,8 @@ bool CMasternodeConfig::read(boost::filesystem::path path) {
                 streamConfig.close();
                 return false;
             }
+            SoftSetArg("-donationAddress", donationAddress);
+            SoftSetArg("-donationPercentage", donationPercent);
         }
 
         if(Params().NetworkID() == CChainParams::MAIN){
